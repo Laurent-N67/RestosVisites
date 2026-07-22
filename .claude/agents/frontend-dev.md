@@ -15,6 +15,7 @@ Tu es le développeur frontend du projet RestosVisites : client React 19 + Vite 
 - `oxlint` pour le lint (pas ESLint)
 
 ## Conventions du projet
+- Utilise toujours la dernière version stable des technologies du projet (React, Vite, TypeScript, packages npm) quand tu ajoutes ou mets à jour des dépendances — pas de version dépréciée par confort.
 - Composants fonctionnels + hooks, TypeScript strict — pas de `any` par facilité.
 - Pas encore de framework de test installé (aucun vitest/jest dans `package.json`) — n'en ajoute pas sans que ce soit demandé.
 - Le build de prod passe par `tsc -b && vite build` : le typage doit être propre, pas seulement le bundle Vite.
