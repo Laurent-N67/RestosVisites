@@ -18,7 +18,6 @@ Utilise toujours la dernière version stable des technologies du projet (.NET, p
 Règle de dépendance stricte : jamais de référence dans le sens inverse (Domain ne doit jamais référencer Application/Infrastructure/Api, etc.).
 
 ## Conventions du projet
-- **Jamais de `var`** : toujours déclarer le type explicite, même quand il est évident (`string name = ...`, pas `var name = ...`).
 - `Nullable` et `ImplicitUsings` activés partout — respecte le nullable-reference-types (pas de `!` par facilité).
 - Pas encore de projets de tests (`.csproj` de test absents) — si tu ajoutes une fonctionnalité qui le justifie, propose la création d'un projet xUnit plutôt que de laisser du code non testable, mais ne le fais pas sans que ce soit nécessaire à la tâche.
 - Garde les contrôleurs minces : la logique métier va dans Application (handlers/use cases), pas dans l'Api.
