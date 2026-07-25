@@ -22,5 +22,5 @@ public sealed class ListerRestaurants
         return restaurants.Select(VersDto).ToList();
     }
 
-    private static RestaurantDto VersDto(Restaurant restaurant) => new(restaurant.Id, restaurant.Nom, restaurant.Adresse);
+    private static RestaurantDto VersDto(Restaurant restaurant) => new(restaurant.Id, restaurant.Nom, restaurant.Adresse, restaurant.Latitude, restaurant.Longitude);
 }

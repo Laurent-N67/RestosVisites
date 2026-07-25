@@ -8,13 +8,15 @@ public sealed class Restaurant
     public Guid Id { get; }
     public string Nom { get; }
     public string Adresse { get; }
+    public double Latitude { get; }
+    public double Longitude { get; }
 
-    public Restaurant(string nom, string adresse)
-        : this(Guid.NewGuid(), nom, adresse)
+    public Restaurant(string nom, string adresse, double latitude, double longitude)
+        : this(Guid.NewGuid(), nom, adresse, latitude, longitude)
     {
     }
 
-    public Restaurant(Guid id, string nom, string adresse)
+    public Restaurant(Guid id, string nom, string adresse, double latitude, double longitude)
     {
         if (string.IsNullOrWhiteSpace(nom))
         {
@@ -26,8 +28,20 @@ public sealed class Restaurant
             throw new ArgumentException("L'adresse du restaurant ne peut pas être vide.", nameof(adresse));
         }
 
+        if (latitude is < -90 or > 90)
+        {
+            throw new ArgumentOutOfRangeException(nameof(latitude), latitude, "La latitude doit être comprise entre -90 et 90.");
+        }
+
+        if (longitude is < -180 or > 180)
+        {
+            throw new ArgumentOutOfRangeException(nameof(longitude), longitude, "La longitude doit être comprise entre -180 et 180.");
+        }
+
         Id = id;
         Nom = nom.Trim();
         Adresse = adresse.Trim();
+        Latitude = latitude;
+        Longitude = longitude;
     }
 }

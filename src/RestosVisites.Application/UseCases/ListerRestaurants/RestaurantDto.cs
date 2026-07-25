@@ -1,3 +1,3 @@
 namespace RestosVisites.Application.UseCases.ListerRestaurants;
 
-public sealed record RestaurantDto(Guid Id, string Nom, string Adresse);
+public sealed record RestaurantDto(Guid Id, string Nom, string Adresse, double Latitude, double Longitude);

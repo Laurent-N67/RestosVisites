@@ -26,7 +26,7 @@ public sealed class CreerRestaurant
                 $"Un restaurant nommé '{request.Nom}' existe déjà à l'adresse '{request.Adresse}'.");
         }
 
-        var restaurant = new Restaurant(request.Nom, request.Adresse);
+        var restaurant = new Restaurant(request.Nom, request.Adresse, request.Latitude, request.Longitude);
         await _restaurantRepository.AjouterAsync(restaurant, ct);
 
         return new CreerRestaurantResponse(restaurant.Id);
