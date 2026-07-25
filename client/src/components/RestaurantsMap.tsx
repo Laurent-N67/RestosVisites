@@ -1,0 +1,99 @@
+import { useEffect, useState } from 'react'
+import { MapContainer, TileLayer, useMap } from 'react-leaflet'
+import L from 'leaflet'
+import { ApiError, getVisites } from '../api/client.ts'
+import type { Restaurant } from '../api/types.ts'
+import RestaurantMarker from './RestaurantMarker.tsx'
+import type { VisitesState } from './RestaurantMarker.tsx'
+
+const DEFAULT_CENTER: [number, number] = [46.6034, 1.8883] // Centre de la France
+const DEFAULT_ZOOM = 6
+
+interface RestaurantsMapProps {
+  restaurants: Restaurant[]
+  refreshToken: number
+}
+
+function FitBounds({ restaurants }: { restaurants: Restaurant[] }) {
+  const map = useMap()
+
+  useEffect(() => {
+    if (restaurants.length === 0) {
+      return
+    }
+    if (restaurants.length === 1) {
+      map.setView([restaurants[0].latitude, restaurants[0].longitude], 14)
+      return
+    }
+    const bounds = L.latLngBounds(
+      restaurants.map((r) => [r.latitude, r.longitude] as [number, number]),
+    )
+    map.fitBounds(bounds, { padding: [40, 40] })
+  }, [restaurants, map])
+
+  return null
+}
+
+function RestaurantsMap({ restaurants, refreshToken }: RestaurantsMapProps) {
+  const [visitesByRestaurant, setVisitesByRestaurant] = useState<
+    Record<string, VisitesState>
+  >({})
+
+  useEffect(() => {
+    setVisitesByRestaurant({})
+  }, [refreshToken])
+
+  function handleOpen(restaurantId: string) {
+    const current = visitesByRestaurant[restaurantId]
+    if (current && (current.status === 'loading' || current.status === 'loaded')) {
+      return
+    }
+
+    setVisitesByRestaurant((prev) => ({
+      ...prev,
+      [restaurantId]: { status: 'loading' },
+    }))
+
+    getVisites(restaurantId)
+      .then((visites) => {
+        setVisitesByRestaurant((prev) => ({
+          ...prev,
+          [restaurantId]: { status: 'loaded', visites },
+        }))
+      })
+      .catch((err: unknown) => {
+        const message =
+          err instanceof ApiError
+            ? (err.detail ?? err.message)
+            : 'Impossible de charger les visites.'
+        setVisitesByRestaurant((prev) => ({
+          ...prev,
+          [restaurantId]: { status: 'error', message },
+        }))
+      })
+  }
+
+  return (
+    <MapContainer
+      center={DEFAULT_CENTER}
+      zoom={DEFAULT_ZOOM}
+      className="restaurants-map"
+    >
+      <TileLayer
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
+      <FitBounds restaurants={restaurants} />
+      {restaurants.map((restaurant) => (
+        <RestaurantMarker
+          key={restaurant.id}
+          restaurant={restaurant}
+          visitesState={visitesByRestaurant[restaurant.id] ?? { status: 'idle' }}
+          onOpen={handleOpen}
+        />
+      ))}
+    </MapContainer>
+  )
+}
+
+export default RestaurantsMap
