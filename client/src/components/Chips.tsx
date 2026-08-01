@@ -1,10 +1,13 @@
+import type { ReactNode } from 'react'
+
 interface ChipsProps {
   items: string[]
   onRemove: (index: number) => void
   emptyLabel?: string
+  renderItem?: (item: string) => ReactNode
 }
 
-function Chips({ items, onRemove, emptyLabel }: ChipsProps) {
+function Chips({ items, onRemove, emptyLabel, renderItem }: ChipsProps) {
   if (items.length === 0) {
     return emptyLabel ? <p className="chips-empty">{emptyLabel}</p> : null
   }
@@ -13,7 +16,7 @@ function Chips({ items, onRemove, emptyLabel }: ChipsProps) {
     <ul className="chips">
       {items.map((item, index) => (
         <li key={`${item}-${index}`} className="chip">
-          <span className="chip-label">{item}</span>
+          {renderItem ? renderItem(item) : <span className="chip-label">{item}</span>}
           <button
             type="button"
             className="chip-remove"

@@ -1,6 +1,11 @@
 import { useState } from 'react'
 import { Marker, Popup } from 'react-leaflet'
-import { ApiError, deleteRestaurant, deleteVisite } from '../api/client.ts'
+import {
+  ApiError,
+  deleteRestaurant,
+  deleteVisite,
+  resolvePhotoUrl,
+} from '../api/client.ts'
 import type { Restaurant, Visite } from '../api/types.ts'
 
 export type VisitesState =
@@ -102,7 +107,12 @@ function VisitesSection({
             {visite.urlsPhotos.length > 0 && (
               <div className="popup-photos">
                 {visite.urlsPhotos.map((url) => (
-                  <img key={url} src={url} alt="" loading="lazy" />
+                  <img
+                    key={url}
+                    src={resolvePhotoUrl(url)}
+                    alt=""
+                    loading="lazy"
+                  />
                 ))}
               </div>
             )}

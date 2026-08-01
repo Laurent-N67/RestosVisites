@@ -23,6 +23,19 @@ export class ApiError extends Error {
   }
 }
 
+async function throwForErrorResponse(response: Response): Promise<never> {
+  let title = response.statusText || `Erreur ${response.status}`
+  let detail: string | undefined
+  try {
+    const problem = (await response.json()) as ProblemDetails
+    title = problem.title ?? title
+    detail = problem.detail
+  } catch {
+    // Corps de réponse absent ou non-JSON, on garde le message par défaut.
+  }
+  throw new ApiError(response.status, title, detail)
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response
   try {
@@ -38,16 +51,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
 
   if (!response.ok) {
-    let title = response.statusText || `Erreur ${response.status}`
-    let detail: string | undefined
-    try {
-      const problem = (await response.json()) as ProblemDetails
-      title = problem.title ?? title
-      detail = problem.detail
-    } catch {
-      // Corps de réponse absent ou non-JSON, on garde le message par défaut.
-    }
-    throw new ApiError(response.status, title, detail)
+    await throwForErrorResponse(response)
   }
 
   if (response.status === 204) {
@@ -55,6 +59,43 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
 
   return (await response.json()) as T
+}
+
+/**
+ * Résout une URL de photo pour l'affichage : les URLs relatives (renvoyées
+ * par l'upload, ex. `/uploads/xxx.jpg`) sont préfixées par l'URL de l'Api,
+ * tandis que les URLs externes collées par l'utilisateur sont laissées
+ * telles quelles.
+ */
+export function resolvePhotoUrl(url: string): string {
+  return url.startsWith('/') ? `${API_BASE_URL}${url}` : url
+}
+
+export interface UploadPhotoResponse {
+  url: string
+}
+
+export async function uploadPhoto(file: File): Promise<UploadPhotoResponse> {
+  const formData = new FormData()
+  formData.append('file', file)
+
+  let response: Response
+  try {
+    // Pas de header Content-Type manuel : le navigateur doit fixer la
+    // boundary multipart/form-data lui-même.
+    response = await fetch(`${API_BASE_URL}/api/photos`, {
+      method: 'POST',
+      body: formData,
+    })
+  } catch {
+    throw new ApiError(0, 'Impossible de joindre le serveur RestosVisites.')
+  }
+
+  if (!response.ok) {
+    await throwForErrorResponse(response)
+  }
+
+  return (await response.json()) as UploadPhotoResponse
 }
 
 export function getRestaurants(): Promise<Restaurant[]> {
