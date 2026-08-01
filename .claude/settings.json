@@ -1,25 +1,38 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dotnet build RestosVisites.sln)",
-      "Bash(dotnet test RestosVisites.sln)",
-      "Bash(dotnet run --project src/RestosVisites.Api --launch-profile http)",
-      "Bash(dotnet --list-sdks)",
-      "Bash(dotnet --version)",
-      "Bash(npm run build)",
-      "Bash(npm run lint)",
-      "Bash(npm run dev)",
+      "Edit",
+      "Write",
+      "Bash(dotnet *)",
+      "Bash(npm *)",
+      "Bash(npx *)",
       "Bash(git add *)",
       "Bash(git commit *)",
       "Bash(git status *)",
       "Bash(git log *)",
       "Bash(git diff *)",
+      "Bash(git show *)",
+      "Bash(git fetch *)",
+      "Bash(git stash *)",
       "Bash(curl -s http://localhost:*)",
       "Bash(curl -sf http://localhost:*)",
       "Bash(netstat -ano *)",
       "Bash(taskkill *)",
       "Bash(mkdir -p *)",
-      "Bash(rm -f src/RestosVisites.Api/restosvisites.db*)"
+      "Bash(rm -f src/RestosVisites.Api/restosvisites.db*)",
+      "Bash(rm -f client/src/RestosVisites.Api/restosvisites.db*)"
+    ],
+    "ask": [
+      "Bash(git push*)",
+      "Bash(git reset --hard*)",
+      "Bash(git checkout -- *)",
+      "Bash(git restore*)",
+      "Bash(git clean*)",
+      "Bash(git branch -D*)",
+      "Bash(git branch --delete*)",
+      "Bash(rm -rf*)",
+      "Bash(gh pr *)",
+      "Bash(gh api*)"
     ]
   }
 }
