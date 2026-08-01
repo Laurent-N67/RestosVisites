@@ -24,6 +24,9 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddInfrastructure(builder.Configuration);
 
+var dossierUploads = Path.Combine(builder.Environment.ContentRootPath, "wwwroot", "uploads");
+builder.Services.AddPhotoStorage(dossierUploads);
+
 builder.Services.AddScoped<CreerRestaurant>();
 builder.Services.AddScoped<ListerRestaurants>();
 builder.Services.AddScoped<ListerVisitesRestaurant>();
@@ -62,6 +65,11 @@ if (app.Environment.IsDevelopment())
 app.UseExceptionHandler();
 
 app.UseHttpsRedirection();
+
+// Le dossier d'upload est créé au démarrage : il n'existe pas dans le dépôt (contenu utilisateur,
+// exclu du contrôle de version), UseStaticFiles/écriture disque échoueraient sinon.
+Directory.CreateDirectory(dossierUploads);
+app.UseStaticFiles();
 
 app.UseCors(NomPolitiqueCorsClient);
 

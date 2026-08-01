@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using RestosVisites.Application.Abstractions;
 using RestosVisites.Infrastructure.Persistence;
 using RestosVisites.Infrastructure.Persistence.Repositories;
+using RestosVisites.Infrastructure.Storage;
 
 namespace RestosVisites.Infrastructure;
 
@@ -24,6 +25,18 @@ public static class DependencyInjection
         services.AddScoped<IRestaurantRepository, RestaurantRepository>();
         services.AddScoped<ICategorieRepository, CategorieRepository>();
         services.AddScoped<IVisiteRepository, VisiteRepository>();
+
+        return services;
+    }
+
+    /// <summary>
+    /// Enregistre le stockage disque des photos. Le dossier racine est fourni par l'appelant (l'Api)
+    /// plutôt que codé en dur ici, afin qu'Infrastructure reste indépendant de la structure du projet hôte.
+    /// </summary>
+    public static IServiceCollection AddPhotoStorage(this IServiceCollection services, string dossierRacine)
+    {
+        services.AddSingleton(new PhotoStorageOptions(dossierRacine));
+        services.AddSingleton<IPhotoStorage, FichierPhotoStorage>();
 
         return services;
     }
