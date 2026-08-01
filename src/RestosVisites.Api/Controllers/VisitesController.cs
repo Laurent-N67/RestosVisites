@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using RestosVisites.Application.UseCases.EnregistrerVisite;
+using RestosVisites.Application.UseCases.ListerToutesLesVisites;
+using RestosVisites.Application.UseCases.ListerVisitesRestaurant;
 using RestosVisites.Application.UseCases.ModifierVisite;
 using RestosVisites.Application.UseCases.SupprimerVisite;
 
@@ -10,17 +12,30 @@ namespace RestosVisites.Api.Controllers;
 public sealed class VisitesController : ControllerBase
 {
     private readonly EnregistrerVisite _enregistrerVisite;
+    private readonly ListerToutesLesVisites _listerToutesLesVisites;
     private readonly ModifierVisite _modifierVisite;
     private readonly SupprimerVisite _supprimerVisite;
 
     public VisitesController(
         EnregistrerVisite enregistrerVisite,
+        ListerToutesLesVisites listerToutesLesVisites,
         ModifierVisite modifierVisite,
         SupprimerVisite supprimerVisite)
     {
         _enregistrerVisite = enregistrerVisite;
+        _listerToutesLesVisites = listerToutesLesVisites;
         _modifierVisite = modifierVisite;
         _supprimerVisite = supprimerVisite;
+    }
+
+    /// <summary>Liste l'ensemble des visites, tous restaurants confondus.</summary>
+    [HttpGet]
+    [ProducesResponseType(typeof(IReadOnlyList<VisiteDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<VisiteDto>>> Lister(CancellationToken ct)
+    {
+        var visites = await _listerToutesLesVisites.ExecuterAsync(ct);
+
+        return Ok(visites);
     }
 
     /// <summary>Enregistre une nouvelle visite pour un restaurant existant.</summary>
