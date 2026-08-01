@@ -178,6 +178,24 @@
   color: var(--danger);
 }
 
+.category-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.category-picker-group-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 4px 0 0;
+}
+
+.category-picker-chips {
+  margin: 2px 0 0;
+}
+
 .visite-restaurant-readonly {
   margin: 0;
   padding: 8px 10px;
@@ -534,7 +552,15 @@
 }
 
 .list-category-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
   flex: 1;
+  margin: 0;
+}
+
+.list-category-filters-group {
   margin: 0;
 }
 

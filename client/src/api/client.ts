@@ -1,4 +1,5 @@
 import type {
+  Categorie,
   CreateRestaurantRequest,
   CreateVisiteRequest,
   CreatedResponse,
@@ -104,6 +105,10 @@ export async function uploadPhoto(file: File): Promise<UploadPhotoResponse> {
 
 export function getRestaurants(): Promise<Restaurant[]> {
   return request<Restaurant[]>('/api/restaurants')
+}
+
+export function getCategories(): Promise<Categorie[]> {
+  return request<Categorie[]>('/api/categories')
 }
 
 export function createRestaurant(

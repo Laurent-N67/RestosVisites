@@ -78,14 +78,6 @@ function VisitesSection({
               <p className="popup-visite-commentaire">{visite.commentaire}</p>
             )}
 
-            {visite.categories.length > 0 && (
-              <ul className="popup-categories">
-                {visite.categories.map((category) => (
-                  <li key={category}>{category}</li>
-                ))}
-              </ul>
-            )}
-
             {visite.urlsPhotos.length > 0 && (
               <div className="popup-photos">
                 {visite.urlsPhotos.map((url) => (
@@ -190,6 +182,13 @@ function RestaurantMarker({
           </div>
 
           <p className="popup-adresse">{restaurant.adresse}</p>
+          {restaurant.categories.length > 0 && (
+            <ul className="popup-categories">
+              {restaurant.categories.map((categorie) => (
+                <li key={categorie.id}>{categorie.nom}</li>
+              ))}
+            </ul>
+          )}
           {restaurantError && (
             <p className="popup-status popup-error">{restaurantError}</p>
           )}

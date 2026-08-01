@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
-import { ApiError, getAllVisites, getRestaurants } from './api/client.ts'
-import type { Restaurant, Visite } from './api/types.ts'
+import { ApiError, getAllVisites, getCategories, getRestaurants } from './api/client.ts'
+import type { Categorie, Restaurant, Visite } from './api/types.ts'
 import RestaurantsMap from './components/RestaurantsMap.tsx'
 import type { VisiteMutation } from './components/RestaurantsMap.tsx'
 import RestaurantsList from './components/RestaurantsList.tsx'
@@ -14,6 +14,7 @@ type View = 'carte' | 'liste'
 function App() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
   const [visites, setVisites] = useState<Visite[]>([])
+  const [categories, setCategories] = useState<Categorie[]>([])
   const [loadError, setLoadError] = useState<string | null>(null)
   const [activePanel, setActivePanel] = useState<Panel>('none')
   const [activeView, setActiveView] = useState<View>('carte')
@@ -52,10 +53,24 @@ function App() {
     }
   }, [])
 
+  const loadCategories = useCallback(async () => {
+    try {
+      const data = await getCategories()
+      setCategories(data)
+    } catch (err) {
+      setLoadError(
+        err instanceof ApiError
+          ? (err.detail ?? err.message)
+          : 'Impossible de charger les catégories.',
+      )
+    }
+  }, [])
+
   useEffect(() => {
     void loadRestaurants()
     void loadAllVisites()
-  }, [loadRestaurants, loadAllVisites])
+    void loadCategories()
+  }, [loadRestaurants, loadAllVisites, loadCategories])
 
   useEffect(() => {
     if (visiteMutation) {
@@ -189,6 +204,7 @@ function App() {
             <AddRestaurantForm
               key={editingRestaurant?.id ?? 'new'}
               restaurant={editingRestaurant ?? undefined}
+              categories={categories}
               onSaved={handleRestaurantSaved}
             />
           )}

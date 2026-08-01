@@ -1,9 +1,16 @@
+export interface Categorie {
+  id: string
+  nom: string
+  groupe: string
+}
+
 export interface Restaurant {
   id: string
   nom: string
   adresse: string
   latitude: number
   longitude: number
+  categories: Categorie[]
 }
 
 export interface Visite {
@@ -12,7 +19,6 @@ export interface Visite {
   date: string
   note: number
   commentaire: string | null
-  categories: string[]
   urlsPhotos: string[]
 }
 
@@ -21,6 +27,7 @@ export interface CreateRestaurantRequest {
   adresse: string
   latitude: number
   longitude: number
+  categorieIds: string[]
 }
 
 export interface CreateVisiteRequest {
@@ -28,7 +35,6 @@ export interface CreateVisiteRequest {
   date: string
   note: number
   commentaire: string | null
-  nomsCategories: string[]
   urlsPhotos: string[]
 }
 

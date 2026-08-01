@@ -3,7 +3,6 @@ import type { FormEvent } from 'react'
 import { ApiError, createVisite, updateVisite } from '../api/client.ts'
 import type { Restaurant, Visite } from '../api/types.ts'
 import StarRating from './StarRating.tsx'
-import TagInput from './TagInput.tsx'
 import PhotoUrlInput from './PhotoUrlInput.tsx'
 
 interface AddVisitFormProps {
@@ -22,7 +21,6 @@ function AddVisitForm({ restaurants, visite, onSaved }: AddVisitFormProps) {
   const [date, setDate] = useState(visite?.date ?? today())
   const [note, setNote] = useState(visite?.note ?? 5)
   const [commentaire, setCommentaire] = useState(visite?.commentaire ?? '')
-  const [categories, setCategories] = useState<string[]>(visite?.categories ?? [])
   const [photos, setPhotos] = useState<string[]>(visite?.urlsPhotos ?? [])
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -49,7 +47,6 @@ function AddVisitForm({ restaurants, visite, onSaved }: AddVisitFormProps) {
           date,
           note,
           commentaire: commentaireValue,
-          nomsCategories: categories,
           urlsPhotos: photos,
         })
       } else {
@@ -58,7 +55,6 @@ function AddVisitForm({ restaurants, visite, onSaved }: AddVisitFormProps) {
           date,
           note,
           commentaire: commentaireValue,
-          nomsCategories: categories,
           urlsPhotos: photos,
         })
       }
@@ -67,7 +63,6 @@ function AddVisitForm({ restaurants, visite, onSaved }: AddVisitFormProps) {
         setDate(today())
         setNote(5)
         setCommentaire('')
-        setCategories([])
         setPhotos([])
       }
       onSaved(restaurantId)
@@ -139,9 +134,6 @@ function AddVisitForm({ restaurants, visite, onSaved }: AddVisitFormProps) {
         onChange={(event) => setCommentaire(event.target.value)}
         rows={3}
       />
-
-      <span className="field-label">Catégories</span>
-      <TagInput values={categories} onChange={setCategories} />
 
       <span className="field-label">Photos</span>
       <PhotoUrlInput values={photos} onChange={setPhotos} />

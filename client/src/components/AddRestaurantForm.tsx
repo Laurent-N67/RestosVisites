@@ -2,15 +2,17 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { ApiError, createRestaurant, updateRestaurant } from '../api/client.ts'
 import type { AddressSuggestion } from '../api/photon.ts'
-import type { Restaurant } from '../api/types.ts'
+import type { Categorie, Restaurant } from '../api/types.ts'
 import AddressSearch from './AddressSearch.tsx'
+import CategoryPicker from './CategoryPicker.tsx'
 
 interface AddRestaurantFormProps {
   restaurant?: Restaurant
+  categories: Categorie[]
   onSaved: () => void
 }
 
-function AddRestaurantForm({ restaurant, onSaved }: AddRestaurantFormProps) {
+function AddRestaurantForm({ restaurant, categories, onSaved }: AddRestaurantFormProps) {
   const isEditing = restaurant !== undefined
   const [nom, setNom] = useState(restaurant?.nom ?? '')
   const [adresse, setAdresse] = useState(restaurant?.adresse ?? '')
@@ -19,6 +21,9 @@ function AddRestaurantForm({ restaurant, onSaved }: AddRestaurantFormProps) {
   )
   const [longitude, setLongitude] = useState<number | null>(
     restaurant?.longitude ?? null,
+  )
+  const [categorieIds, setCategorieIds] = useState<string[]>(
+    restaurant?.categories.map((c) => c.id) ?? [],
   )
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -45,7 +50,13 @@ function AddRestaurantForm({ restaurant, onSaved }: AddRestaurantFormProps) {
     setError(null)
     setSuccess(false)
     try {
-      const payload = { nom: nom.trim(), adresse: adresse.trim(), latitude, longitude }
+      const payload = {
+        nom: nom.trim(),
+        adresse: adresse.trim(),
+        latitude,
+        longitude,
+        categorieIds,
+      }
       if (restaurant) {
         await updateRestaurant(restaurant.id, payload)
       } else {
@@ -57,6 +68,7 @@ function AddRestaurantForm({ restaurant, onSaved }: AddRestaurantFormProps) {
         setAdresse('')
         setLatitude(null)
         setLongitude(null)
+        setCategorieIds([])
       }
       onSaved()
     } catch (err) {
@@ -98,6 +110,13 @@ function AddRestaurantForm({ restaurant, onSaved }: AddRestaurantFormProps) {
         value={adresse}
         onChange={(event) => setAdresse(event.target.value)}
         required
+      />
+
+      <span className="field-label">Catégories</span>
+      <CategoryPicker
+        categories={categories}
+        selectedIds={categorieIds}
+        onChange={setCategorieIds}
       />
 
       {latitude !== null && longitude !== null ? (

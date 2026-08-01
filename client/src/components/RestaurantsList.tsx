@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import type { Restaurant, Visite } from '../api/types.ts'
+import type { Categorie, Restaurant, Visite } from '../api/types.ts'
+import { groupCategories } from '../utils/categories.ts'
 import { useDeleteRestaurant } from '../hooks/useDeleteRestaurant.ts'
 import { formatDate, stars } from '../utils/format.ts'
 
@@ -16,7 +17,7 @@ interface RestaurantAggregate {
   restaurant: Restaurant
   count: number
   lastVisite: Visite | null
-  categories: string[]
+  categories: Categorie[]
 }
 
 function aggregate(
@@ -42,9 +43,9 @@ function aggregate(
           : latest,
       null,
     )
-    const categories = Array.from(
-      new Set(restaurantVisites.flatMap((visite) => visite.categories)),
-    ).sort((a, b) => a.localeCompare(b, 'fr'))
+    const categories = [...restaurant.categories].sort((a, b) =>
+      a.nom.localeCompare(b.nom, 'fr'),
+    )
 
     return {
       restaurant,
@@ -144,8 +145,8 @@ function RestaurantCard({
 
       {categories.length > 0 && (
         <ul className="popup-categories">
-          {categories.map((category) => (
-            <li key={category}>{category}</li>
+          {categories.map((categorie) => (
+            <li key={categorie.id}>{categorie.nom}</li>
           ))}
         </ul>
       )}
@@ -170,21 +171,23 @@ function RestaurantsList({
     [restaurants, visites],
   )
 
-  const allCategories = useMemo(
-    () =>
-      Array.from(new Set(visites.flatMap((visite) => visite.categories))).sort(
-        (a, b) => a.localeCompare(b, 'fr'),
-      ),
-    [visites],
-  )
+  const allCategoriesGrouped = useMemo(() => {
+    const byId = new Map<string, Categorie>()
+    for (const restaurant of restaurants) {
+      for (const categorie of restaurant.categories) {
+        byId.set(categorie.id, categorie)
+      }
+    }
+    return groupCategories(Array.from(byId.values()))
+  }, [restaurants])
 
-  function toggleCategory(category: string) {
+  function toggleCategory(categorieId: string) {
     setSelectedCategories((prev) => {
       const next = new Set(prev)
-      if (next.has(category)) {
-        next.delete(category)
+      if (next.has(categorieId)) {
+        next.delete(categorieId)
       } else {
-        next.add(category)
+        next.add(categorieId)
       }
       return next
     })
@@ -198,7 +201,7 @@ function RestaurantsList({
         item.restaurant.nom.toLowerCase().includes(query)
       const matchesCategory =
         selectedCategories.size === 0 ||
-        item.categories.some((category) => selectedCategories.has(category))
+        item.categories.some((categorie) => selectedCategories.has(categorie.id))
       return matchesSearch && matchesCategory
     })
   }, [aggregates, search, selectedCategories])
@@ -219,24 +222,29 @@ function RestaurantsList({
           onChange={(e) => setSearch(e.target.value)}
         />
 
-        {allCategories.length > 0 && (
-          <ul className="chips list-category-filters">
-            {allCategories.map((category) => (
-              <li key={category}>
-                <button
-                  type="button"
-                  className={
-                    selectedCategories.has(category)
-                      ? 'chip-filter chip-filter--active'
-                      : 'chip-filter'
-                  }
-                  onClick={() => toggleCategory(category)}
-                >
-                  {category}
-                </button>
-              </li>
+        {allCategoriesGrouped.length > 0 && (
+          <div className="list-category-filters">
+            {allCategoriesGrouped.map(([groupe, groupCategoriesList]) => (
+              <ul key={groupe} className="chips list-category-filters-group">
+                {groupCategoriesList.map((categorie) => (
+                  <li key={categorie.id}>
+                    <button
+                      type="button"
+                      className={
+                        selectedCategories.has(categorie.id)
+                          ? 'chip-filter chip-filter--active'
+                          : 'chip-filter'
+                      }
+                      aria-pressed={selectedCategories.has(categorie.id)}
+                      onClick={() => toggleCategory(categorie.id)}
+                    >
+                      {categorie.nom}
+                    </button>
+                  </li>
+                ))}
+              </ul>
             ))}
-          </ul>
+          </div>
         )}
 
         <label className="list-sort-label">
