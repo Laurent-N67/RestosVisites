@@ -5,5 +5,4 @@ public sealed record ModifierVisiteRequest(
     DateOnly Date,
     int Note,
     string? Commentaire,
-    IReadOnlyList<string> NomsCategories,
     IReadOnlyList<string> UrlsPhotos);

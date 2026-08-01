@@ -30,5 +30,14 @@ public sealed class RestaurantConfiguration : IEntityTypeConfiguration<Restauran
 
         builder.Property(r => r.Longitude)
             .IsRequired();
+
+        // Un restaurant est rattaché à un ensemble de catégories du catalogue prédéfini,
+        // réutilisées entre plusieurs restaurants : many-to-many via une table de jointure.
+        builder.HasMany(r => r.Categories)
+            .WithMany()
+            .UsingEntity(joinBuilder => joinBuilder.ToTable("RestaurantCategories"));
+
+        builder.Navigation(r => r.Categories)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }

@@ -1,9 +1,12 @@
+using System.Data;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using RestosVisites.Domain.Entities;
 using RestosVisites.Infrastructure.Persistence;
+using RestosVisites.Infrastructure.Persistence.Seed;
 
 namespace RestosVisites.Api.Tests;
 
@@ -33,7 +36,14 @@ public sealed class RestosVisitesWebApplicationFactory : WebApplicationFactory<P
                 services.Remove(dbContextOptionsDescriptor);
             }
 
-            _connection.Open();
+            // ConfigureWebHost peut être invoqué plusieurs fois par WebApplicationFactory (ex :
+            // premier accès à .Services puis re-création lors du premier CreateClient()) : ouvrir
+            // la connexion et repeupler le catalogue à chaque fois romprait (connexion déjà ouverte,
+            // doublons de catégories), donc idempotence explicite ci-dessous.
+            if (_connection.State != ConnectionState.Open)
+            {
+                _connection.Open();
+            }
 
             services.AddDbContext<RestosVisitesDbContext>(options => options.UseSqlite(_connection));
 
@@ -43,6 +53,15 @@ public sealed class RestosVisitesWebApplicationFactory : WebApplicationFactory<P
             using var scope = serviceProvider.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<RestosVisitesDbContext>();
             dbContext.Database.EnsureCreated();
+
+            // EnsureCreated() ne rejoue pas les migrations (donc pas l'InsertData du catalogue de
+            // catégories) : on repeuple ici le même catalogue, avec les mêmes Ids déterministes.
+            if (!dbContext.Categories.Any())
+            {
+                dbContext.Categories.AddRange(
+                    CategorieSeedData.Items.Select(item => new Categorie(CategorieSeedData.IdPour(item.Groupe, item.Nom), item.Nom, item.Groupe)));
+                dbContext.SaveChanges();
+            }
         });
     }
 

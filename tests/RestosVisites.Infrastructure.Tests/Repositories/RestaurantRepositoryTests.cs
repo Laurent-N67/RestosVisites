@@ -81,4 +81,60 @@ public sealed class RestaurantRepositoryTests : SqliteTestBase
         Assert.Contains(restaurants, r => r.Id == premier.Id);
         Assert.Contains(restaurants, r => r.Id == second.Id);
     }
+
+    [Fact]
+    public async Task AjouterAsync_AvecCategories_RepeupleLaCollectionDepuisNouveauDbContext()
+    {
+        var categorie = new Categorie("Italienne", "Type de cuisine");
+        var restaurant = new Restaurant("Le Petit Bouchon", "12 rue de la Paix, Lyon", 45.75, 4.85, [categorie]);
+
+        await using (var dbContext = CreerDbContext())
+        {
+            await dbContext.Categories.AddAsync(categorie, TestContext.Current.CancellationToken);
+            var repository = new RestaurantRepository(dbContext);
+            await repository.AjouterAsync(restaurant, TestContext.Current.CancellationToken);
+        }
+
+        await using var autreDbContext = CreerDbContext();
+        var autreRepository = new RestaurantRepository(autreDbContext);
+        var restaurantRelu = await autreRepository.ObtenirParIdAsync(restaurant.Id, TestContext.Current.CancellationToken);
+
+        Assert.NotNull(restaurantRelu);
+        Assert.Equal(categorie.Id, Assert.Single(restaurantRelu.Categories).Id);
+    }
+
+    [Fact]
+    public async Task MettreAJourAsync_AvecNouvellesCategories_RemplaceLesCategoriesEnBase()
+    {
+        var categorieInitiale = new Categorie("Italienne", "Type de cuisine");
+        var nouvelleCategorie = new Categorie("Terrasse", "Autres caractéristiques");
+        var restaurant = new Restaurant("Le Petit Bouchon", "12 rue de la Paix, Lyon", 45.75, 4.85, [categorieInitiale]);
+
+        await using (var dbContext = CreerDbContext())
+        {
+            await dbContext.Categories.AddRangeAsync([categorieInitiale, nouvelleCategorie]);
+            var repository = new RestaurantRepository(dbContext);
+            await repository.AjouterAsync(restaurant, TestContext.Current.CancellationToken);
+        }
+
+        await using (var dbContext = CreerDbContext())
+        {
+            var repository = new RestaurantRepository(dbContext);
+            var restaurantATracker = await repository.ObtenirParIdAsync(restaurant.Id, TestContext.Current.CancellationToken);
+            Assert.NotNull(restaurantATracker);
+
+            var categorieTrackee = await dbContext.Categories.FindAsync([nouvelleCategorie.Id], TestContext.Current.CancellationToken);
+            Assert.NotNull(categorieTrackee);
+
+            restaurantATracker.DefinirCategories([categorieTrackee]);
+            await repository.MettreAJourAsync(restaurantATracker, TestContext.Current.CancellationToken);
+        }
+
+        await using var autreDbContext = CreerDbContext();
+        var autreRepository = new RestaurantRepository(autreDbContext);
+        var restaurantRelu = await autreRepository.ObtenirParIdAsync(restaurant.Id, TestContext.Current.CancellationToken);
+
+        Assert.NotNull(restaurantRelu);
+        Assert.Equal(nouvelleCategorie.Id, Assert.Single(restaurantRelu.Categories).Id);
+    }
 }

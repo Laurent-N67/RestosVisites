@@ -6,18 +6,15 @@ using RestosVisites.Domain.ValueObjects;
 namespace RestosVisites.Application.UseCases.ModifierVisite;
 
 /// <summary>
-/// Cas d'usage : modifier une visite existante, en remplaçant entièrement ses catégories et
-/// photos par les nouvelles listes fournies (résolution des catégories par nom, avec
-/// réutilisation si elles existent déjà, comme pour <see cref="RestosVisites.Application.UseCases.EnregistrerVisite.EnregistrerVisite"/>).
+/// Cas d'usage : modifier une visite existante, en remplaçant entièrement ses photos par la
+/// nouvelle liste fournie.
 /// </summary>
 public sealed class ModifierVisite
 {
-    private readonly ICategorieRepository _categorieRepository;
     private readonly IVisiteRepository _visiteRepository;
 
-    public ModifierVisite(ICategorieRepository categorieRepository, IVisiteRepository visiteRepository)
+    public ModifierVisite(IVisiteRepository visiteRepository)
     {
-        _categorieRepository = categorieRepository;
         _visiteRepository = visiteRepository;
     }
 
@@ -29,26 +26,6 @@ public sealed class ModifierVisite
             throw new ErreurApplicationException(
                 TypeErreurApplication.RessourceNonTrouvee,
                 $"Aucune visite trouvée avec l'identifiant '{request.VisiteId}'.");
-        }
-
-        var categoriesASupprimer = visite.Categories
-            .Where(c => !request.NomsCategories.Contains(c.Nom, StringComparer.OrdinalIgnoreCase))
-            .ToList();
-        foreach (var categorie in categoriesASupprimer)
-        {
-            visite.SupprimerCategorie(categorie.Id);
-        }
-
-        foreach (var nomCategorie in request.NomsCategories)
-        {
-            var categorie = await _categorieRepository.ObtenirParNomAsync(nomCategorie, ct);
-            if (categorie is null)
-            {
-                categorie = new Categorie(nomCategorie);
-                await _categorieRepository.AjouterAsync(categorie, ct);
-            }
-
-            visite.AjouterCategorie(categorie);
         }
 
         var urlsActuelles = visite.Photos.Select(p => p.Url).ToHashSet(StringComparer.OrdinalIgnoreCase);

@@ -21,7 +21,11 @@ public sealed class CategorieConfiguration : IEntityTypeConfiguration<Categorie>
             .IsRequired()
             .HasMaxLength(100);
 
-        builder.HasIndex(c => c.Nom)
+        builder.Property(c => c.Groupe)
+            .IsRequired()
+            .HasMaxLength(100);
+
+        builder.HasIndex(c => new { c.Groupe, c.Nom })
             .IsUnique();
     }
 }

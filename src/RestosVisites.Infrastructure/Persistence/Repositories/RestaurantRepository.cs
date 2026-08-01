@@ -20,13 +20,18 @@ public sealed class RestaurantRepository : IRestaurantRepository
     }
 
     public async Task<Restaurant?> ObtenirParIdAsync(Guid id, CancellationToken ct)
-        => await _dbContext.Restaurants.FirstOrDefaultAsync(r => r.Id == id, ct);
+        => await _dbContext.Restaurants
+            .Include(r => r.Categories)
+            .FirstOrDefaultAsync(r => r.Id == id, ct);
 
     public async Task<Restaurant?> ObtenirParNomEtAdresseAsync(string nom, string adresse, CancellationToken ct)
         => await _dbContext.Restaurants.FirstOrDefaultAsync(r => r.Nom == nom && r.Adresse == adresse, ct);
 
     public async Task<IReadOnlyList<Restaurant>> ListerAsync(CancellationToken ct)
-        => await _dbContext.Restaurants.AsNoTracking().ToListAsync(ct);
+        => await _dbContext.Restaurants
+            .AsNoTracking()
+            .Include(r => r.Categories)
+            .ToListAsync(ct);
 
     public async Task MettreAJourAsync(Restaurant restaurant, CancellationToken ct)
     {

@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using RestosVisites.Domain.Entities;
 using RestosVisites.Domain.ValueObjects;
 using RestosVisites.Infrastructure.Persistence.Repositories;
@@ -19,15 +18,13 @@ public sealed class VisiteRepositoryTests : SqliteTestBase
     }
 
     [Fact]
-    public async Task AjouterAsync_AvecPlusieursPhotosEtCategories_RepeupleLesCollectionsDepuisNouveauDbContext()
+    public async Task AjouterAsync_AvecPlusieursPhotos_RepeupleLaCollectionDepuisNouveauDbContext()
     {
         var restaurant = await CreerRestaurantAsync();
 
         var visite = new Visite(restaurant.Id, new DateOnly(2026, 7, 25), new Note(5), "Excellent repas");
         visite.AjouterPhoto(new Photo("https://exemple.test/photo1.jpg"));
         visite.AjouterPhoto(new Photo("https://exemple.test/photo2.jpg"));
-        visite.AjouterCategorie(new Categorie("Italien"));
-        visite.AjouterCategorie(new Categorie("Terrasse"));
 
         await using (var dbContext = CreerDbContext())
         {
@@ -47,9 +44,6 @@ public sealed class VisiteRepositoryTests : SqliteTestBase
         Assert.Equal(2, visiteRelue.Photos.Count);
         Assert.Contains(visiteRelue.Photos, p => p.Url == "https://exemple.test/photo1.jpg");
         Assert.Contains(visiteRelue.Photos, p => p.Url == "https://exemple.test/photo2.jpg");
-        Assert.Equal(2, visiteRelue.Categories.Count);
-        Assert.Contains(visiteRelue.Categories, c => c.Nom == "Italien");
-        Assert.Contains(visiteRelue.Categories, c => c.Nom == "Terrasse");
     }
 
     [Fact]
@@ -97,35 +91,5 @@ public sealed class VisiteRepositoryTests : SqliteTestBase
         var toutesLesVisites = await autreRepository.ListerToutesAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(2, toutesLesVisites.Count);
-    }
-
-    [Fact]
-    public async Task AjouterAsync_MemeCategorieReutiliseeSurDeuxVisites_NeCreeAucunDoublonEnBase()
-    {
-        var restaurant = await CreerRestaurantAsync();
-        var categoriePartagee = new Categorie("Vegan");
-
-        var premiereVisite = new Visite(restaurant.Id, new DateOnly(2026, 2, 1), new Note(4));
-        premiereVisite.AjouterCategorie(categoriePartagee);
-
-        var secondeVisite = new Visite(restaurant.Id, new DateOnly(2026, 2, 2), new Note(5));
-        secondeVisite.AjouterCategorie(categoriePartagee);
-
-        await using (var dbContext = CreerDbContext())
-        {
-            var repository = new VisiteRepository(dbContext);
-            await repository.AjouterAsync(premiereVisite, TestContext.Current.CancellationToken);
-            await repository.AjouterAsync(secondeVisite, TestContext.Current.CancellationToken);
-        }
-
-        await using var autreDbContext = CreerDbContext();
-
-        var nombreDeCategories = await autreDbContext.Categories.CountAsync(c => c.Nom == "Vegan", TestContext.Current.CancellationToken);
-        Assert.Equal(1, nombreDeCategories);
-
-        var autreRepository = new VisiteRepository(autreDbContext);
-        var toutesLesVisites = await autreRepository.ListerToutesAsync(TestContext.Current.CancellationToken);
-
-        Assert.All(toutesLesVisites, v => Assert.Contains(v.Categories, c => c.Nom == "Vegan"));
     }
 }

@@ -1,22 +1,40 @@
 namespace RestosVisites.Domain.Entities;
 
 /// <summary>
-/// Un restaurant, identifiable par son nom et son adresse.
+/// Un restaurant, identifiable par son nom et son adresse, et rattaché à un ensemble de
+/// catégories choisies dans le catalogue prédéfini (<see cref="Categorie"/>).
 /// </summary>
 public sealed class Restaurant
 {
+    private readonly List<Categorie> _categories = [];
+
     public Guid Id { get; }
     public string Nom { get; private set; }
     public string Adresse { get; private set; }
     public double Latitude { get; private set; }
     public double Longitude { get; private set; }
 
+    public IReadOnlyCollection<Categorie> Categories => _categories;
+
     public Restaurant(string nom, string adresse, double latitude, double longitude)
         : this(Guid.NewGuid(), nom, adresse, latitude, longitude)
     {
     }
 
+    public Restaurant(string nom, string adresse, double latitude, double longitude, IEnumerable<Categorie> categories)
+        : this(Guid.NewGuid(), nom, adresse, latitude, longitude, categories)
+    {
+    }
+
+    // Constructeur utilisé par EF Core au chargement depuis la base (constructor binding) : ses
+    // paramètres se limitent volontairement aux propriétés scalaires mappées, une collection
+    // navigation comme "categories" ne pouvant pas être liée à un paramètre de constructeur.
     public Restaurant(Guid id, string nom, string adresse, double latitude, double longitude)
+        : this(id, nom, adresse, latitude, longitude, [])
+    {
+    }
+
+    public Restaurant(Guid id, string nom, string adresse, double latitude, double longitude, IEnumerable<Categorie> categories)
     {
         Valider(nom, adresse, latitude, longitude);
 
@@ -25,6 +43,7 @@ public sealed class Restaurant
         Adresse = adresse.Trim();
         Latitude = latitude;
         Longitude = longitude;
+        DefinirCategories(categories);
     }
 
     /// <summary>
@@ -39,6 +58,28 @@ public sealed class Restaurant
         Adresse = adresse.Trim();
         Latitude = latitude;
         Longitude = longitude;
+    }
+
+    /// <summary>
+    /// Remplace entièrement l'ensemble des catégories associées au restaurant par celles fournies
+    /// (dédoublonnées par identifiant), le formulaire renvoyant systématiquement l'ensemble complet
+    /// des catégories choisies plutôt qu'un ajout/retrait incrémental.
+    /// </summary>
+    public void DefinirCategories(IEnumerable<Categorie> categories)
+    {
+        ArgumentNullException.ThrowIfNull(categories);
+
+        _categories.Clear();
+
+        foreach (var categorie in categories)
+        {
+            if (_categories.Any(c => c.Id == categorie.Id))
+            {
+                continue;
+            }
+
+            _categories.Add(categorie);
+        }
     }
 
     private static void Valider(string nom, string adresse, double latitude, double longitude)

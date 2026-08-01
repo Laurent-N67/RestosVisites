@@ -52,13 +52,5 @@ public sealed class VisiteConfiguration : IEntityTypeConfiguration<Visite>
 
         builder.Navigation(v => v.Photos)
             .UsePropertyAccessMode(PropertyAccessMode.Field);
-
-        // Une catégorie est réutilisée entre plusieurs visites : many-to-many via une table de jointure.
-        builder.HasMany(v => v.Categories)
-            .WithMany()
-            .UsingEntity(joinBuilder => joinBuilder.ToTable("VisiteCategories"));
-
-        builder.Navigation(v => v.Categories)
-            .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }

@@ -19,15 +19,13 @@ public class EnregistrerVisiteTests
     public async Task ExecuterAsync_CasNominal_PersisteLaVisiteEtRetourneUnId()
     {
         var (restaurantRepository, restaurantId) = await CreerRestaurantExistantAsync();
-        var categorieRepository = new FakeCategorieRepository();
         var visiteRepository = new FakeVisiteRepository();
-        var useCase = new EnregistrerVisite(restaurantRepository, categorieRepository, visiteRepository);
+        var useCase = new EnregistrerVisite(restaurantRepository, visiteRepository);
         var request = new EnregistrerVisiteRequest(
             restaurantId,
             new DateOnly(2026, 1, 15),
             4,
             "Très bon accueil",
-            ["Italien"],
             ["https://exemple.test/photo.jpg"]);
 
         var response = await useCase.ExecuterAsync(request, TestContext.Current.CancellationToken);
@@ -41,15 +39,13 @@ public class EnregistrerVisiteTests
     public async Task ExecuterAsync_RestaurantInexistant_LeveErreurApplicationExceptionRessourceNonTrouvee()
     {
         var restaurantRepository = new FakeRestaurantRepository();
-        var categorieRepository = new FakeCategorieRepository();
         var visiteRepository = new FakeVisiteRepository();
-        var useCase = new EnregistrerVisite(restaurantRepository, categorieRepository, visiteRepository);
+        var useCase = new EnregistrerVisite(restaurantRepository, visiteRepository);
         var request = new EnregistrerVisiteRequest(
             Guid.NewGuid(),
             new DateOnly(2026, 1, 15),
             4,
             null,
-            [],
             []);
 
         var exception = await Assert.ThrowsAsync<ErreurApplicationException>(
@@ -59,66 +55,16 @@ public class EnregistrerVisiteTests
     }
 
     [Fact]
-    public async Task ExecuterAsync_CategorieExistante_ReutiliseLaCategorieSansDoublon()
-    {
-        var (restaurantRepository, restaurantId) = await CreerRestaurantExistantAsync();
-        var categorieRepository = new FakeCategorieRepository();
-        var categorieExistante = new Categorie("Italien");
-        await categorieRepository.AjouterAsync(categorieExistante, TestContext.Current.CancellationToken);
-        var visiteRepository = new FakeVisiteRepository();
-        var useCase = new EnregistrerVisite(restaurantRepository, categorieRepository, visiteRepository);
-        var request = new EnregistrerVisiteRequest(
-            restaurantId,
-            new DateOnly(2026, 1, 15),
-            4,
-            null,
-            ["Italien"],
-            []);
-
-        await useCase.ExecuterAsync(request, TestContext.Current.CancellationToken);
-
-        Assert.Single(categorieRepository.Categories);
-        Assert.Equal(categorieExistante.Id, categorieRepository.Categories[0].Id);
-        var visite = Assert.Single(visiteRepository.Visites);
-        Assert.Equal(categorieExistante.Id, Assert.Single(visite.Categories).Id);
-    }
-
-    [Fact]
-    public async Task ExecuterAsync_CategorieInexistante_CreeUneNouvelleCategorie()
-    {
-        var (restaurantRepository, restaurantId) = await CreerRestaurantExistantAsync();
-        var categorieRepository = new FakeCategorieRepository();
-        var visiteRepository = new FakeVisiteRepository();
-        var useCase = new EnregistrerVisite(restaurantRepository, categorieRepository, visiteRepository);
-        var request = new EnregistrerVisiteRequest(
-            restaurantId,
-            new DateOnly(2026, 1, 15),
-            4,
-            null,
-            ["Italien"],
-            []);
-
-        await useCase.ExecuterAsync(request, TestContext.Current.CancellationToken);
-
-        var categorieCreee = Assert.Single(categorieRepository.Categories);
-        Assert.Equal("Italien", categorieCreee.Nom);
-        var visite = Assert.Single(visiteRepository.Visites);
-        Assert.Equal(categorieCreee.Id, Assert.Single(visite.Categories).Id);
-    }
-
-    [Fact]
     public async Task ExecuterAsync_PlusieursPhotos_SontToutesAssocieesALaVisite()
     {
         var (restaurantRepository, restaurantId) = await CreerRestaurantExistantAsync();
-        var categorieRepository = new FakeCategorieRepository();
         var visiteRepository = new FakeVisiteRepository();
-        var useCase = new EnregistrerVisite(restaurantRepository, categorieRepository, visiteRepository);
+        var useCase = new EnregistrerVisite(restaurantRepository, visiteRepository);
         var request = new EnregistrerVisiteRequest(
             restaurantId,
             new DateOnly(2026, 1, 15),
             4,
             null,
-            [],
             ["https://exemple.test/photo1.jpg", "https://exemple.test/photo2.jpg"]);
 
         await useCase.ExecuterAsync(request, TestContext.Current.CancellationToken);

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RestosVisites.Infrastructure.Persistence;
 
@@ -10,9 +11,11 @@ using RestosVisites.Infrastructure.Persistence;
 namespace RestosVisites.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(RestosVisitesDbContext))]
-    partial class RestosVisitesDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260801183910_AjouterCatalogueCategoriesRestaurant")]
+    partial class AjouterCatalogueCategoriesRestaurant
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.10");

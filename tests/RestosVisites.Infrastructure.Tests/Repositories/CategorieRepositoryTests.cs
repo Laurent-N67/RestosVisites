@@ -1,37 +1,39 @@
 using RestosVisites.Domain.Entities;
 using RestosVisites.Infrastructure.Persistence.Repositories;
+using RestosVisites.Infrastructure.Persistence.Seed;
 
 namespace RestosVisites.Infrastructure.Tests.Repositories;
 
 public sealed class CategorieRepositoryTests : SqliteTestBase
 {
     [Fact]
-    public async Task AjouterAsync_PuisObtenirParNomAsync_DepuisNouveauDbContext_RetrouveLaCategorie()
+    public async Task ObtenirParIdAsync_CategorieExistante_DepuisNouveauDbContext_LaRetrouve()
     {
-        var categorie = new Categorie("Italien");
+        var categorie = new Categorie("Italienne", "Type de cuisine");
 
         await using (var dbContext = CreerDbContext())
         {
-            var repository = new CategorieRepository(dbContext);
-            await repository.AjouterAsync(categorie, TestContext.Current.CancellationToken);
+            await dbContext.Categories.AddAsync(categorie, TestContext.Current.CancellationToken);
+            await dbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
         }
 
         await using var autreDbContext = CreerDbContext();
         var autreRepository = new CategorieRepository(autreDbContext);
-        var categorieRelue = await autreRepository.ObtenirParNomAsync("Italien", TestContext.Current.CancellationToken);
+        var categorieRelue = await autreRepository.ObtenirParIdAsync(categorie.Id, TestContext.Current.CancellationToken);
 
         Assert.NotNull(categorieRelue);
         Assert.Equal(categorie.Id, categorieRelue.Id);
-        Assert.Equal("Italien", categorieRelue.Nom);
+        Assert.Equal("Italienne", categorieRelue.Nom);
+        Assert.Equal("Type de cuisine", categorieRelue.Groupe);
     }
 
     [Fact]
-    public async Task ObtenirParNomAsync_QuandLaCategorieNExistePas_RetourneNull()
+    public async Task ObtenirParIdAsync_QuandLaCategorieNExistePas_RetourneNull()
     {
         await using var dbContext = CreerDbContext();
         var repository = new CategorieRepository(dbContext);
 
-        var categorieRelue = await repository.ObtenirParNomAsync("Inexistante", TestContext.Current.CancellationToken);
+        var categorieRelue = await repository.ObtenirParIdAsync(Guid.NewGuid(), TestContext.Current.CancellationToken);
 
         Assert.Null(categorieRelue);
     }
@@ -39,14 +41,13 @@ public sealed class CategorieRepositoryTests : SqliteTestBase
     [Fact]
     public async Task ListerAsync_RetourneToutesLesCategoriesAjoutees()
     {
-        var premiere = new Categorie("Terrasse");
-        var seconde = new Categorie("Vegan");
+        var premiere = new Categorie("Terrasse", "Autres caractéristiques");
+        var seconde = new Categorie("Végan", "Autres caractéristiques");
 
         await using (var dbContext = CreerDbContext())
         {
-            var repository = new CategorieRepository(dbContext);
-            await repository.AjouterAsync(premiere, TestContext.Current.CancellationToken);
-            await repository.AjouterAsync(seconde, TestContext.Current.CancellationToken);
+            await dbContext.Categories.AddRangeAsync([premiere, seconde]);
+            await dbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
         }
 
         await using var autreDbContext = CreerDbContext();
@@ -56,5 +57,25 @@ public sealed class CategorieRepositoryTests : SqliteTestBase
         Assert.Equal(2, categories.Count);
         Assert.Contains(categories, c => c.Id == premiere.Id);
         Assert.Contains(categories, c => c.Id == seconde.Id);
+    }
+
+    [Fact]
+    public void IdPour_MemeGroupeEtNom_EstDeterministe()
+    {
+        var premier = CategorieSeedData.IdPour("Type de cuisine", "Italienne");
+        var second = CategorieSeedData.IdPour("Type de cuisine", "Italienne");
+
+        Assert.Equal(premier, second);
+    }
+
+    [Fact]
+    public void IdPour_GroupeOuNomDifferent_ProduitDesIdsDifferents()
+    {
+        var id1 = CategorieSeedData.IdPour("Type de cuisine", "Italienne");
+        var id2 = CategorieSeedData.IdPour("Type de cuisine", "Française");
+        var id3 = CategorieSeedData.IdPour("Autres caractéristiques", "Italienne");
+
+        Assert.NotEqual(id1, id2);
+        Assert.NotEqual(id1, id3);
     }
 }

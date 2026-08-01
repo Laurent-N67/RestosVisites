@@ -6,5 +6,4 @@ public sealed record VisiteDto(
     DateOnly Date,
     int Note,
     string? Commentaire,
-    IReadOnlyList<string> Categories,
     IReadOnlyList<string> UrlsPhotos);

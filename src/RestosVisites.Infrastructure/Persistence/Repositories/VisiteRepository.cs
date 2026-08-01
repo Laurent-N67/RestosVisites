@@ -22,14 +22,12 @@ public sealed class VisiteRepository : IVisiteRepository
     public async Task<Visite?> ObtenirParIdAsync(Guid id, CancellationToken ct)
         => await _dbContext.Visites
             .Include(v => v.Photos)
-            .Include(v => v.Categories)
             .FirstOrDefaultAsync(v => v.Id == id, ct);
 
     public async Task<IReadOnlyList<Visite>> ListerParRestaurantAsync(Guid restaurantId, CancellationToken ct)
         => await _dbContext.Visites
             .AsNoTracking()
             .Include(v => v.Photos)
-            .Include(v => v.Categories)
             .Where(v => v.RestaurantId == restaurantId)
             .ToListAsync(ct);
 
@@ -37,13 +35,12 @@ public sealed class VisiteRepository : IVisiteRepository
         => await _dbContext.Visites
             .AsNoTracking()
             .Include(v => v.Photos)
-            .Include(v => v.Categories)
             .ToListAsync(ct);
 
     /// <summary>
     /// Persiste les modifications d'une visite déjà suivie par le contexte (obtenue via
-    /// <see cref="ObtenirParIdAsync"/>) : les changements sur ses propriétés ainsi que sur ses
-    /// collections de photos et catégories sont détectés automatiquement par EF Core.
+    /// <see cref="ObtenirParIdAsync"/>) : les changements sur ses propriétés ainsi que sur sa
+    /// collection de photos sont détectés automatiquement par EF Core.
     /// </summary>
     public async Task MettreAJourAsync(Visite visite, CancellationToken ct)
     {

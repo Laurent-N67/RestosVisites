@@ -19,4 +19,12 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- Permet à RestosVisites.Infrastructure.Tests et RestosVisites.Api.Tests de réutiliser les
+         Ids déterministes de CategorieSeedData (classe interne) plutôt que de les
+         recalculer/dupliquer dans les tests. -->
+    <InternalsVisibleTo Include="RestosVisites.Infrastructure.Tests" />
+    <InternalsVisibleTo Include="RestosVisites.Api.Tests" />
+  </ItemGroup>
+
 </Project>

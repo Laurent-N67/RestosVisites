@@ -56,7 +56,7 @@ public sealed class VisitesController : ControllerBase
     public async Task<IActionResult> Modifier(Guid id, ModifierVisiteBody body, CancellationToken ct)
     {
         var request = new ModifierVisiteRequest(
-            id, body.Date, body.Note, body.Commentaire, body.NomsCategories, body.UrlsPhotos);
+            id, body.Date, body.Note, body.Commentaire, body.UrlsPhotos);
         await _modifierVisite.ExecuterAsync(request, ct);
 
         return NoContent();
@@ -79,5 +79,4 @@ public sealed record ModifierVisiteBody(
     DateOnly Date,
     int Note,
     string? Commentaire,
-    IReadOnlyList<string> NomsCategories,
     IReadOnlyList<string> UrlsPhotos);

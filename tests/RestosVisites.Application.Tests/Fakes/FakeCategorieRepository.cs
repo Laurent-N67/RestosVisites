@@ -12,16 +12,19 @@ public sealed class FakeCategorieRepository : ICategorieRepository
 
     public IReadOnlyList<Categorie> Categories => _categories;
 
-    public Task<Categorie?> ObtenirParNomAsync(string nom, CancellationToken ct)
-    {
-        var categorie = _categories.FirstOrDefault(c => string.Equals(c.Nom, nom, StringComparison.OrdinalIgnoreCase));
-        return Task.FromResult(categorie);
-    }
-
-    public Task AjouterAsync(Categorie categorie, CancellationToken ct)
+    /// <summary>
+    /// Ajoute une catégorie au catalogue fake, pour préparer un scénario de test (le catalogue
+    /// n'étant plus alimenté à la volée par les cas d'usage).
+    /// </summary>
+    public void Ajouter(Categorie categorie)
     {
         _categories.Add(categorie);
-        return Task.CompletedTask;
+    }
+
+    public Task<Categorie?> ObtenirParIdAsync(Guid id, CancellationToken ct)
+    {
+        var categorie = _categories.FirstOrDefault(c => c.Id == id);
+        return Task.FromResult(categorie);
     }
 
     public Task<IReadOnlyList<Categorie>> ListerAsync(CancellationToken ct)

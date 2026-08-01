@@ -5,12 +5,13 @@ namespace RestosVisites.Domain.Tests.Entities;
 public class CategorieTests
 {
     [Fact]
-    public void Constructeur_NomValide_CreeLaCategorie()
+    public void Constructeur_NomEtGroupeValides_CreeLaCategorie()
     {
-        var categorie = new Categorie("Italien");
+        var categorie = new Categorie("Italienne", "Type de cuisine");
 
         Assert.NotEqual(Guid.Empty, categorie.Id);
-        Assert.Equal("Italien", categorie.Nom);
+        Assert.Equal("Italienne", categorie.Nom);
+        Assert.Equal("Type de cuisine", categorie.Groupe);
     }
 
     [Theory]
@@ -19,6 +20,15 @@ public class CategorieTests
     [InlineData(null)]
     public void Constructeur_NomVideOuBlanc_LeveArgumentException(string? nom)
     {
-        Assert.Throws<ArgumentException>(() => new Categorie(nom!));
+        Assert.Throws<ArgumentException>(() => new Categorie(nom!, "Type de cuisine"));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(" ")]
+    [InlineData(null)]
+    public void Constructeur_GroupeVideOuBlanc_LeveArgumentException(string? groupe)
+    {
+        Assert.Throws<ArgumentException>(() => new Categorie("Italienne", groupe!));
     }
 }

@@ -36,7 +36,7 @@ public sealed class VisitesControllerTests : IClassFixture<RestosVisitesWebAppli
     public async Task Get_AvecVisitesSurPlusieursRestaurants_RetourneToutesLesVisites()
     {
         var creationRestaurant1 = new CreerRestaurantRequest(
-            "Restaurant Liste 1", "1 rue de la Liste", 45.0, 4.0);
+            "Restaurant Liste 1", "1 rue de la Liste", 45.0, 4.0, []);
         var creationRestaurant1Response = await _client.PostAsJsonAsync(
             "/api/restaurants", creationRestaurant1, TestContext.Current.CancellationToken);
         var restaurant1 = await creationRestaurant1Response.Content.ReadFromJsonAsync<CreerRestaurantResponse>(
@@ -44,7 +44,7 @@ public sealed class VisitesControllerTests : IClassFixture<RestosVisitesWebAppli
         Assert.NotNull(restaurant1);
 
         var creationRestaurant2 = new CreerRestaurantRequest(
-            "Restaurant Liste 2", "2 rue de la Liste", 45.1, 4.1);
+            "Restaurant Liste 2", "2 rue de la Liste", 45.1, 4.1, []);
         var creationRestaurant2Response = await _client.PostAsJsonAsync(
             "/api/restaurants", creationRestaurant2, TestContext.Current.CancellationToken);
         var restaurant2 = await creationRestaurant2Response.Content.ReadFromJsonAsync<CreerRestaurantResponse>(
@@ -52,7 +52,7 @@ public sealed class VisitesControllerTests : IClassFixture<RestosVisitesWebAppli
         Assert.NotNull(restaurant2);
 
         var creationVisite1 = new EnregistrerVisiteRequest(
-            restaurant1.Id, new DateOnly(2026, 7, 25), 4, "Bonne visite", ["Vegan"], []);
+            restaurant1.Id, new DateOnly(2026, 7, 25), 4, "Bonne visite", []);
         var creationVisite1Response = await _client.PostAsJsonAsync(
             "/api/visites", creationVisite1, TestContext.Current.CancellationToken);
         var visite1 = await creationVisite1Response.Content.ReadFromJsonAsync<EnregistrerVisiteResponse>(
@@ -60,7 +60,7 @@ public sealed class VisitesControllerTests : IClassFixture<RestosVisitesWebAppli
         Assert.NotNull(visite1);
 
         var creationVisite2 = new EnregistrerVisiteRequest(
-            restaurant2.Id, new DateOnly(2026, 7, 26), 5, "Excellente visite", ["Italien"], []);
+            restaurant2.Id, new DateOnly(2026, 7, 26), 5, "Excellente visite", []);
         var creationVisite2Response = await _client.PostAsJsonAsync(
             "/api/visites", creationVisite2, TestContext.Current.CancellationToken);
         var visite2 = await creationVisite2Response.Content.ReadFromJsonAsync<EnregistrerVisiteResponse>(
@@ -79,7 +79,7 @@ public sealed class VisitesControllerTests : IClassFixture<RestosVisitesWebAppli
     [Fact]
     public async Task Post_AvecRestaurantExistant_Retourne201()
     {
-        var creationRestaurant = new CreerRestaurantRequest("Restaurant Visite", "1 rue de la Visite", 45.0, 4.0);
+        var creationRestaurant = new CreerRestaurantRequest("Restaurant Visite", "1 rue de la Visite", 45.0, 4.0, []);
         var creationRestaurantResponse = await _client.PostAsJsonAsync(
             "/api/restaurants", creationRestaurant, TestContext.Current.CancellationToken);
         var restaurantCree = await creationRestaurantResponse.Content.ReadFromJsonAsync<CreerRestaurantResponse>(
@@ -91,7 +91,6 @@ public sealed class VisitesControllerTests : IClassFixture<RestosVisitesWebAppli
             new DateOnly(2026, 7, 25),
             4,
             "Bonne visite",
-            ["Vegan"],
             ["https://exemple.test/photo1.jpg", "https://exemple.test/photo2.jpg"]);
 
         var response = await _client.PostAsJsonAsync("/api/visites", request, TestContext.Current.CancellationToken);
@@ -110,7 +109,6 @@ public sealed class VisitesControllerTests : IClassFixture<RestosVisitesWebAppli
             new DateOnly(2026, 7, 25),
             3,
             null,
-            [],
             []);
 
         var response = await _client.PostAsJsonAsync("/api/visites", request, TestContext.Current.CancellationToken);
@@ -119,10 +117,10 @@ public sealed class VisitesControllerTests : IClassFixture<RestosVisitesWebAppli
     }
 
     [Fact]
-    public async Task Put_VisiteExistante_Retourne204EtModifieLesCategoriesEtPhotos()
+    public async Task Put_VisiteExistante_Retourne204EtModifieLesPhotos()
     {
         var creationRestaurant = new CreerRestaurantRequest(
-            "Restaurant Visite À Modifier", "2 rue de la Modification", 45.0, 4.0);
+            "Restaurant Visite À Modifier", "2 rue de la Modification", 45.0, 4.0, []);
         var creationRestaurantResponse = await _client.PostAsJsonAsync(
             "/api/restaurants", creationRestaurant, TestContext.Current.CancellationToken);
         var restaurantCree = await creationRestaurantResponse.Content.ReadFromJsonAsync<CreerRestaurantResponse>(
@@ -134,7 +132,6 @@ public sealed class VisitesControllerTests : IClassFixture<RestosVisitesWebAppli
             new DateOnly(2026, 7, 25),
             4,
             "Bonne visite",
-            ["Vegan"],
             ["https://exemple.test/photo1.jpg"]);
         var creationVisiteResponse = await _client.PostAsJsonAsync(
             "/api/visites", creationVisite, TestContext.Current.CancellationToken);
@@ -146,7 +143,6 @@ public sealed class VisitesControllerTests : IClassFixture<RestosVisitesWebAppli
             new DateOnly(2026, 7, 26),
             5,
             "Visite modifiée",
-            ["Italien", "Terrasse"],
             ["https://exemple.test/photo2.jpg"]);
 
         var response = await _client.PutAsJsonAsync(
@@ -163,15 +159,13 @@ public sealed class VisitesControllerTests : IClassFixture<RestosVisitesWebAppli
         Assert.Equal(new DateOnly(2026, 7, 26), visiteModifiee.Date);
         Assert.Equal(5, visiteModifiee.Note);
         Assert.Equal("Visite modifiée", visiteModifiee.Commentaire);
-        // Le many-to-many Visite/Categorie ne garantit pas d'ordre : on compare sans tenir compte de l'ordre.
-        Assert.Equal(["Italien", "Terrasse"], visiteModifiee.Categories.OrderBy(c => c, StringComparer.Ordinal));
         Assert.Equal(["https://exemple.test/photo2.jpg"], visiteModifiee.UrlsPhotos);
     }
 
     [Fact]
     public async Task Put_VisiteInexistante_Retourne404()
     {
-        var modificationBody = new ModifierVisiteBody(new DateOnly(2026, 7, 25), 3, null, [], []);
+        var modificationBody = new ModifierVisiteBody(new DateOnly(2026, 7, 25), 3, null, []);
 
         var response = await _client.PutAsJsonAsync(
             $"/api/visites/{Guid.NewGuid()}", modificationBody, TestContext.Current.CancellationToken);
@@ -183,7 +177,7 @@ public sealed class VisitesControllerTests : IClassFixture<RestosVisitesWebAppli
     public async Task Delete_VisiteExistante_Retourne204()
     {
         var creationRestaurant = new CreerRestaurantRequest(
-            "Restaurant Visite À Supprimer", "3 rue de la Suppression", 45.0, 4.0);
+            "Restaurant Visite À Supprimer", "3 rue de la Suppression", 45.0, 4.0, []);
         var creationRestaurantResponse = await _client.PostAsJsonAsync(
             "/api/restaurants", creationRestaurant, TestContext.Current.CancellationToken);
         var restaurantCree = await creationRestaurantResponse.Content.ReadFromJsonAsync<CreerRestaurantResponse>(
@@ -195,7 +189,6 @@ public sealed class VisitesControllerTests : IClassFixture<RestosVisitesWebAppli
             new DateOnly(2026, 7, 25),
             4,
             "Bonne visite",
-            ["Vegan"],
             ["https://exemple.test/photo1.jpg"]);
         var creationVisiteResponse = await _client.PostAsJsonAsync(
             "/api/visites", creationVisite, TestContext.Current.CancellationToken);

@@ -14,6 +14,17 @@ public class RestaurantTests
         Assert.Equal("1 rue de la Paix", restaurant.Adresse);
         Assert.Equal(48.8566, restaurant.Latitude);
         Assert.Equal(2.3522, restaurant.Longitude);
+        Assert.Empty(restaurant.Categories);
+    }
+
+    [Fact]
+    public void Constructeur_AvecCategories_LesAssocie()
+    {
+        var categorie = new Categorie("Italienne", "Type de cuisine");
+
+        var restaurant = new Restaurant("Le Bon Restaurant", "1 rue de la Paix", 48.8566, 2.3522, [categorie]);
+
+        Assert.Equal(categorie.Id, Assert.Single(restaurant.Categories).Id);
     }
 
     [Theory]
@@ -149,5 +160,37 @@ public class RestaurantTests
         Assert.Equal("1 rue de la Paix", restaurant.Adresse);
         Assert.Equal(48.8566, restaurant.Latitude);
         Assert.Equal(2.3522, restaurant.Longitude);
+    }
+
+    [Fact]
+    public void DefinirCategories_RemplaceEntierementLEnsembleExistant()
+    {
+        var restaurant = new Restaurant("Le Bon Restaurant", "1 rue de la Paix", 48.8566, 2.3522, [new Categorie("Italienne", "Type de cuisine")]);
+        var nouvelleCategorie = new Categorie("Terrasse", "Autres caractéristiques");
+
+        restaurant.DefinirCategories([nouvelleCategorie]);
+
+        Assert.Equal(nouvelleCategorie.Id, Assert.Single(restaurant.Categories).Id);
+    }
+
+    [Fact]
+    public void DefinirCategories_AvecDoublons_NeLesAjoutePasDeuxFois()
+    {
+        var restaurant = new Restaurant("Le Bon Restaurant", "1 rue de la Paix", 48.8566, 2.3522);
+        var categorie = new Categorie("Italienne", "Type de cuisine");
+
+        restaurant.DefinirCategories([categorie, categorie]);
+
+        Assert.Single(restaurant.Categories);
+    }
+
+    [Fact]
+    public void DefinirCategories_ListeVide_ViideLEnsemble()
+    {
+        var restaurant = new Restaurant("Le Bon Restaurant", "1 rue de la Paix", 48.8566, 2.3522, [new Categorie("Italienne", "Type de cuisine")]);
+
+        restaurant.DefinirCategories([]);
+
+        Assert.Empty(restaurant.Categories);
     }
 }

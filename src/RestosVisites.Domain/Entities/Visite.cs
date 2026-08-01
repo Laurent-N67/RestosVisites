@@ -4,12 +4,11 @@ namespace RestosVisites.Domain.Entities;
 
 /// <summary>
 /// Une visite effectuée dans un restaurant : agrégat racine regroupant la date,
-/// la note, un commentaire optionnel, les photos et les catégories associées.
+/// la note, un commentaire optionnel et les photos associées.
 /// </summary>
 public sealed class Visite
 {
     private readonly List<Photo> _photos = [];
-    private readonly List<Categorie> _categories = [];
 
     public Guid Id { get; }
     public Guid RestaurantId { get; }
@@ -18,7 +17,6 @@ public sealed class Visite
     public string? Commentaire { get; private set; }
 
     public IReadOnlyCollection<Photo> Photos => _photos;
-    public IReadOnlyCollection<Categorie> Categories => _categories;
 
     public Visite(Guid restaurantId, DateOnly date, Note note, string? commentaire = null)
         : this(Guid.NewGuid(), restaurantId, date, note, commentaire)
@@ -58,37 +56,12 @@ public sealed class Visite
     }
 
     /// <summary>
-    /// Associe une catégorie à la visite. N'a aucun effet si la catégorie est
-    /// déjà associée (même identifiant).
-    /// </summary>
-    public void AjouterCategorie(Categorie categorie)
-    {
-        ArgumentNullException.ThrowIfNull(categorie);
-
-        if (_categories.Any(c => c.Id == categorie.Id))
-        {
-            return;
-        }
-
-        _categories.Add(categorie);
-    }
-
-    /// <summary>
     /// Retire une photo de la visite. N'a aucun effet si aucune photo avec cet
     /// identifiant n'est associée.
     /// </summary>
     public void SupprimerPhoto(Guid photoId)
     {
         _photos.RemoveAll(p => p.Id == photoId);
-    }
-
-    /// <summary>
-    /// Dissocie une catégorie de la visite. N'a aucun effet si aucune catégorie avec cet
-    /// identifiant n'est associée.
-    /// </summary>
-    public void SupprimerCategorie(Guid categorieId)
-    {
-        _categories.RemoveAll(c => c.Id == categorieId);
     }
 
     /// <summary>

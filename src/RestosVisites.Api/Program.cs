@@ -4,6 +4,7 @@ using Microsoft.Extensions.FileProviders;
 using RestosVisites.Api.Middleware;
 using RestosVisites.Application.UseCases.CreerRestaurant;
 using RestosVisites.Application.UseCases.EnregistrerVisite;
+using RestosVisites.Application.UseCases.ListerCategories;
 using RestosVisites.Application.UseCases.ListerRestaurants;
 using RestosVisites.Application.UseCases.ListerToutesLesVisites;
 using RestosVisites.Application.UseCases.ListerVisitesRestaurant;
@@ -39,6 +40,7 @@ Console.WriteLine($"[RestosVisites] Dossier de stockage des photos : {dossierUpl
 builder.Services.AddPhotoStorage(dossierUploads);
 
 builder.Services.AddScoped<CreerRestaurant>();
+builder.Services.AddScoped<ListerCategories>();
 builder.Services.AddScoped<ListerRestaurants>();
 builder.Services.AddScoped<ListerVisitesRestaurant>();
 builder.Services.AddScoped<ListerToutesLesVisites>();

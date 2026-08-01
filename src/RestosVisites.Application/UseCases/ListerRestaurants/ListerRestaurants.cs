@@ -1,4 +1,5 @@
 using RestosVisites.Application.Abstractions;
+using RestosVisites.Application.UseCases.ListerCategories;
 using RestosVisites.Domain.Entities;
 
 namespace RestosVisites.Application.UseCases.ListerRestaurants;
@@ -22,5 +23,15 @@ public sealed class ListerRestaurants
         return restaurants.Select(VersDto).ToList();
     }
 
-    private static RestaurantDto VersDto(Restaurant restaurant) => new(restaurant.Id, restaurant.Nom, restaurant.Adresse, restaurant.Latitude, restaurant.Longitude);
+    private static RestaurantDto VersDto(Restaurant restaurant) => new(
+        restaurant.Id,
+        restaurant.Nom,
+        restaurant.Adresse,
+        restaurant.Latitude,
+        restaurant.Longitude,
+        restaurant.Categories
+            .OrderBy(c => c.Groupe, StringComparer.Ordinal)
+            .ThenBy(c => c.Nom, StringComparer.Ordinal)
+            .Select(c => new CategorieDto(c.Id, c.Nom, c.Groupe))
+            .ToList());
 }

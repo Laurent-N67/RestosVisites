@@ -70,7 +70,7 @@ public sealed class RestaurantsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Modifier(Guid id, ModifierRestaurantBody body, CancellationToken ct)
     {
-        var request = new ModifierRestaurantRequest(id, body.Nom, body.Adresse, body.Latitude, body.Longitude);
+        var request = new ModifierRestaurantRequest(id, body.Nom, body.Adresse, body.Latitude, body.Longitude, body.CategorieIds);
         await _modifierRestaurant.ExecuterAsync(request, ct);
 
         return NoContent();
@@ -89,4 +89,9 @@ public sealed class RestaurantsController : ControllerBase
 }
 
 /// <summary>Corps de requête pour la modification d'un restaurant (l'identifiant provient de l'URL).</summary>
-public sealed record ModifierRestaurantBody(string Nom, string Adresse, double Latitude, double Longitude);
+public sealed record ModifierRestaurantBody(
+    string Nom,
+    string Adresse,
+    double Latitude,
+    double Longitude,
+    IReadOnlyCollection<Guid> CategorieIds);

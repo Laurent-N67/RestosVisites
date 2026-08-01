@@ -19,7 +19,6 @@ public class VisiteTests
         Assert.Equal(4, visite.Note.Valeur);
         Assert.Equal("Très bon accueil", visite.Commentaire);
         Assert.Empty(visite.Photos);
-        Assert.Empty(visite.Categories);
     }
 
     [Fact]
@@ -71,29 +70,6 @@ public class VisiteTests
     }
 
     [Fact]
-    public void AjouterCategorie_MemeCategorieDeuxFois_NAjoutePasDeDoublon()
-    {
-        var visite = new Visite(RestaurantIdValide, DateValide, new Note(3));
-        var categorie = new Categorie("Italien");
-
-        visite.AjouterCategorie(categorie);
-        visite.AjouterCategorie(categorie);
-
-        Assert.Single(visite.Categories);
-    }
-
-    [Fact]
-    public void AjouterCategorie_CategoriesDifferentes_AjouteLesDeux()
-    {
-        var visite = new Visite(RestaurantIdValide, DateValide, new Note(3));
-
-        visite.AjouterCategorie(new Categorie("Italien"));
-        visite.AjouterCategorie(new Categorie("Terrasse"));
-
-        Assert.Equal(2, visite.Categories.Count);
-    }
-
-    [Fact]
     public void SupprimerPhoto_PhotoPresente_LaRetire()
     {
         var visite = new Visite(RestaurantIdValide, DateValide, new Note(3));
@@ -115,30 +91,6 @@ public class VisiteTests
         visite.SupprimerPhoto(Guid.NewGuid());
 
         Assert.Single(visite.Photos);
-    }
-
-    [Fact]
-    public void SupprimerCategorie_CategoriePresente_LaRetire()
-    {
-        var visite = new Visite(RestaurantIdValide, DateValide, new Note(3));
-        var categorie = new Categorie("Italien");
-        visite.AjouterCategorie(categorie);
-
-        visite.SupprimerCategorie(categorie.Id);
-
-        Assert.Empty(visite.Categories);
-    }
-
-    [Fact]
-    public void SupprimerCategorie_IdAbsent_NaAucunEffet()
-    {
-        var visite = new Visite(RestaurantIdValide, DateValide, new Note(3));
-        var categorie = new Categorie("Italien");
-        visite.AjouterCategorie(categorie);
-
-        visite.SupprimerCategorie(Guid.NewGuid());
-
-        Assert.Single(visite.Categories);
     }
 
     [Fact]

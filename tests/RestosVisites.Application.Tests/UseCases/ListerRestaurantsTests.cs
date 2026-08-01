@@ -34,4 +34,23 @@ public class ListerRestaurantsTests
         Assert.Contains(resultat, r => r.Id == restaurant1.Id && r.Nom == restaurant1.Nom);
         Assert.Contains(resultat, r => r.Id == restaurant2.Id && r.Nom == restaurant2.Nom);
     }
+
+    [Fact]
+    public async Task ExecuterAsync_RestaurantAvecCategories_LesInclutDansLeDto()
+    {
+        var restaurantRepository = new FakeRestaurantRepository();
+        var categorie = new Categorie("Italienne", "Type de cuisine");
+        var restaurant = new Restaurant("Le Bon Restaurant", "1 rue de la Paix", 48.8566, 2.3522, [categorie]);
+        await restaurantRepository.AjouterAsync(restaurant, TestContext.Current.CancellationToken);
+
+        var useCase = new ListerRestaurants(restaurantRepository);
+
+        var resultat = await useCase.ExecuterAsync(TestContext.Current.CancellationToken);
+
+        var dto = Assert.Single(resultat);
+        var categorieDto = Assert.Single(dto.Categories);
+        Assert.Equal(categorie.Id, categorieDto.Id);
+        Assert.Equal("Italienne", categorieDto.Nom);
+        Assert.Equal("Type de cuisine", categorieDto.Groupe);
+    }
 }
