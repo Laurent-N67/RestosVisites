@@ -182,6 +182,38 @@ function RestaurantsList({
     return groupCategories(Array.from(byId.values()))
   }, [restaurants])
 
+  const categorieGroupeById = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const [groupe, categoriesDuGroupe] of allCategoriesGrouped) {
+      for (const categorie of categoriesDuGroupe) {
+        map.set(categorie.id, groupe)
+      }
+    }
+    return map
+  }, [allCategoriesGrouped])
+
+  // Catégories sélectionnées, regroupées par `groupe` : un restaurant doit
+  // correspondre à au moins une catégorie sélectionnée de CHAQUE groupe
+  // représenté (ET entre groupes, ex. prix et cuisine), mais il suffit qu'il
+  // corresponde à une seule des catégories sélectionnées au sein d'un même
+  // groupe (OU entre deux cuisines par exemple).
+  const selectedIdsByGroupe = useMemo(() => {
+    const map = new Map<string, Set<string>>()
+    for (const id of selectedCategories) {
+      const groupe = categorieGroupeById.get(id)
+      if (!groupe) {
+        continue
+      }
+      const set = map.get(groupe)
+      if (set) {
+        set.add(id)
+      } else {
+        map.set(groupe, new Set([id]))
+      }
+    }
+    return map
+  }, [selectedCategories, categorieGroupeById])
+
   function toggleCategory(categorieId: string) {
     setSelectedCategories((prev) => {
       const next = new Set(prev)
@@ -204,12 +236,14 @@ function RestaurantsList({
       const matchesSearch =
         query.length === 0 ||
         item.restaurant.nom.toLowerCase().includes(query)
-      const matchesCategory =
-        selectedCategories.size === 0 ||
-        item.categories.some((categorie) => selectedCategories.has(categorie.id))
+      const itemCategoryIds = new Set(item.categories.map((c) => c.id))
+      const matchesCategory = Array.from(selectedIdsByGroupe.values()).every(
+        (idsDuGroupe) =>
+          Array.from(idsDuGroupe).some((id) => itemCategoryIds.has(id)),
+      )
       return matchesSearch && matchesCategory
     })
-  }, [aggregates, search, selectedCategories])
+  }, [aggregates, search, selectedIdsByGroupe])
 
   const sorted = useMemo(
     () => sortAggregates(filtered, sortOption),
