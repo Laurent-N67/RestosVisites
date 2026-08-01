@@ -160,7 +160,7 @@ function RestaurantMarker({
       position={[restaurant.latitude, restaurant.longitude]}
       eventHandlers={{ click: () => onOpen(restaurant.id) }}
     >
-      <Tooltip permanent direction="top" offset={[0, -41]} className="restaurant-label">
+      <Tooltip permanent direction="top" offset={[-16, -17]} className="restaurant-label">
         <span className="restaurant-label-nom">{restaurant.nom}</span>
         {lastVisite && (
           <span
