@@ -25,6 +25,9 @@ function App() {
   const [visiteMutation, setVisiteMutation] = useState<VisiteMutation | null>(
     null,
   )
+  const [preselectedRestaurantId, setPreselectedRestaurantId] = useState<
+    string | null
+  >(null)
 
   const loadRestaurants = useCallback(async () => {
     try {
@@ -82,6 +85,7 @@ function App() {
     setActivePanel('none')
     setEditingRestaurant(null)
     setEditingVisite(null)
+    setPreselectedRestaurantId(null)
   }
 
   function handleToggleRestaurantPanel() {
@@ -89,6 +93,7 @@ function App() {
       panel === 'restaurant' && editingRestaurant === null ? 'none' : 'restaurant',
     )
     setEditingRestaurant(null)
+    setPreselectedRestaurantId(null)
   }
 
   function handleToggleVisitePanel() {
@@ -96,6 +101,7 @@ function App() {
       panel === 'visite' && editingVisite === null ? 'none' : 'visite',
     )
     setEditingVisite(null)
+    setPreselectedRestaurantId(null)
   }
 
   function handleEditRestaurant(restaurant: Restaurant) {
@@ -115,11 +121,14 @@ function App() {
     void loadAllVisites()
   }
 
-  function handleRestaurantSaved() {
+  function handleRestaurantSaved(restaurantId: string) {
     void loadRestaurants()
     if (editingRestaurant) {
       setActivePanel('none')
       setEditingRestaurant(null)
+    } else {
+      setActivePanel('visite')
+      setPreselectedRestaurantId(restaurantId)
     }
   }
 
@@ -173,6 +182,7 @@ function App() {
         {activeView === 'carte' ? (
           <RestaurantsMap
             restaurants={restaurants}
+            visites={visites}
             visiteMutation={visiteMutation}
             onEditRestaurant={handleEditRestaurant}
             onEditVisite={handleEditVisite}
@@ -210,9 +220,10 @@ function App() {
           )}
           {activePanel === 'visite' && (
             <AddVisitForm
-              key={editingVisite?.id ?? 'new'}
+              key={editingVisite?.id ?? preselectedRestaurantId ?? 'new'}
               restaurants={restaurants}
               visite={editingVisite ?? undefined}
+              initialRestaurantId={preselectedRestaurantId ?? undefined}
               onSaved={handleVisiteSaved}
             />
           )}

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { MapContainer, TileLayer, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import { ApiError, getVisites } from '../api/client.ts'
@@ -16,11 +16,23 @@ export interface VisiteMutation {
 
 interface RestaurantsMapProps {
   restaurants: Restaurant[]
+  visites: Visite[]
   visiteMutation: VisiteMutation | null
   onEditRestaurant: (restaurant: Restaurant) => void
   onEditVisite: (visite: Visite) => void
   onRestaurantDeleted: () => void
   onVisiteDeleted: () => void
+}
+
+function computeLastVisites(visites: Visite[]): Map<string, Visite> {
+  const lastVisites = new Map<string, Visite>()
+  for (const visite of visites) {
+    const current = lastVisites.get(visite.restaurantId)
+    if (!current || visite.date.localeCompare(current.date) > 0) {
+      lastVisites.set(visite.restaurantId, visite)
+    }
+  }
+  return lastVisites
 }
 
 function FitBounds({ restaurants }: { restaurants: Restaurant[] }) {
@@ -45,6 +57,7 @@ function FitBounds({ restaurants }: { restaurants: Restaurant[] }) {
 
 function RestaurantsMap({
   restaurants,
+  visites,
   visiteMutation,
   onEditRestaurant,
   onEditVisite,
@@ -54,6 +67,8 @@ function RestaurantsMap({
   const [visitesByRestaurant, setVisitesByRestaurant] = useState<
     Record<string, VisitesState>
   >({})
+
+  const lastVisites = useMemo(() => computeLastVisites(visites), [visites])
 
   const loadVisites = useCallback((restaurantId: string) => {
     setVisitesByRestaurant((prev) => ({
@@ -114,6 +129,7 @@ function RestaurantsMap({
           key={restaurant.id}
           restaurant={restaurant}
           visitesState={visitesByRestaurant[restaurant.id] ?? { status: 'idle' }}
+          lastVisite={lastVisites.get(restaurant.id) ?? null}
           onOpen={handleOpen}
           onEditRestaurant={onEditRestaurant}
           onEditVisite={onEditVisite}

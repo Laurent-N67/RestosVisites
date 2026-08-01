@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Marker, Popup } from 'react-leaflet'
+import { Marker, Popup, Tooltip } from 'react-leaflet'
 import { deleteVisite, resolvePhotoUrl } from '../api/client.ts'
 import type { Restaurant, Visite } from '../api/types.ts'
 import { useDeleteRestaurant } from '../hooks/useDeleteRestaurant.ts'
@@ -15,6 +15,7 @@ export type VisitesState =
 interface RestaurantMarkerProps {
   restaurant: Restaurant
   visitesState: VisitesState
+  lastVisite: Visite | null
   onOpen: (restaurantId: string) => void
   onEditRestaurant: (restaurant: Restaurant) => void
   onRestaurantDeleted: () => void
@@ -118,6 +119,7 @@ function VisitesSection({
 function RestaurantMarker({
   restaurant,
   visitesState,
+  lastVisite,
   onOpen,
   onEditRestaurant,
   onRestaurantDeleted,
@@ -158,6 +160,17 @@ function RestaurantMarker({
       position={[restaurant.latitude, restaurant.longitude]}
       eventHandlers={{ click: () => onOpen(restaurant.id) }}
     >
+      <Tooltip permanent direction="top" offset={[0, -41]} className="restaurant-label">
+        <span className="restaurant-label-nom">{restaurant.nom}</span>
+        {lastVisite && (
+          <span
+            className="restaurant-label-note"
+            aria-label={`Note ${lastVisite.note} sur 5`}
+          >
+            {stars(lastVisite.note)}
+          </span>
+        )}
+      </Tooltip>
       <Popup>
         <div className="restaurant-popup">
           <div className="popup-header">

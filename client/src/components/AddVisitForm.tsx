@@ -8,6 +8,7 @@ import PhotoUrlInput from './PhotoUrlInput.tsx'
 interface AddVisitFormProps {
   restaurants: Restaurant[]
   visite?: Visite
+  initialRestaurantId?: string
   onSaved: (restaurantId: string) => void
 }
 
@@ -15,9 +16,16 @@ function today(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
-function AddVisitForm({ restaurants, visite, onSaved }: AddVisitFormProps) {
+function AddVisitForm({
+  restaurants,
+  visite,
+  initialRestaurantId,
+  onSaved,
+}: AddVisitFormProps) {
   const isEditing = visite !== undefined
-  const [restaurantId, setRestaurantId] = useState(visite?.restaurantId ?? '')
+  const [restaurantId, setRestaurantId] = useState(
+    visite?.restaurantId ?? initialRestaurantId ?? '',
+  )
   const [date, setDate] = useState(visite?.date ?? today())
   const [note, setNote] = useState(visite?.note ?? 5)
   const [commentaire, setCommentaire] = useState(visite?.commentaire ?? '')

@@ -9,7 +9,7 @@ import CategoryPicker from './CategoryPicker.tsx'
 interface AddRestaurantFormProps {
   restaurant?: Restaurant
   categories: Categorie[]
-  onSaved: () => void
+  onSaved: (restaurantId: string) => void
 }
 
 function AddRestaurantForm({ restaurant, categories, onSaved }: AddRestaurantFormProps) {
@@ -57,10 +57,13 @@ function AddRestaurantForm({ restaurant, categories, onSaved }: AddRestaurantFor
         longitude,
         categorieIds,
       }
+      let savedRestaurantId: string
       if (restaurant) {
         await updateRestaurant(restaurant.id, payload)
+        savedRestaurantId = restaurant.id
       } else {
-        await createRestaurant(payload)
+        const created = await createRestaurant(payload)
+        savedRestaurantId = created.id
       }
       setSuccess(true)
       if (!isEditing) {
@@ -70,7 +73,7 @@ function AddRestaurantForm({ restaurant, categories, onSaved }: AddRestaurantFor
         setLongitude(null)
         setCategorieIds([])
       }
-      onSaved()
+      onSaved(savedRestaurantId)
     } catch (err) {
       if (err instanceof ApiError && err.status === 409) {
         setError('Un restaurant avec ce nom et cette adresse existe déjà.')

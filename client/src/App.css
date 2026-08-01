@@ -374,6 +374,29 @@
   color: var(--text);
 }
 
+/* Marker label (permanent tooltip) */
+
+.restaurant-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 3px 8px;
+  font-size: 12px;
+  line-height: 1.2;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.restaurant-label-nom {
+  font-weight: 600;
+}
+
+.restaurant-label-note {
+  color: #f5a623;
+  font-size: 11px;
+}
+
 /* Popup Leaflet */
 
 .restaurant-popup {
