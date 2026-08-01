@@ -48,16 +48,25 @@ function composeAddress(props: PhotonProperties): string {
   return parts.join(', ')
 }
 
+export interface AddressSearchBias {
+  latitude: number
+  longitude: number
+}
+
 export async function searchAddress(
   query: string,
   signal?: AbortSignal,
+  bias?: AddressSearchBias,
 ): Promise<AddressSuggestion[]> {
   const trimmed = query.trim()
   if (trimmed.length < 2) {
     return []
   }
 
-  const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(trimmed)}&limit=5`
+  let url = `https://photon.komoot.io/api/?q=${encodeURIComponent(trimmed)}&limit=5`
+  if (bias) {
+    url += `&lat=${bias.latitude}&lon=${bias.longitude}&location_bias_scale=0.5`
+  }
   const response = await fetch(url, { signal })
 
   if (!response.ok) {
