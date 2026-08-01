@@ -3,6 +3,7 @@ import type { Categorie, Restaurant, Visite } from '../api/types.ts'
 import { groupCategories } from '../utils/categories.ts'
 import { useDeleteRestaurant } from '../hooks/useDeleteRestaurant.ts'
 import { formatDate, stars } from '../utils/format.ts'
+import CategoryFilterDropdown from './CategoryFilterDropdown.tsx'
 
 interface RestaurantsListProps {
   restaurants: Restaurant[]
@@ -193,6 +194,10 @@ function RestaurantsList({
     })
   }
 
+  function clearCategories() {
+    setSelectedCategories(new Set())
+  }
+
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase()
     return aggregates.filter((item) => {
@@ -222,30 +227,12 @@ function RestaurantsList({
           onChange={(e) => setSearch(e.target.value)}
         />
 
-        {allCategoriesGrouped.length > 0 && (
-          <div className="list-category-filters">
-            {allCategoriesGrouped.map(([groupe, groupCategoriesList]) => (
-              <ul key={groupe} className="chips list-category-filters-group">
-                {groupCategoriesList.map((categorie) => (
-                  <li key={categorie.id}>
-                    <button
-                      type="button"
-                      className={
-                        selectedCategories.has(categorie.id)
-                          ? 'chip-filter chip-filter--active'
-                          : 'chip-filter'
-                      }
-                      aria-pressed={selectedCategories.has(categorie.id)}
-                      onClick={() => toggleCategory(categorie.id)}
-                    >
-                      {categorie.nom}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            ))}
-          </div>
-        )}
+        <CategoryFilterDropdown
+          categoriesGrouped={allCategoriesGrouped}
+          selectedIds={selectedCategories}
+          onToggle={toggleCategory}
+          onClear={clearCategories}
+        />
 
         <label className="list-sort-label">
           Trier par

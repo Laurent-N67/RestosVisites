@@ -65,8 +65,32 @@
 }
 
 .restaurants-map {
+  position: relative;
   width: 100%;
   height: 100%;
+}
+
+.map-theme-toggle {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 1000;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  background: #fff;
+  font-size: 16px;
+  line-height: 1;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+}
+
+.map-theme-toggle:hover {
+  background: #f4f4f4;
 }
 
 .map-error-banner {
@@ -574,15 +598,6 @@
   flex-shrink: 0;
 }
 
-.list-category-filters {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  flex: 1;
-  margin: 0;
-}
-
 .list-category-filters-group {
   margin: 0;
 }
@@ -601,6 +616,162 @@
 .chip-filter:hover {
   background: var(--accent);
   color: #fff;
+}
+
+.chip-filter--removable {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Dropdown de filtre par catégorie (vue Liste) */
+
+.category-filter-dropdown {
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 100%;
+}
+
+.category-filter-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--accent-border);
+  background: var(--accent-bg);
+  color: var(--accent);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.category-filter-trigger:hover,
+.category-filter-trigger[aria-expanded='true'] {
+  background: var(--accent);
+  color: #fff;
+}
+
+.category-filter-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.category-filter-trigger[aria-expanded='true'] .category-filter-badge {
+  background: #fff;
+  color: var(--accent);
+}
+
+.category-filter-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 30;
+  width: min(360px, calc(100vw - 40px));
+  max-height: min(420px, 70vh);
+  overflow-y: auto;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.category-filter-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.category-filter-search {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.category-filter-close {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 16px;
+  line-height: 1;
+}
+
+.category-filter-close:hover {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.category-filter-reset {
+  align-self: flex-start;
+  border: none;
+  background: none;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.category-filter-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.category-filter-group-title {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-h);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.category-filter-empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.category-filter-selected {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+}
+
+@media (max-width: 480px) {
+  .category-filter-panel {
+    position: fixed;
+    top: auto;
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+    width: auto;
+    max-height: min(70vh, 480px);
+  }
 }
 
 .list-sort-label {

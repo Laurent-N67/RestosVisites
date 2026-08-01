@@ -8,9 +8,17 @@ interface PhotoUrlInputProps {
   onChange: (values: string[]) => void
 }
 
+interface UploadProgress {
+  current: number
+  total: number
+}
+
 function PhotoUrlInput({ values, onChange }: PhotoUrlInputProps) {
   const [draft, setDraft] = useState('')
   const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(
+    null,
+  )
   const [uploadError, setUploadError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -22,6 +30,21 @@ function PhotoUrlInput({ values, onChange }: PhotoUrlInputProps) {
     if (!values.includes(trimmed)) {
       onChange([...values, trimmed])
     }
+  }
+
+  /**
+   * Ajoute une photo à une liste locale (plutôt qu'à la prop `values`, qui
+   * ne se met à jour qu'au prochain rendu) : nécessaire pour accumuler
+   * correctement les résultats d'un lot d'uploads séquentiels.
+   */
+  function addPhotoTo(list: string[], url: string): string[] {
+    const trimmed = url.trim()
+    if (trimmed.length === 0 || list.includes(trimmed)) {
+      return list
+    }
+    const next = [...list, trimmed]
+    onChange(next)
+    return next
   }
 
   function handleAddDraft() {
@@ -41,27 +64,44 @@ function PhotoUrlInput({ values, onChange }: PhotoUrlInputProps) {
   }
 
   async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0]
-    if (!file) {
+    const files = Array.from(event.target.files ?? [])
+    if (files.length === 0) {
       return
     }
 
     setUploading(true)
     setUploadError(null)
-    try {
-      const { url } = await uploadPhoto(file)
-      addPhoto(url)
-    } catch (err) {
-      setUploadError(
-        err instanceof ApiError
-          ? (err.detail ?? err.message)
-          : "L'envoi de la photo a échoué.",
-      )
-    } finally {
-      setUploading(false)
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ''
+
+    const failures: string[] = []
+    let currentValues = values
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i]
+      setUploadProgress({ current: i + 1, total: files.length })
+      try {
+        const { url } = await uploadPhoto(file)
+        currentValues = addPhotoTo(currentValues, url)
+      } catch (err) {
+        const reason =
+          err instanceof ApiError
+            ? (err.detail ?? err.message)
+            : "l'envoi a échoué"
+        failures.push(`${file.name} (${reason})`)
       }
+    }
+
+    if (failures.length > 0) {
+      setUploadError(
+        failures.length === 1
+          ? `1 photo n'a pas pu être envoyée : ${failures[0]}`
+          : `${failures.length} photos n'ont pas pu être envoyées : ${failures.join(', ')}`,
+      )
+    }
+
+    setUploading(false)
+    setUploadProgress(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
     }
   }
 
@@ -86,10 +126,17 @@ function PhotoUrlInput({ values, onChange }: PhotoUrlInputProps) {
           ref={fileInputRef}
           type="file"
           accept="image/jpeg,image/png,image/webp"
+          multiple
           onChange={(event) => void handleFileChange(event)}
           disabled={uploading}
         />
-        {uploading && <span className="photo-upload-status">Envoi en cours…</span>}
+        {uploading && (
+          <span className="photo-upload-status">
+            {uploadProgress
+              ? `Envoi ${uploadProgress.current}/${uploadProgress.total}…`
+              : 'Envoi en cours…'}
+          </span>
+        )}
       </div>
 
       {uploadError && <p className="form-error">{uploadError}</p>}
