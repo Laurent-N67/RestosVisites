@@ -29,8 +29,13 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 // En production, ce chemin pointe vers le volume persistant monté (ex: /data/uploads) via la
 // configuration "PhotoStorage:DossierRacine" ; par défaut (dev), les photos vont dans wwwroot/uploads.
-var dossierUploads = builder.Configuration["PhotoStorage:DossierRacine"]
-    ?? Path.Combine(builder.Environment.ContentRootPath, "wwwroot", "uploads");
+// IsNullOrWhiteSpace (pas juste ??) : une variable d'environnement absente peut atterrir ici comme
+// chaîne vide selon la source de configuration, pas seulement comme null.
+var dossierUploadsConfigure = builder.Configuration["PhotoStorage:DossierRacine"];
+var dossierUploads = string.IsNullOrWhiteSpace(dossierUploadsConfigure)
+    ? Path.Combine(builder.Environment.ContentRootPath, "wwwroot", "uploads")
+    : dossierUploadsConfigure;
+Console.WriteLine($"[RestosVisites] Dossier de stockage des photos : {dossierUploads}");
 builder.Services.AddPhotoStorage(dossierUploads);
 
 builder.Services.AddScoped<CreerRestaurant>();
