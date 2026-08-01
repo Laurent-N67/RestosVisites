@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 
-export type MapTheme = 'light' | 'dark'
+export type Theme = 'light' | 'dark'
 
-const STORAGE_KEY = 'restosvisites:map-theme'
+const STORAGE_KEY = 'restosvisites:theme'
 
-function readStoredTheme(): MapTheme | null {
+function readStoredTheme(): Theme | null {
   try {
     const stored = window.localStorage.getItem(STORAGE_KEY)
     return stored === 'light' || stored === 'dark' ? stored : null
@@ -13,7 +13,7 @@ function readStoredTheme(): MapTheme | null {
   }
 }
 
-function getInitialTheme(): MapTheme {
+function getInitialTheme(): Theme {
   const stored = readStoredTheme()
   if (stored) {
     return stored
@@ -24,14 +24,17 @@ function getInitialTheme(): MapTheme {
 }
 
 /**
- * Thème (clair/sombre) des tuiles de la carte, persisté dans localStorage
+ * Thème global (clair/sombre) de l'application, persisté dans localStorage
  * pour se souvenir du choix entre sessions. À défaut de préférence
- * enregistrée, se base sur la préférence système de l'appareil.
+ * enregistrée, se base sur la préférence système de l'appareil. Applique le
+ * thème sur `<html data-theme="...">` pour que les variables CSS globales
+ * (App.css / index.css) et le chrome Leaflet en tiennent compte.
  */
-export function useMapTheme() {
-  const [theme, setTheme] = useState<MapTheme>(getInitialTheme)
+export function useTheme() {
+  const [theme, setTheme] = useState<Theme>(getInitialTheme)
 
   useEffect(() => {
+    document.documentElement.dataset.theme = theme
     try {
       window.localStorage.setItem(STORAGE_KEY, theme)
     } catch {
@@ -44,5 +47,5 @@ export function useMapTheme() {
     setTheme((current) => (current === 'light' ? 'dark' : 'light'))
   }
 
-  return { theme, toggleTheme }
+  return { theme, setTheme, toggleTheme }
 }

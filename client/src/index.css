@@ -2,12 +2,16 @@
   --text: #2f2b33;
   --text-h: #08060d;
   --bg: #fff;
+  --bg-card: #fff;
   --border: #e5e4e7;
+  --field-bg: #fff;
   --accent: #aa3bff;
   --accent-bg: rgba(170, 59, 255, 0.1);
   --accent-border: rgba(170, 59, 255, 0.5);
   --danger: #c0392b;
+  --danger-bg: #fff3f2;
   --success: #1e824c;
+  --star: #f5a623;
   --shadow:
     rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
 
@@ -21,6 +25,29 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Mode sombre : palette quasi-noire façon MangaDex, cartes légèrement plus
+   claires que le fond, bordures discrètes, texte clair, accent violet de la
+   marque conservé. */
+:root[data-theme='dark'] {
+  --text: #c7c3d1;
+  --text-h: #f6f4fa;
+  --bg: #121016;
+  --bg-card: #1c1a23;
+  --border: #322f3c;
+  --field-bg: #201e28;
+  --accent: #aa3bff;
+  --accent-bg: rgba(170, 59, 255, 0.18);
+  --accent-border: rgba(170, 59, 255, 0.55);
+  --danger: #ff6e5f;
+  --danger-bg: rgba(255, 110, 95, 0.15);
+  --success: #4fd88a;
+  --star: #f5a623;
+  --shadow:
+    rgba(0, 0, 0, 0.6) 0 10px 15px -3px, rgba(0, 0, 0, 0.45) 0 4px 6px -2px;
+
+  color-scheme: dark;
 }
 
 *,

@@ -5,7 +5,7 @@ import { ApiError, getVisites } from '../api/client.ts'
 import type { Restaurant, Visite } from '../api/types.ts'
 import RestaurantMarker from './RestaurantMarker.tsx'
 import type { VisitesState } from './RestaurantMarker.tsx'
-import { useMapTheme } from '../hooks/useMapTheme.ts'
+import type { Theme } from '../hooks/useTheme.ts'
 
 const DEFAULT_CENTER: [number, number] = [46.6034, 1.8883] // Centre de la France
 const DEFAULT_ZOOM = 6
@@ -21,6 +21,7 @@ export interface VisiteMutation {
 }
 
 interface RestaurantsMapProps {
+  theme: Theme
   restaurants: Restaurant[]
   visites: Visite[]
   visiteMutation: VisiteMutation | null
@@ -62,6 +63,7 @@ function FitBounds({ restaurants }: { restaurants: Restaurant[] }) {
 }
 
 function RestaurantsMap({
+  theme,
   restaurants,
   visites,
   visiteMutation,
@@ -73,7 +75,6 @@ function RestaurantsMap({
   const [visitesByRestaurant, setVisitesByRestaurant] = useState<
     Record<string, VisitesState>
   >({})
-  const { theme: mapTheme, toggleTheme: toggleMapTheme } = useMapTheme()
 
   const lastVisites = useMemo(() => computeLastVisites(visites), [visites])
 
@@ -123,26 +124,9 @@ function RestaurantsMap({
       zoom={DEFAULT_ZOOM}
       className="restaurants-map"
     >
-      <button
-        type="button"
-        className="map-theme-toggle"
-        onClick={toggleMapTheme}
-        aria-label={
-          mapTheme === 'dark'
-            ? 'Passer la carte en mode clair'
-            : 'Passer la carte en mode sombre'
-        }
-        title={
-          mapTheme === 'dark'
-            ? 'Passer la carte en mode clair'
-            : 'Passer la carte en mode sombre'
-        }
-      >
-        {mapTheme === 'dark' ? '☀️' : '🌙'}
-      </button>
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-        url={TILE_URLS[mapTheme]}
+        url={TILE_URLS[theme]}
         subdomains="abcd"
         maxZoom={20}
         detectRetina

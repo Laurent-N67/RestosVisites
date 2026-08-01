@@ -6,12 +6,14 @@ import type { VisiteMutation } from './components/RestaurantsMap.tsx'
 import RestaurantsList from './components/RestaurantsList.tsx'
 import AddRestaurantForm from './components/AddRestaurantForm.tsx'
 import AddVisitForm from './components/AddVisitForm.tsx'
+import { useTheme } from './hooks/useTheme.ts'
 import './App.css'
 
 type Panel = 'none' | 'restaurant' | 'visite'
 type View = 'carte' | 'liste'
 
 function App() {
+  const { theme, toggleTheme } = useTheme()
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
   const [visites, setVisites] = useState<Visite[]>([])
   const [categories, setCategories] = useState<Categorie[]>([])
@@ -175,12 +177,26 @@ function App() {
           >
             + Visite
           </button>
+          <button
+            type="button"
+            className="theme-toggle"
+            onClick={toggleTheme}
+            aria-label={
+              theme === 'dark' ? 'Passer en mode clair' : 'Passer en mode sombre'
+            }
+            title={
+              theme === 'dark' ? 'Passer en mode clair' : 'Passer en mode sombre'
+            }
+          >
+            {theme === 'dark' ? '☀️' : '🌙'}
+          </button>
         </div>
       </header>
 
       <main className="app-main">
         {activeView === 'carte' ? (
           <RestaurantsMap
+            theme={theme}
             restaurants={restaurants}
             visites={visites}
             visiteMutation={visiteMutation}

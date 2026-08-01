@@ -70,27 +70,22 @@
   height: 100%;
 }
 
-.map-theme-toggle {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  z-index: 1000;
+.theme-toggle {
   width: 34px;
   height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border);
   border-radius: 6px;
-  background: #fff;
+  background: var(--bg-card);
   font-size: 16px;
   line-height: 1;
-  box-shadow: var(--shadow);
-  cursor: pointer;
+  flex-shrink: 0;
 }
 
-.map-theme-toggle:hover {
-  background: #f4f4f4;
+.theme-toggle:hover {
+  background: var(--accent-bg);
 }
 
 .map-error-banner {
@@ -99,7 +94,7 @@
   left: 50%;
   transform: translateX(-50%);
   z-index: 1000;
-  background: #fff3f2;
+  background: var(--danger-bg);
   border: 1px solid var(--danger);
   color: var(--danger);
   padding: 8px 16px;
@@ -115,7 +110,7 @@
   right: 0;
   height: 100%;
   width: min(380px, 100%);
-  background: var(--bg);
+  background: var(--bg-card);
   border-left: 1px solid var(--border);
   box-shadow: var(--shadow);
   overflow-y: auto;
@@ -163,6 +158,8 @@
   border: 1px solid var(--border);
   border-radius: 6px;
   width: 100%;
+  background: var(--field-bg);
+  color: var(--text-h);
 }
 
 .panel-form button[type='submit'] {
@@ -248,6 +245,8 @@
   padding: 8px 10px;
   border: 1px solid var(--border);
   border-radius: 6px;
+  background: var(--field-bg);
+  color: var(--text-h);
 }
 
 .address-search-results {
@@ -256,7 +255,7 @@
   left: 0;
   right: 0;
   z-index: 20;
-  background: var(--bg);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 6px;
   box-shadow: var(--shadow);
@@ -313,7 +312,7 @@
 }
 
 .star--filled {
-  color: #f5a623;
+  color: var(--star);
 }
 
 /* Chips (catégories / photos) */
@@ -417,7 +416,7 @@
 }
 
 .restaurant-label-note {
-  color: #f5a623;
+  color: var(--star);
   font-size: 11px;
 }
 
@@ -455,7 +454,7 @@
 }
 
 .popup-stars {
-  color: #f5a623;
+  color: var(--star);
 }
 
 .popup-categories {
@@ -516,7 +515,7 @@
 
 .popup-btn-danger {
   border-color: var(--danger);
-  background: #fff3f2;
+  background: var(--danger-bg);
   color: var(--danger);
 }
 
@@ -596,6 +595,8 @@
   border-radius: 6px;
   min-width: 220px;
   flex-shrink: 0;
+  background: var(--field-bg);
+  color: var(--text-h);
 }
 
 .list-category-filters-group {
@@ -682,7 +683,7 @@
   width: min(360px, calc(100vw - 40px));
   max-height: min(420px, 70vh);
   overflow-y: auto;
-  background: var(--bg);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 8px;
   box-shadow: var(--shadow);
@@ -704,6 +705,8 @@
   padding: 8px 12px;
   border: 1px solid var(--border);
   border-radius: 6px;
+  background: var(--field-bg);
+  color: var(--text-h);
 }
 
 .category-filter-close {
@@ -712,7 +715,7 @@
   height: 28px;
   border: 1px solid var(--border);
   border-radius: 6px;
-  background: var(--bg);
+  background: var(--bg-card);
   color: var(--text);
   font-size: 16px;
   line-height: 1;
@@ -789,6 +792,8 @@
   border: 1px solid var(--border);
   border-radius: 6px;
   font-weight: 400;
+  background: var(--field-bg);
+  color: var(--text-h);
 }
 
 .list-empty {
@@ -806,7 +811,7 @@
 .restaurant-card {
   border: 1px solid var(--border);
   border-radius: 8px;
-  background: var(--bg);
+  background: var(--bg-card);
   box-shadow: var(--shadow);
   padding: 14px;
 }
@@ -839,4 +844,87 @@
     flex-wrap: wrap;
     gap: 10px;
   }
+}
+
+/* Chrome Leaflet natif en mode sombre : sans ces overrides, les popups,
+   tooltips et contrôles de zoom gardent un fond blanc par défaut même
+   quand les tuiles de la carte sont sombres. */
+
+:root[data-theme='dark'] .leaflet-container {
+  background: var(--bg);
+}
+
+:root[data-theme='dark'] .leaflet-popup-content-wrapper {
+  background: var(--bg-card);
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+
+:root[data-theme='dark'] .leaflet-popup-tip {
+  background: var(--bg-card);
+  box-shadow: none;
+}
+
+:root[data-theme='dark'] .leaflet-popup-content a {
+  color: var(--accent);
+}
+
+:root[data-theme='dark'] .leaflet-popup-close-button {
+  color: var(--text);
+}
+
+:root[data-theme='dark'] .leaflet-popup-close-button:hover {
+  color: var(--text-h);
+}
+
+:root[data-theme='dark'] .leaflet-tooltip {
+  background: var(--bg-card);
+  color: var(--text);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+:root[data-theme='dark'] .leaflet-tooltip-top::before {
+  border-top-color: var(--bg-card);
+}
+
+:root[data-theme='dark'] .leaflet-tooltip-bottom::before {
+  border-bottom-color: var(--bg-card);
+}
+
+:root[data-theme='dark'] .leaflet-tooltip-left::before {
+  border-left-color: var(--bg-card);
+}
+
+:root[data-theme='dark'] .leaflet-tooltip-right::before {
+  border-right-color: var(--bg-card);
+}
+
+:root[data-theme='dark'] .leaflet-bar {
+  border-color: var(--border);
+}
+
+:root[data-theme='dark'] .leaflet-control-zoom a {
+  background: var(--bg-card);
+  color: var(--text);
+  border-bottom-color: var(--border);
+}
+
+:root[data-theme='dark'] .leaflet-control-zoom a:hover {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+:root[data-theme='dark'] .leaflet-control-zoom a.leaflet-disabled {
+  background: var(--bg);
+  color: var(--border);
+}
+
+:root[data-theme='dark'] .leaflet-control-attribution {
+  background: rgba(28, 26, 35, 0.8);
+  color: var(--text);
+}
+
+:root[data-theme='dark'] .leaflet-control-attribution a {
+  color: var(--accent);
 }
