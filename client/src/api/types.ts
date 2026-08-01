@@ -32,6 +32,10 @@ export interface CreateVisiteRequest {
   urlsPhotos: string[]
 }
 
+export type UpdateRestaurantRequest = CreateRestaurantRequest
+
+export type UpdateVisiteRequest = Omit<CreateVisiteRequest, 'restaurantId'>
+
 export interface CreatedResponse {
   id: string
 }

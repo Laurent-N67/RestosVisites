@@ -162,6 +162,16 @@
   color: var(--danger);
 }
 
+.visite-restaurant-readonly {
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--accent-bg);
+  color: var(--text);
+  font-size: 14px;
+}
+
 /* Recherche d'adresse */
 
 .address-search {
@@ -313,7 +323,14 @@
 /* Popup Leaflet */
 
 .restaurant-popup {
-  min-width: 200px;
+  min-width: 240px;
+}
+
+.popup-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .restaurant-popup h3 {
@@ -336,11 +353,6 @@
   color: var(--danger);
 }
 
-.popup-last-visite {
-  margin: 0 0 6px;
-  font-size: 14px;
-}
-
 .popup-stars {
   color: #f5a623;
 }
@@ -350,7 +362,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-  margin: 0 0 8px;
+  margin: 4px 0 8px;
   padding: 0;
 }
 
@@ -378,9 +390,87 @@
 
 .popup-directions {
   display: inline-block;
+  margin-top: 4px;
   font-size: 13px;
   font-weight: 600;
   color: var(--accent);
+}
+
+.popup-actions,
+.popup-visite-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.popup-btn {
+  padding: 4px 10px;
+  border: 1px solid var(--accent-border);
+  background: var(--accent-bg);
+  color: var(--accent);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.popup-btn-danger {
+  border-color: var(--danger);
+  background: #fff3f2;
+  color: var(--danger);
+}
+
+.popup-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.popup-visites {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.popup-visites-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.popup-visite {
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.popup-visite:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.popup-visite-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.popup-visite-date {
+  font-size: 12px;
+  color: var(--text);
+}
+
+.popup-visite-commentaire {
+  margin: 0 0 4px;
+  font-size: 13px;
+}
+
+.popup-visite-actions {
+  margin-top: 4px;
 }
 
 @media (max-width: 640px) {

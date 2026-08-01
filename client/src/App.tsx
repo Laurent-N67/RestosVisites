@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback } from 'react'
 import { ApiError, getRestaurants } from './api/client.ts'
-import type { Restaurant } from './api/types.ts'
+import type { Restaurant, Visite } from './api/types.ts'
 import RestaurantsMap from './components/RestaurantsMap.tsx'
+import type { VisiteMutation } from './components/RestaurantsMap.tsx'
 import AddRestaurantForm from './components/AddRestaurantForm.tsx'
 import AddVisitForm from './components/AddVisitForm.tsx'
 import './App.css'
@@ -12,7 +13,13 @@ function App() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
   const [loadError, setLoadError] = useState<string | null>(null)
   const [activePanel, setActivePanel] = useState<Panel>('none')
-  const [refreshToken, setRefreshToken] = useState(0)
+  const [editingRestaurant, setEditingRestaurant] = useState<Restaurant | null>(
+    null,
+  )
+  const [editingVisite, setEditingVisite] = useState<Visite | null>(null)
+  const [visiteMutation, setVisiteMutation] = useState<VisiteMutation | null>(
+    null,
+  )
 
   const loadRestaurants = useCallback(async () => {
     try {
@@ -32,12 +39,56 @@ function App() {
     void loadRestaurants()
   }, [loadRestaurants])
 
-  function handleRestaurantCreated() {
+  function closePanel() {
+    setActivePanel('none')
+    setEditingRestaurant(null)
+    setEditingVisite(null)
+  }
+
+  function handleToggleRestaurantPanel() {
+    setActivePanel((panel) =>
+      panel === 'restaurant' && editingRestaurant === null ? 'none' : 'restaurant',
+    )
+    setEditingRestaurant(null)
+  }
+
+  function handleToggleVisitePanel() {
+    setActivePanel((panel) =>
+      panel === 'visite' && editingVisite === null ? 'none' : 'visite',
+    )
+    setEditingVisite(null)
+  }
+
+  function handleEditRestaurant(restaurant: Restaurant) {
+    setEditingVisite(null)
+    setEditingRestaurant(restaurant)
+    setActivePanel('restaurant')
+  }
+
+  function handleEditVisite(visite: Visite) {
+    setEditingRestaurant(null)
+    setEditingVisite(visite)
+    setActivePanel('visite')
+  }
+
+  function handleRestaurantDeleted() {
     void loadRestaurants()
   }
 
-  function handleVisiteCreated() {
-    setRefreshToken((token) => token + 1)
+  function handleRestaurantSaved() {
+    void loadRestaurants()
+    if (editingRestaurant) {
+      setActivePanel('none')
+      setEditingRestaurant(null)
+    }
+  }
+
+  function handleVisiteSaved(restaurantId: string) {
+    setVisiteMutation({ restaurantId, token: Date.now() })
+    if (editingVisite) {
+      setActivePanel('none')
+      setEditingVisite(null)
+    }
   }
 
   return (
@@ -48,20 +99,14 @@ function App() {
           <button
             type="button"
             className={activePanel === 'restaurant' ? 'active' : ''}
-            onClick={() =>
-              setActivePanel((panel) =>
-                panel === 'restaurant' ? 'none' : 'restaurant',
-              )
-            }
+            onClick={handleToggleRestaurantPanel}
           >
             + Restaurant
           </button>
           <button
             type="button"
             className={activePanel === 'visite' ? 'active' : ''}
-            onClick={() =>
-              setActivePanel((panel) => (panel === 'visite' ? 'none' : 'visite'))
-            }
+            onClick={handleToggleVisitePanel}
           >
             + Visite
           </button>
@@ -69,7 +114,13 @@ function App() {
       </header>
 
       <main className="app-main">
-        <RestaurantsMap restaurants={restaurants} refreshToken={refreshToken} />
+        <RestaurantsMap
+          restaurants={restaurants}
+          visiteMutation={visiteMutation}
+          onEditRestaurant={handleEditRestaurant}
+          onEditVisite={handleEditVisite}
+          onRestaurantDeleted={handleRestaurantDeleted}
+        />
         {loadError && <p className="map-error-banner">{loadError}</p>}
       </main>
 
@@ -79,15 +130,24 @@ function App() {
             type="button"
             className="side-panel-close"
             aria-label="Fermer"
-            onClick={() => setActivePanel('none')}
+            onClick={closePanel}
           >
             ×
           </button>
           {activePanel === 'restaurant' && (
-            <AddRestaurantForm onCreated={handleRestaurantCreated} />
+            <AddRestaurantForm
+              key={editingRestaurant?.id ?? 'new'}
+              restaurant={editingRestaurant ?? undefined}
+              onSaved={handleRestaurantSaved}
+            />
           )}
           {activePanel === 'visite' && (
-            <AddVisitForm restaurants={restaurants} onCreated={handleVisiteCreated} />
+            <AddVisitForm
+              key={editingVisite?.id ?? 'new'}
+              restaurants={restaurants}
+              visite={editingVisite ?? undefined}
+              onSaved={handleVisiteSaved}
+            />
           )}
         </aside>
       )}

@@ -4,6 +4,8 @@ import type {
   CreatedResponse,
   ProblemDetails,
   Restaurant,
+  UpdateRestaurantRequest,
+  UpdateVisiteRequest,
   Visite,
 } from './types.ts'
 
@@ -68,6 +70,20 @@ export function createRestaurant(
   })
 }
 
+export function updateRestaurant(
+  id: string,
+  payload: UpdateRestaurantRequest,
+): Promise<void> {
+  return request<void>(`/api/restaurants/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  })
+}
+
+export function deleteRestaurant(id: string): Promise<void> {
+  return request<void>(`/api/restaurants/${id}`, { method: 'DELETE' })
+}
+
 export function getVisites(restaurantId: string): Promise<Visite[]> {
   return request<Visite[]>(`/api/restaurants/${restaurantId}/visites`)
 }
@@ -79,4 +95,18 @@ export function createVisite(
     method: 'POST',
     body: JSON.stringify(payload),
   })
+}
+
+export function updateVisite(
+  id: string,
+  payload: UpdateVisiteRequest,
+): Promise<void> {
+  return request<void>(`/api/visites/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  })
+}
+
+export function deleteVisite(id: string): Promise<void> {
+  return request<void>(`/api/visites/${id}`, { method: 'DELETE' })
 }

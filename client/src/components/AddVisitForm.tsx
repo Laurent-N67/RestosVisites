@@ -1,30 +1,35 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { ApiError, createVisite } from '../api/client.ts'
-import type { Restaurant } from '../api/types.ts'
+import { ApiError, createVisite, updateVisite } from '../api/client.ts'
+import type { Restaurant, Visite } from '../api/types.ts'
 import StarRating from './StarRating.tsx'
 import TagInput from './TagInput.tsx'
 import PhotoUrlInput from './PhotoUrlInput.tsx'
 
 interface AddVisitFormProps {
   restaurants: Restaurant[]
-  onCreated: () => void
+  visite?: Visite
+  onSaved: (restaurantId: string) => void
 }
 
 function today(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
-function AddVisitForm({ restaurants, onCreated }: AddVisitFormProps) {
-  const [restaurantId, setRestaurantId] = useState('')
-  const [date, setDate] = useState(today())
-  const [note, setNote] = useState(5)
-  const [commentaire, setCommentaire] = useState('')
-  const [categories, setCategories] = useState<string[]>([])
-  const [photos, setPhotos] = useState<string[]>([])
+function AddVisitForm({ restaurants, visite, onSaved }: AddVisitFormProps) {
+  const isEditing = visite !== undefined
+  const [restaurantId, setRestaurantId] = useState(visite?.restaurantId ?? '')
+  const [date, setDate] = useState(visite?.date ?? today())
+  const [note, setNote] = useState(visite?.note ?? 5)
+  const [commentaire, setCommentaire] = useState(visite?.commentaire ?? '')
+  const [categories, setCategories] = useState<string[]>(visite?.categories ?? [])
+  const [photos, setPhotos] = useState<string[]>(visite?.urlsPhotos ?? [])
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+
+  const restaurantNom =
+    restaurants.find((r) => r.id === restaurantId)?.nom ?? restaurantId
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -37,26 +42,44 @@ function AddVisitForm({ restaurants, onCreated }: AddVisitFormProps) {
     setError(null)
     setSuccess(false)
     try {
-      await createVisite({
-        restaurantId,
-        date,
-        note,
-        commentaire: commentaire.trim().length > 0 ? commentaire.trim() : null,
-        nomsCategories: categories,
-        urlsPhotos: photos,
-      })
+      const commentaireValue =
+        commentaire.trim().length > 0 ? commentaire.trim() : null
+      if (visite) {
+        await updateVisite(visite.id, {
+          date,
+          note,
+          commentaire: commentaireValue,
+          nomsCategories: categories,
+          urlsPhotos: photos,
+        })
+      } else {
+        await createVisite({
+          restaurantId,
+          date,
+          note,
+          commentaire: commentaireValue,
+          nomsCategories: categories,
+          urlsPhotos: photos,
+        })
+      }
       setSuccess(true)
-      setDate(today())
-      setNote(5)
-      setCommentaire('')
-      setCategories([])
-      setPhotos([])
-      onCreated()
+      if (!isEditing) {
+        setDate(today())
+        setNote(5)
+        setCommentaire('')
+        setCategories([])
+        setPhotos([])
+      }
+      onSaved(restaurantId)
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.detail ?? err.message)
       } else {
-        setError("L'enregistrement de la visite a échoué.")
+        setError(
+          isEditing
+            ? 'La modification de la visite a échoué.'
+            : "L'enregistrement de la visite a échoué.",
+        )
       }
     } finally {
       setSubmitting(false)
@@ -74,24 +97,28 @@ function AddVisitForm({ restaurants, onCreated }: AddVisitFormProps) {
 
   return (
     <form className="panel-form" onSubmit={(event) => void handleSubmit(event)}>
-      <h2>Enregistrer une visite</h2>
+      <h2>{isEditing ? 'Modifier la visite' : 'Enregistrer une visite'}</h2>
 
-      <label htmlFor="visite-restaurant">Restaurant</label>
-      <select
-        id="visite-restaurant"
-        value={restaurantId}
-        onChange={(event) => setRestaurantId(event.target.value)}
-        required
-      >
-        <option value="" disabled>
-          Choisir un restaurant
-        </option>
-        {restaurants.map((restaurant) => (
-          <option key={restaurant.id} value={restaurant.id}>
-            {restaurant.nom}
+      <span className="field-label">Restaurant</span>
+      {isEditing ? (
+        <p className="visite-restaurant-readonly">{restaurantNom}</p>
+      ) : (
+        <select
+          id="visite-restaurant"
+          value={restaurantId}
+          onChange={(event) => setRestaurantId(event.target.value)}
+          required
+        >
+          <option value="" disabled>
+            Choisir un restaurant
           </option>
-        ))}
-      </select>
+          {restaurants.map((restaurant) => (
+            <option key={restaurant.id} value={restaurant.id}>
+              {restaurant.nom}
+            </option>
+          ))}
+        </select>
+      )}
 
       <label htmlFor="visite-date">Date</label>
       <input
@@ -120,10 +147,20 @@ function AddVisitForm({ restaurants, onCreated }: AddVisitFormProps) {
       <PhotoUrlInput values={photos} onChange={setPhotos} />
 
       {error && <p className="form-error">{error}</p>}
-      {success && <p className="form-success">Visite enregistrée avec succès.</p>}
+      {success && (
+        <p className="form-success">
+          {isEditing
+            ? 'Visite modifiée avec succès.'
+            : 'Visite enregistrée avec succès.'}
+        </p>
+      )}
 
       <button type="submit" disabled={submitting}>
-        {submitting ? 'Enregistrement…' : 'Enregistrer la visite'}
+        {submitting
+          ? 'Enregistrement…'
+          : isEditing
+            ? 'Enregistrer les modifications'
+            : 'Enregistrer la visite'}
       </button>
     </form>
   )

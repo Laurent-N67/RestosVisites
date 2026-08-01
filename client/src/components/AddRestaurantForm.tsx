@@ -1,18 +1,25 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { ApiError, createRestaurant } from '../api/client.ts'
+import { ApiError, createRestaurant, updateRestaurant } from '../api/client.ts'
 import type { AddressSuggestion } from '../api/photon.ts'
+import type { Restaurant } from '../api/types.ts'
 import AddressSearch from './AddressSearch.tsx'
 
 interface AddRestaurantFormProps {
-  onCreated: () => void
+  restaurant?: Restaurant
+  onSaved: () => void
 }
 
-function AddRestaurantForm({ onCreated }: AddRestaurantFormProps) {
-  const [nom, setNom] = useState('')
-  const [adresse, setAdresse] = useState('')
-  const [latitude, setLatitude] = useState<number | null>(null)
-  const [longitude, setLongitude] = useState<number | null>(null)
+function AddRestaurantForm({ restaurant, onSaved }: AddRestaurantFormProps) {
+  const isEditing = restaurant !== undefined
+  const [nom, setNom] = useState(restaurant?.nom ?? '')
+  const [adresse, setAdresse] = useState(restaurant?.adresse ?? '')
+  const [latitude, setLatitude] = useState<number | null>(
+    restaurant?.latitude ?? null,
+  )
+  const [longitude, setLongitude] = useState<number | null>(
+    restaurant?.longitude ?? null,
+  )
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
@@ -38,25 +45,31 @@ function AddRestaurantForm({ onCreated }: AddRestaurantFormProps) {
     setError(null)
     setSuccess(false)
     try {
-      await createRestaurant({
-        nom: nom.trim(),
-        adresse: adresse.trim(),
-        latitude,
-        longitude,
-      })
+      const payload = { nom: nom.trim(), adresse: adresse.trim(), latitude, longitude }
+      if (restaurant) {
+        await updateRestaurant(restaurant.id, payload)
+      } else {
+        await createRestaurant(payload)
+      }
       setSuccess(true)
-      setNom('')
-      setAdresse('')
-      setLatitude(null)
-      setLongitude(null)
-      onCreated()
+      if (!isEditing) {
+        setNom('')
+        setAdresse('')
+        setLatitude(null)
+        setLongitude(null)
+      }
+      onSaved()
     } catch (err) {
       if (err instanceof ApiError && err.status === 409) {
         setError('Un restaurant avec ce nom et cette adresse existe déjà.')
       } else if (err instanceof ApiError) {
         setError(err.detail ?? err.message)
       } else {
-        setError("La création du restaurant a échoué.")
+        setError(
+          isEditing
+            ? 'La modification du restaurant a échoué.'
+            : 'La création du restaurant a échoué.',
+        )
       }
     } finally {
       setSubmitting(false)
@@ -65,7 +78,7 @@ function AddRestaurantForm({ onCreated }: AddRestaurantFormProps) {
 
   return (
     <form className="panel-form" onSubmit={(event) => void handleSubmit(event)}>
-      <h2>Ajouter un restaurant</h2>
+      <h2>{isEditing ? 'Modifier le restaurant' : 'Ajouter un restaurant'}</h2>
 
       <AddressSearch onSelect={handleAddressSelect} />
 
@@ -99,11 +112,21 @@ function AddRestaurantForm({ onCreated }: AddRestaurantFormProps) {
 
       {error && <p className="form-error">{error}</p>}
       {success && (
-        <p className="form-success">Restaurant créé avec succès.</p>
+        <p className="form-success">
+          {isEditing
+            ? 'Restaurant modifié avec succès.'
+            : 'Restaurant créé avec succès.'}
+        </p>
       )}
 
       <button type="submit" disabled={submitting}>
-        {submitting ? 'Création…' : 'Créer le restaurant'}
+        {submitting
+          ? isEditing
+            ? 'Enregistrement…'
+            : 'Création…'
+          : isEditing
+            ? 'Enregistrer les modifications'
+            : 'Créer le restaurant'}
       </button>
     </form>
   )

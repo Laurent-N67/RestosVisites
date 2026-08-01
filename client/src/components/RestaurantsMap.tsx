@@ -1,17 +1,25 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { MapContainer, TileLayer, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import { ApiError, getVisites } from '../api/client.ts'
-import type { Restaurant } from '../api/types.ts'
+import type { Restaurant, Visite } from '../api/types.ts'
 import RestaurantMarker from './RestaurantMarker.tsx'
 import type { VisitesState } from './RestaurantMarker.tsx'
 
 const DEFAULT_CENTER: [number, number] = [46.6034, 1.8883] // Centre de la France
 const DEFAULT_ZOOM = 6
 
+export interface VisiteMutation {
+  restaurantId: string
+  token: number
+}
+
 interface RestaurantsMapProps {
   restaurants: Restaurant[]
-  refreshToken: number
+  visiteMutation: VisiteMutation | null
+  onEditRestaurant: (restaurant: Restaurant) => void
+  onEditVisite: (visite: Visite) => void
+  onRestaurantDeleted: () => void
 }
 
 function FitBounds({ restaurants }: { restaurants: Restaurant[] }) {
@@ -34,21 +42,18 @@ function FitBounds({ restaurants }: { restaurants: Restaurant[] }) {
   return null
 }
 
-function RestaurantsMap({ restaurants, refreshToken }: RestaurantsMapProps) {
+function RestaurantsMap({
+  restaurants,
+  visiteMutation,
+  onEditRestaurant,
+  onEditVisite,
+  onRestaurantDeleted,
+}: RestaurantsMapProps) {
   const [visitesByRestaurant, setVisitesByRestaurant] = useState<
     Record<string, VisitesState>
   >({})
 
-  useEffect(() => {
-    setVisitesByRestaurant({})
-  }, [refreshToken])
-
-  function handleOpen(restaurantId: string) {
-    const current = visitesByRestaurant[restaurantId]
-    if (current && (current.status === 'loading' || current.status === 'loaded')) {
-      return
-    }
-
+  const loadVisites = useCallback((restaurantId: string) => {
     setVisitesByRestaurant((prev) => ({
       ...prev,
       [restaurantId]: { status: 'loading' },
@@ -71,6 +76,21 @@ function RestaurantsMap({ restaurants, refreshToken }: RestaurantsMapProps) {
           [restaurantId]: { status: 'error', message },
         }))
       })
+  }, [])
+
+  useEffect(() => {
+    if (visiteMutation) {
+      loadVisites(visiteMutation.restaurantId)
+    }
+  }, [visiteMutation, loadVisites])
+
+  function handleOpen(restaurantId: string) {
+    const current = visitesByRestaurant[restaurantId]
+    if (current && (current.status === 'loading' || current.status === 'loaded')) {
+      return
+    }
+
+    loadVisites(restaurantId)
   }
 
   return (
@@ -90,6 +110,10 @@ function RestaurantsMap({ restaurants, refreshToken }: RestaurantsMapProps) {
           restaurant={restaurant}
           visitesState={visitesByRestaurant[restaurant.id] ?? { status: 'idle' }}
           onOpen={handleOpen}
+          onEditRestaurant={onEditRestaurant}
+          onEditVisite={onEditVisite}
+          onRestaurantDeleted={onRestaurantDeleted}
+          onVisitesRefresh={loadVisites}
         />
       ))}
     </MapContainer>
