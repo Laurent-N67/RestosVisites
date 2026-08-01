@@ -16,11 +16,19 @@
       "Bash(git stash *)",
       "Bash(curl -s http://localhost:*)",
       "Bash(curl -sf http://localhost:*)",
+      "Bash(curl -s https://restosvisites.fly.dev*)",
+      "Bash(curl -s -o /dev/null *)",
       "Bash(netstat -ano *)",
       "Bash(taskkill *)",
       "Bash(mkdir -p *)",
       "Bash(rm -f src/RestosVisites.Api/restosvisites.db*)",
-      "Bash(rm -f client/src/RestosVisites.Api/restosvisites.db*)"
+      "Bash(rm -f client/src/RestosVisites.Api/restosvisites.db*)",
+      "PowerShell(& \"$env:USERPROFILE\\.fly\\bin\\flyctl.exe\" auth whoami)",
+      "PowerShell(& \"$env:USERPROFILE\\.fly\\bin\\flyctl.exe\" version)",
+      "PowerShell(& \"$env:USERPROFILE\\.fly\\bin\\flyctl.exe\" logs*)",
+      "PowerShell(& \"$env:USERPROFILE\\.fly\\bin\\flyctl.exe\" status*)",
+      "PowerShell(Get-Command *)",
+      "PowerShell(Test-Path *)"
     ],
     "ask": [
       "Bash(git push*)",
@@ -32,7 +40,11 @@
       "Bash(git branch --delete*)",
       "Bash(rm -rf*)",
       "Bash(gh pr *)",
-      "Bash(gh api*)"
+      "Bash(gh api*)",
+      "PowerShell(& \"$env:USERPROFILE\\.fly\\bin\\flyctl.exe\" deploy*)",
+      "PowerShell(& \"$env:USERPROFILE\\.fly\\bin\\flyctl.exe\" ssh *)",
+      "PowerShell(& \"$env:USERPROFILE\\.fly\\bin\\flyctl.exe\" secrets *)",
+      "PowerShell(& \"$env:USERPROFILE\\.fly\\bin\\flyctl.exe\" machine *)"
     ]
   }
 }
