@@ -9,7 +9,11 @@ import type {
   Visite,
 } from './types.ts'
 
-export const API_BASE_URL = 'http://localhost:5006'
+// En production, l'Api est servie par le même conteneur/origine que le client (voir Dockerfile et
+// Program.cs qui sert le build React depuis wwwroot) : VITE_API_BASE_URL vaut alors une chaîne vide,
+// pour des appels relatifs ("/api/..."). En dev, aucune variable n'est définie, on retombe sur le
+// serveur .NET lancé séparément sur localhost:5006.
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5006'
 
 export class ApiError extends Error {
   status: number

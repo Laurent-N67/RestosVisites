@@ -1,0 +1,13 @@
+**/bin
+**/obj
+client/node_modules
+client/dist
+client/dev-dist
+tests
+*.db
+*.db-shm
+*.db-wal
+.git
+.vs
+.vscode
+.claude
