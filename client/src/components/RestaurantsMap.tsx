@@ -20,6 +20,7 @@ interface RestaurantsMapProps {
   onEditRestaurant: (restaurant: Restaurant) => void
   onEditVisite: (visite: Visite) => void
   onRestaurantDeleted: () => void
+  onVisiteDeleted: () => void
 }
 
 function FitBounds({ restaurants }: { restaurants: Restaurant[] }) {
@@ -48,6 +49,7 @@ function RestaurantsMap({
   onEditRestaurant,
   onEditVisite,
   onRestaurantDeleted,
+  onVisiteDeleted,
 }: RestaurantsMapProps) {
   const [visitesByRestaurant, setVisitesByRestaurant] = useState<
     Record<string, VisitesState>
@@ -114,6 +116,7 @@ function RestaurantsMap({
           onEditVisite={onEditVisite}
           onRestaurantDeleted={onRestaurantDeleted}
           onVisitesRefresh={loadVisites}
+          onVisiteDeleted={onVisiteDeleted}
         />
       ))}
     </MapContainer>

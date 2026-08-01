@@ -1,12 +1,10 @@
 import { useState } from 'react'
 import { Marker, Popup } from 'react-leaflet'
-import {
-  ApiError,
-  deleteRestaurant,
-  deleteVisite,
-  resolvePhotoUrl,
-} from '../api/client.ts'
+import { deleteVisite, resolvePhotoUrl } from '../api/client.ts'
 import type { Restaurant, Visite } from '../api/types.ts'
+import { useDeleteRestaurant } from '../hooks/useDeleteRestaurant.ts'
+import { errorMessage } from '../utils/errors.ts'
+import { formatDate, stars } from '../utils/format.ts'
 
 export type VisitesState =
   | { status: 'idle' }
@@ -22,23 +20,7 @@ interface RestaurantMarkerProps {
   onRestaurantDeleted: () => void
   onEditVisite: (visite: Visite) => void
   onVisitesRefresh: (restaurantId: string) => void
-}
-
-function formatDate(isoDate: string): string {
-  const parsed = new Date(`${isoDate}T00:00:00`)
-  if (Number.isNaN(parsed.getTime())) {
-    return isoDate
-  }
-  return parsed.toLocaleDateString('fr-FR')
-}
-
-function stars(note: number): string {
-  const filled = Math.max(0, Math.min(5, note))
-  return '★'.repeat(filled) + '☆'.repeat(5 - filled)
-}
-
-function errorMessage(err: unknown, fallback: string): string {
-  return err instanceof ApiError ? (err.detail ?? err.message) : fallback
+  onVisiteDeleted: () => void
 }
 
 interface VisitesSectionProps {
@@ -149,35 +131,17 @@ function RestaurantMarker({
   onRestaurantDeleted,
   onEditVisite,
   onVisitesRefresh,
+  onVisiteDeleted,
 }: RestaurantMarkerProps) {
-  const [deletingRestaurant, setDeletingRestaurant] = useState(false)
-  const [restaurantError, setRestaurantError] = useState<string | null>(null)
+  const {
+    deleting: deletingRestaurant,
+    error: restaurantError,
+    handleDelete: handleDeleteRestaurant,
+  } = useDeleteRestaurant(onRestaurantDeleted)
   const [deletingVisiteId, setDeletingVisiteId] = useState<string | null>(null)
   const [visiteError, setVisiteError] = useState<string | null>(null)
 
   const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${restaurant.latitude},${restaurant.longitude}`
-
-  async function handleDeleteRestaurant() {
-    if (
-      !window.confirm(
-        `Supprimer "${restaurant.nom}" et toutes ses visites ?`,
-      )
-    ) {
-      return
-    }
-
-    setDeletingRestaurant(true)
-    setRestaurantError(null)
-    try {
-      await deleteRestaurant(restaurant.id)
-      onRestaurantDeleted()
-    } catch (err) {
-      setRestaurantError(
-        errorMessage(err, 'La suppression du restaurant a échoué.'),
-      )
-      setDeletingRestaurant(false)
-    }
-  }
 
   async function handleDeleteVisite(visite: Visite) {
     if (!window.confirm('Supprimer cette visite ?')) {
@@ -189,6 +153,7 @@ function RestaurantMarker({
     try {
       await deleteVisite(visite.id)
       onVisitesRefresh(restaurant.id)
+      onVisiteDeleted()
     } catch (err) {
       setVisiteError(errorMessage(err, 'La suppression de la visite a échoué.'))
     } finally {
@@ -217,7 +182,7 @@ function RestaurantMarker({
                 type="button"
                 className="popup-btn popup-btn-danger"
                 disabled={deletingRestaurant}
-                onClick={() => void handleDeleteRestaurant()}
+                onClick={() => void handleDeleteRestaurant(restaurant)}
               >
                 {deletingRestaurant ? 'Suppression…' : 'Supprimer'}
               </button>

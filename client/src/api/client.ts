@@ -129,6 +129,10 @@ export function getVisites(restaurantId: string): Promise<Visite[]> {
   return request<Visite[]>(`/api/restaurants/${restaurantId}/visites`)
 }
 
+export function getAllVisites(): Promise<Visite[]> {
+  return request<Visite[]>('/api/visites')
+}
+
 export function createVisite(
   payload: CreateVisiteRequest,
 ): Promise<CreatedResponse> {

@@ -1,0 +1,280 @@
+import { useMemo, useState } from 'react'
+import type { Restaurant, Visite } from '../api/types.ts'
+import { useDeleteRestaurant } from '../hooks/useDeleteRestaurant.ts'
+import { formatDate, stars } from '../utils/format.ts'
+
+interface RestaurantsListProps {
+  restaurants: Restaurant[]
+  visites: Visite[]
+  onEditRestaurant: (restaurant: Restaurant) => void
+  onRestaurantDeleted: () => void
+}
+
+type SortOption = 'nom' | 'derniereVisite' | 'nombreVisites'
+
+interface RestaurantAggregate {
+  restaurant: Restaurant
+  count: number
+  lastVisite: Visite | null
+  categories: string[]
+}
+
+function aggregate(
+  restaurants: Restaurant[],
+  visites: Visite[],
+): RestaurantAggregate[] {
+  const visitesByRestaurant = new Map<string, Visite[]>()
+  for (const visite of visites) {
+    const list = visitesByRestaurant.get(visite.restaurantId)
+    if (list) {
+      list.push(visite)
+    } else {
+      visitesByRestaurant.set(visite.restaurantId, [visite])
+    }
+  }
+
+  return restaurants.map((restaurant) => {
+    const restaurantVisites = visitesByRestaurant.get(restaurant.id) ?? []
+    const lastVisite = restaurantVisites.reduce<Visite | null>(
+      (latest, visite) =>
+        !latest || visite.date.localeCompare(latest.date) > 0
+          ? visite
+          : latest,
+      null,
+    )
+    const categories = Array.from(
+      new Set(restaurantVisites.flatMap((visite) => visite.categories)),
+    ).sort((a, b) => a.localeCompare(b, 'fr'))
+
+    return {
+      restaurant,
+      count: restaurantVisites.length,
+      lastVisite,
+      categories,
+    }
+  })
+}
+
+function sortAggregates(
+  aggregates: RestaurantAggregate[],
+  sortOption: SortOption,
+): RestaurantAggregate[] {
+  const sorted = [...aggregates]
+  switch (sortOption) {
+    case 'nom':
+      sorted.sort((a, b) =>
+        a.restaurant.nom.localeCompare(b.restaurant.nom, 'fr'),
+      )
+      break
+    case 'derniereVisite':
+      sorted.sort((a, b) => {
+        if (!a.lastVisite && !b.lastVisite) return 0
+        if (!a.lastVisite) return 1
+        if (!b.lastVisite) return -1
+        return b.lastVisite.date.localeCompare(a.lastVisite.date)
+      })
+      break
+    case 'nombreVisites':
+      sorted.sort((a, b) => b.count - a.count)
+      break
+  }
+  return sorted
+}
+
+interface RestaurantCardProps {
+  aggregate: RestaurantAggregate
+  onEditRestaurant: (restaurant: Restaurant) => void
+  onRestaurantDeleted: () => void
+}
+
+function RestaurantCard({
+  aggregate: item,
+  onEditRestaurant,
+  onRestaurantDeleted,
+}: RestaurantCardProps) {
+  const { deleting, error, handleDelete } =
+    useDeleteRestaurant(onRestaurantDeleted)
+  const { restaurant, count, lastVisite, categories } = item
+
+  return (
+    <article className="restaurant-card">
+      <div className="popup-header">
+        <h3>{restaurant.nom}</h3>
+        <div className="popup-actions">
+          <button
+            type="button"
+            className="popup-btn"
+            onClick={() => onEditRestaurant(restaurant)}
+          >
+            Modifier
+          </button>
+          <button
+            type="button"
+            className="popup-btn popup-btn-danger"
+            disabled={deleting}
+            onClick={() => void handleDelete(restaurant)}
+          >
+            {deleting ? 'Suppression…' : 'Supprimer'}
+          </button>
+        </div>
+      </div>
+
+      <p className="popup-adresse">{restaurant.adresse}</p>
+      {error && <p className="popup-status popup-error">{error}</p>}
+
+      <p className="list-card-count">
+        {count} {count > 1 ? 'visites' : 'visite'}
+      </p>
+
+      {lastVisite ? (
+        <div className="list-card-last-visite">
+          <span
+            className="popup-stars"
+            aria-label={`Note ${lastVisite.note} sur 5`}
+          >
+            {stars(lastVisite.note)}
+          </span>
+          <span className="popup-visite-date">
+            {formatDate(lastVisite.date)}
+          </span>
+        </div>
+      ) : (
+        <p className="popup-status">Aucune visite enregistrée.</p>
+      )}
+
+      {categories.length > 0 && (
+        <ul className="popup-categories">
+          {categories.map((category) => (
+            <li key={category}>{category}</li>
+          ))}
+        </ul>
+      )}
+    </article>
+  )
+}
+
+function RestaurantsList({
+  restaurants,
+  visites,
+  onEditRestaurant,
+  onRestaurantDeleted,
+}: RestaurantsListProps) {
+  const [search, setSearch] = useState('')
+  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(
+    new Set(),
+  )
+  const [sortOption, setSortOption] = useState<SortOption>('nom')
+
+  const aggregates = useMemo(
+    () => aggregate(restaurants, visites),
+    [restaurants, visites],
+  )
+
+  const allCategories = useMemo(
+    () =>
+      Array.from(new Set(visites.flatMap((visite) => visite.categories))).sort(
+        (a, b) => a.localeCompare(b, 'fr'),
+      ),
+    [visites],
+  )
+
+  function toggleCategory(category: string) {
+    setSelectedCategories((prev) => {
+      const next = new Set(prev)
+      if (next.has(category)) {
+        next.delete(category)
+      } else {
+        next.add(category)
+      }
+      return next
+    })
+  }
+
+  const filtered = useMemo(() => {
+    const query = search.trim().toLowerCase()
+    return aggregates.filter((item) => {
+      const matchesSearch =
+        query.length === 0 ||
+        item.restaurant.nom.toLowerCase().includes(query)
+      const matchesCategory =
+        selectedCategories.size === 0 ||
+        item.categories.some((category) => selectedCategories.has(category))
+      return matchesSearch && matchesCategory
+    })
+  }, [aggregates, search, selectedCategories])
+
+  const sorted = useMemo(
+    () => sortAggregates(filtered, sortOption),
+    [filtered, sortOption],
+  )
+
+  return (
+    <div className="restaurants-list-view">
+      <div className="list-controls">
+        <input
+          type="search"
+          className="list-search"
+          placeholder="Rechercher un restaurant…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+
+        {allCategories.length > 0 && (
+          <ul className="chips list-category-filters">
+            {allCategories.map((category) => (
+              <li key={category}>
+                <button
+                  type="button"
+                  className={
+                    selectedCategories.has(category)
+                      ? 'chip-filter chip-filter--active'
+                      : 'chip-filter'
+                  }
+                  onClick={() => toggleCategory(category)}
+                >
+                  {category}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <label className="list-sort-label">
+          Trier par
+          <select
+            value={sortOption}
+            onChange={(e) => setSortOption(e.target.value as SortOption)}
+          >
+            <option value="nom">Nom (A → Z)</option>
+            <option value="derniereVisite">Dernière visite (récente d'abord)</option>
+            <option value="nombreVisites">Nombre de visites</option>
+          </select>
+        </label>
+      </div>
+
+      {restaurants.length === 0 && (
+        <p className="list-empty">Aucun restaurant enregistré.</p>
+      )}
+      {restaurants.length > 0 && sorted.length === 0 && (
+        <p className="list-empty">
+          Aucun restaurant ne correspond à la recherche.
+        </p>
+      )}
+
+      {sorted.length > 0 && (
+        <div className="restaurant-cards">
+          {sorted.map((item) => (
+            <RestaurantCard
+              key={item.restaurant.id}
+              aggregate={item}
+              onEditRestaurant={onEditRestaurant}
+              onRestaurantDeleted={onRestaurantDeleted}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default RestaurantsList

@@ -1,18 +1,22 @@
 import { useEffect, useState, useCallback } from 'react'
-import { ApiError, getRestaurants } from './api/client.ts'
+import { ApiError, getAllVisites, getRestaurants } from './api/client.ts'
 import type { Restaurant, Visite } from './api/types.ts'
 import RestaurantsMap from './components/RestaurantsMap.tsx'
 import type { VisiteMutation } from './components/RestaurantsMap.tsx'
+import RestaurantsList from './components/RestaurantsList.tsx'
 import AddRestaurantForm from './components/AddRestaurantForm.tsx'
 import AddVisitForm from './components/AddVisitForm.tsx'
 import './App.css'
 
 type Panel = 'none' | 'restaurant' | 'visite'
+type View = 'carte' | 'liste'
 
 function App() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
+  const [visites, setVisites] = useState<Visite[]>([])
   const [loadError, setLoadError] = useState<string | null>(null)
   const [activePanel, setActivePanel] = useState<Panel>('none')
+  const [activeView, setActiveView] = useState<View>('carte')
   const [editingRestaurant, setEditingRestaurant] = useState<Restaurant | null>(
     null,
   )
@@ -35,9 +39,29 @@ function App() {
     }
   }, [])
 
+  const loadAllVisites = useCallback(async () => {
+    try {
+      const data = await getAllVisites()
+      setVisites(data)
+    } catch (err) {
+      setLoadError(
+        err instanceof ApiError
+          ? (err.detail ?? err.message)
+          : 'Impossible de charger les visites.',
+      )
+    }
+  }, [])
+
   useEffect(() => {
     void loadRestaurants()
-  }, [loadRestaurants])
+    void loadAllVisites()
+  }, [loadRestaurants, loadAllVisites])
+
+  useEffect(() => {
+    if (visiteMutation) {
+      void loadAllVisites()
+    }
+  }, [visiteMutation, loadAllVisites])
 
   function closePanel() {
     setActivePanel('none')
@@ -73,6 +97,7 @@ function App() {
 
   function handleRestaurantDeleted() {
     void loadRestaurants()
+    void loadAllVisites()
   }
 
   function handleRestaurantSaved() {
@@ -95,6 +120,22 @@ function App() {
     <div className="app-shell">
       <header className="app-header">
         <h1>RestosVisites</h1>
+        <div className="app-view-switch">
+          <button
+            type="button"
+            className={activeView === 'carte' ? 'active' : ''}
+            onClick={() => setActiveView('carte')}
+          >
+            Carte
+          </button>
+          <button
+            type="button"
+            className={activeView === 'liste' ? 'active' : ''}
+            onClick={() => setActiveView('liste')}
+          >
+            Liste
+          </button>
+        </div>
         <div className="app-actions">
           <button
             type="button"
@@ -114,13 +155,23 @@ function App() {
       </header>
 
       <main className="app-main">
-        <RestaurantsMap
-          restaurants={restaurants}
-          visiteMutation={visiteMutation}
-          onEditRestaurant={handleEditRestaurant}
-          onEditVisite={handleEditVisite}
-          onRestaurantDeleted={handleRestaurantDeleted}
-        />
+        {activeView === 'carte' ? (
+          <RestaurantsMap
+            restaurants={restaurants}
+            visiteMutation={visiteMutation}
+            onEditRestaurant={handleEditRestaurant}
+            onEditVisite={handleEditVisite}
+            onRestaurantDeleted={handleRestaurantDeleted}
+            onVisiteDeleted={() => void loadAllVisites()}
+          />
+        ) : (
+          <RestaurantsList
+            restaurants={restaurants}
+            visites={visites}
+            onEditRestaurant={handleEditRestaurant}
+            onRestaurantDeleted={handleRestaurantDeleted}
+          />
+        )}
         {loadError && <p className="map-error-banner">{loadError}</p>}
       </main>
 
