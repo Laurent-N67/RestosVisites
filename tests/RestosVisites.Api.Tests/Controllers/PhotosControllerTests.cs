@@ -81,10 +81,10 @@ public sealed class PhotosControllerTests : IClassFixture<RestosVisitesWebApplic
     [Fact]
     public async Task Post_FichierTropGros_Retourne400()
     {
-        // Volontairement juste au-dessus de la limite de 5 Mo (mais sous la limite globale de requête,
+        // Volontairement juste au-dessus de la limite de 50 Mo (mais sous la limite globale de requête,
         // qui inclut une marge pour l'en-tête multipart) afin d'exercer précisément la vérification
         // explicite de taille du contrôleur plutôt que le rejet bas niveau de la requête.
-        var contenuTropGros = new byte[5 * 1024 * 1024 + 1024];
+        var contenuTropGros = new byte[50 * 1024 * 1024 + 1024];
         // Signature JPEG valide en tête, pour s'assurer que c'est bien la taille qui est rejetée.
         Array.Copy(ContenuJpegValide, contenuTropGros, ContenuJpegValide.Length);
 

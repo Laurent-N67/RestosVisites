@@ -22,7 +22,7 @@ public sealed class PhotosController : ControllerBase
         ["image/webp"] = ".webp",
     };
 
-    private const long TailleMaxFichierOctets = 5 * 1024 * 1024; // 5 Mo
+    private const long TailleMaxFichierOctets = 50 * 1024 * 1024; // 50 Mo
     // Légère marge par rapport à la taille max du fichier, pour absorber l'en-tête multipart/form-data.
     private const long TailleMaxRequeteOctets = TailleMaxFichierOctets + 64 * 1024;
 
@@ -47,7 +47,7 @@ public sealed class PhotosController : ControllerBase
 
         if (file.Length > TailleMaxFichierOctets)
         {
-            return BadRequest("Le fichier dépasse la taille maximale autorisée (5 Mo).");
+            return BadRequest("Le fichier dépasse la taille maximale autorisée (50 Mo).");
         }
 
         if (!ExtensionsParTypeMime.TryGetValue(file.ContentType, out var extension))
