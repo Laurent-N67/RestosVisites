@@ -13,6 +13,11 @@ public sealed class VisiteConfiguration : IEntityTypeConfiguration<Visite>
 
         builder.HasKey(v => v.Id);
 
+        // Identifiant toujours généré côté Domain (constructeur de Visite), jamais par la base :
+        // voir le commentaire équivalent dans PhotoConfiguration pour le raisonnement complet.
+        builder.Property(v => v.Id)
+            .ValueGeneratedNever();
+
         builder.Property(v => v.RestaurantId)
             .IsRequired();
 

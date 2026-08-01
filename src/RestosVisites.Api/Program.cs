@@ -4,6 +4,10 @@ using RestosVisites.Application.UseCases.CreerRestaurant;
 using RestosVisites.Application.UseCases.EnregistrerVisite;
 using RestosVisites.Application.UseCases.ListerRestaurants;
 using RestosVisites.Application.UseCases.ListerVisitesRestaurant;
+using RestosVisites.Application.UseCases.ModifierRestaurant;
+using RestosVisites.Application.UseCases.ModifierVisite;
+using RestosVisites.Application.UseCases.SupprimerRestaurant;
+using RestosVisites.Application.UseCases.SupprimerVisite;
 using RestosVisites.Infrastructure;
 using RestosVisites.Infrastructure.Persistence;
 
@@ -24,6 +28,10 @@ builder.Services.AddScoped<CreerRestaurant>();
 builder.Services.AddScoped<ListerRestaurants>();
 builder.Services.AddScoped<ListerVisitesRestaurant>();
 builder.Services.AddScoped<EnregistrerVisite>();
+builder.Services.AddScoped<ModifierRestaurant>();
+builder.Services.AddScoped<SupprimerRestaurant>();
+builder.Services.AddScoped<ModifierVisite>();
+builder.Services.AddScoped<SupprimerVisite>();
 
 builder.Services.AddExceptionHandler<ErreurApplicationExceptionHandler>();
 builder.Services.AddProblemDetails();

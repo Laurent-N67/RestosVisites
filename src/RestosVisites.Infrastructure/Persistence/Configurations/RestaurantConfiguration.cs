@@ -12,6 +12,11 @@ public sealed class RestaurantConfiguration : IEntityTypeConfiguration<Restauran
 
         builder.HasKey(r => r.Id);
 
+        // Identifiant toujours généré côté Domain (constructeur de Restaurant), jamais par la
+        // base : voir le commentaire équivalent dans PhotoConfiguration pour le raisonnement complet.
+        builder.Property(r => r.Id)
+            .ValueGeneratedNever();
+
         builder.Property(r => r.Nom)
             .IsRequired()
             .HasMaxLength(200);
