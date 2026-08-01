@@ -36,4 +36,15 @@ public sealed class FakeRestaurantRepository : IRestaurantRepository
     {
         return Task.FromResult<IReadOnlyList<Restaurant>>(_restaurants.ToList());
     }
+
+    public Task MettreAJourAsync(Restaurant restaurant, CancellationToken ct)
+    {
+        return Task.CompletedTask;
+    }
+
+    public Task SupprimerAsync(Guid id, CancellationToken ct)
+    {
+        _restaurants.RemoveAll(r => r.Id == id);
+        return Task.CompletedTask;
+    }
 }

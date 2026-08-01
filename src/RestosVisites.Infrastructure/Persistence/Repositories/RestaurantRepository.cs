@@ -27,4 +27,20 @@ public sealed class RestaurantRepository : IRestaurantRepository
 
     public async Task<IReadOnlyList<Restaurant>> ListerAsync(CancellationToken ct)
         => await _dbContext.Restaurants.AsNoTracking().ToListAsync(ct);
+
+    public async Task MettreAJourAsync(Restaurant restaurant, CancellationToken ct)
+    {
+        _dbContext.Restaurants.Update(restaurant);
+        await _dbContext.SaveChangesAsync(ct);
+    }
+
+    public async Task SupprimerAsync(Guid id, CancellationToken ct)
+    {
+        var restaurant = await _dbContext.Restaurants.FindAsync([id], ct);
+        if (restaurant is not null)
+        {
+            _dbContext.Restaurants.Remove(restaurant);
+            await _dbContext.SaveChangesAsync(ct);
+        }
+    }
 }

@@ -92,4 +92,96 @@ public class VisiteTests
 
         Assert.Equal(2, visite.Categories.Count);
     }
+
+    [Fact]
+    public void SupprimerPhoto_PhotoPresente_LaRetire()
+    {
+        var visite = new Visite(RestaurantIdValide, DateValide, new Note(3));
+        var photo = new Photo("https://exemple.test/photo.jpg");
+        visite.AjouterPhoto(photo);
+
+        visite.SupprimerPhoto(photo.Id);
+
+        Assert.Empty(visite.Photos);
+    }
+
+    [Fact]
+    public void SupprimerPhoto_IdAbsent_NaAucunEffet()
+    {
+        var visite = new Visite(RestaurantIdValide, DateValide, new Note(3));
+        var photo = new Photo("https://exemple.test/photo.jpg");
+        visite.AjouterPhoto(photo);
+
+        visite.SupprimerPhoto(Guid.NewGuid());
+
+        Assert.Single(visite.Photos);
+    }
+
+    [Fact]
+    public void SupprimerCategorie_CategoriePresente_LaRetire()
+    {
+        var visite = new Visite(RestaurantIdValide, DateValide, new Note(3));
+        var categorie = new Categorie("Italien");
+        visite.AjouterCategorie(categorie);
+
+        visite.SupprimerCategorie(categorie.Id);
+
+        Assert.Empty(visite.Categories);
+    }
+
+    [Fact]
+    public void SupprimerCategorie_IdAbsent_NaAucunEffet()
+    {
+        var visite = new Visite(RestaurantIdValide, DateValide, new Note(3));
+        var categorie = new Categorie("Italien");
+        visite.AjouterCategorie(categorie);
+
+        visite.SupprimerCategorie(Guid.NewGuid());
+
+        Assert.Single(visite.Categories);
+    }
+
+    [Fact]
+    public void Modifier_ValeursValides_MetAJourLesProprietes()
+    {
+        var visite = new Visite(RestaurantIdValide, DateValide, new Note(3), "Correct");
+        var nouvelleDate = new DateOnly(2026, 2, 1);
+
+        visite.Modifier(nouvelleDate, new Note(5), "Excellent accueil");
+
+        Assert.Equal(nouvelleDate, visite.Date);
+        Assert.Equal(5, visite.Note.Valeur);
+        Assert.Equal("Excellent accueil", visite.Commentaire);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(" ")]
+    [InlineData(null)]
+    public void Modifier_CommentaireVideOuBlanc_EstNormaliseANull(string? commentaire)
+    {
+        var visite = new Visite(RestaurantIdValide, DateValide, new Note(3), "Correct");
+
+        visite.Modifier(DateValide, new Note(4), commentaire);
+
+        Assert.Null(visite.Commentaire);
+    }
+
+    [Fact]
+    public void Modifier_CommentaireAvecEspaces_EstTrim()
+    {
+        var visite = new Visite(RestaurantIdValide, DateValide, new Note(3));
+
+        visite.Modifier(DateValide, new Note(4), "  Sympa  ");
+
+        Assert.Equal("Sympa", visite.Commentaire);
+    }
+
+    [Fact]
+    public void Modifier_NoteNull_LeveArgumentNullException()
+    {
+        var visite = new Visite(RestaurantIdValide, DateValide, new Note(3));
+
+        Assert.Throws<ArgumentNullException>(() => visite.Modifier(DateValide, null!, null));
+    }
 }

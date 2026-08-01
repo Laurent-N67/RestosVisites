@@ -17,4 +17,8 @@ public interface IRestaurantRepository
     Task<Restaurant?> ObtenirParNomEtAdresseAsync(string nom, string adresse, CancellationToken ct);
 
     Task<IReadOnlyList<Restaurant>> ListerAsync(CancellationToken ct);
+
+    Task MettreAJourAsync(Restaurant restaurant, CancellationToken ct);
+
+    Task SupprimerAsync(Guid id, CancellationToken ct);
 }

@@ -19,6 +19,12 @@ public sealed class VisiteRepository : IVisiteRepository
         await _dbContext.SaveChangesAsync(ct);
     }
 
+    public async Task<Visite?> ObtenirParIdAsync(Guid id, CancellationToken ct)
+        => await _dbContext.Visites
+            .Include(v => v.Photos)
+            .Include(v => v.Categories)
+            .FirstOrDefaultAsync(v => v.Id == id, ct);
+
     public async Task<IReadOnlyList<Visite>> ListerParRestaurantAsync(Guid restaurantId, CancellationToken ct)
         => await _dbContext.Visites
             .AsNoTracking()
@@ -33,4 +39,24 @@ public sealed class VisiteRepository : IVisiteRepository
             .Include(v => v.Photos)
             .Include(v => v.Categories)
             .ToListAsync(ct);
+
+    /// <summary>
+    /// Persiste les modifications d'une visite déjà suivie par le contexte (obtenue via
+    /// <see cref="ObtenirParIdAsync"/>) : les changements sur ses propriétés ainsi que sur ses
+    /// collections de photos et catégories sont détectés automatiquement par EF Core.
+    /// </summary>
+    public async Task MettreAJourAsync(Visite visite, CancellationToken ct)
+    {
+        await _dbContext.SaveChangesAsync(ct);
+    }
+
+    public async Task SupprimerAsync(Guid id, CancellationToken ct)
+    {
+        var visite = await _dbContext.Visites.FindAsync([id], ct);
+        if (visite is not null)
+        {
+            _dbContext.Visites.Remove(visite);
+            await _dbContext.SaveChangesAsync(ct);
+        }
+    }
 }
