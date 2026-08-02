@@ -1,10 +1,19 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError } from '../api/client.ts'
-import type { Utilisateur, UtilisateurAvecFavoris } from '../api/types.ts'
+import type { Utilisateur, UtilisateurAvecFavoris, Visite } from '../api/types.ts'
 import { Role } from '../api/types.ts'
 import UtilisateursPage from './UtilisateursPage.tsx'
+
+function renderPage(visites: Visite[] = []) {
+  return render(
+    <MemoryRouter>
+      <UtilisateursPage visites={visites} />
+    </MemoryRouter>,
+  )
+}
 
 const { getUtilisateursAvecFavorisMock, changerRoleMock } = vi.hoisted(() => ({
   getUtilisateursAvecFavorisMock: vi.fn(),
@@ -71,7 +80,7 @@ describe('UtilisateursPage', () => {
 
   it('affiche la liste des utilisateurs avec leurs favoris', async () => {
     getUtilisateursAvecFavorisMock.mockResolvedValue(utilisateurs)
-    render(<UtilisateursPage />)
+    renderPage()
 
     expect(await screen.findByText('Une Personne')).toBeInTheDocument()
     expect(screen.getByText(/Le Bon Coin/)).toBeInTheDocument()
@@ -79,11 +88,42 @@ describe('UtilisateursPage', () => {
     expect(screen.getByText('Aucun favori.')).toBeInTheDocument()
   })
 
+  it("affiche la note moyenne des visites du propriétaire du favori et un lien vers le restaurant", async () => {
+    getUtilisateursAvecFavorisMock.mockResolvedValue(utilisateurs)
+    const visites: Visite[] = [
+      {
+        id: 'v1',
+        restaurantId: 'restaurant-1',
+        date: '2026-06-05',
+        note: 4,
+        commentaire: null,
+        urlsPhotos: [],
+        utilisateurId: 'user-1',
+        utilisateurNomAffiche: 'Une Personne',
+      },
+      {
+        id: 'v2',
+        restaurantId: 'restaurant-1',
+        date: '2026-06-10',
+        note: 2,
+        commentaire: null,
+        urlsPhotos: [],
+        utilisateurId: 'user-1',
+        utilisateurNomAffiche: 'Une Personne',
+      },
+    ]
+    renderPage(visites)
+
+    const lien = await screen.findByRole('link', { name: /Le Bon Coin/ })
+    expect(lien).toHaveAttribute('href', '/restaurants/restaurant-1')
+    expect(lien.textContent).toContain('(3.0)')
+  })
+
   it('affiche un sélecteur de rôle pour un admin et permet de changer un rôle', async () => {
     getUtilisateursAvecFavorisMock.mockResolvedValue(utilisateurs)
     changerRoleMock.mockResolvedValue(undefined)
     const user = userEvent.setup()
-    render(<UtilisateursPage />)
+    renderPage()
 
     await screen.findByText('Une Personne')
     const selects = screen.getAllByLabelText('Rôle')
@@ -104,7 +144,7 @@ describe('UtilisateursPage', () => {
       role: Role.Simple,
     }
     getUtilisateursAvecFavorisMock.mockResolvedValue(utilisateurs)
-    render(<UtilisateursPage />)
+    renderPage()
 
     await screen.findByText('Une Personne')
     expect(screen.queryByLabelText('Rôle')).not.toBeInTheDocument()
@@ -115,7 +155,7 @@ describe('UtilisateursPage', () => {
     getUtilisateursAvecFavorisMock.mockRejectedValue(
       new ApiError(500, 'Erreur serveur', 'Impossible de charger les utilisateurs.'),
     )
-    render(<UtilisateursPage />)
+    renderPage()
 
     expect(
       await screen.findByText('Impossible de charger les utilisateurs.'),

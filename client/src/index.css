@@ -5,9 +5,9 @@
   --bg-card: #fff;
   --border: #e5e4e7;
   --field-bg: #fff;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
+  --accent: #e0551e;
+  --accent-bg: rgba(224, 85, 30, 0.1);
+  --accent-border: rgba(224, 85, 30, 0.5);
   --danger: #c0392b;
   --danger-bg: #fff3f2;
   --success: #1e824c;
@@ -27,19 +27,19 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Mode sombre : palette quasi-noire façon MangaDex, cartes légèrement plus
-   claires que le fond, bordures discrètes, texte clair, accent violet de la
-   marque conservé. */
+/* Mode sombre : gris neutre façon MangaDex (pas de teinte noire/violette),
+   cartes légèrement plus claires que le fond, bordures discrètes, texte
+   clair, accent orange façon MangaDex. */
 :root[data-theme='dark'] {
-  --text: #c7c3d1;
-  --text-h: #f6f4fa;
-  --bg: #121016;
-  --bg-card: #1c1a23;
-  --border: #322f3c;
-  --field-bg: #201e28;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.18);
-  --accent-border: rgba(170, 59, 255, 0.55);
+  --text: #c9cbce;
+  --text-h: #f4f5f6;
+  --bg: #18191b;
+  --bg-card: #202224;
+  --border: #35373a;
+  --field-bg: #26282b;
+  --accent: #ff6740;
+  --accent-bg: rgba(255, 103, 64, 0.18);
+  --accent-border: rgba(255, 103, 64, 0.55);
   --danger: #ff6e5f;
   --danger-bg: rgba(255, 110, 95, 0.15);
   --success: #4fd88a;

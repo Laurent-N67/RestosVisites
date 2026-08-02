@@ -25,3 +25,25 @@ export function meetsRatingThreshold(
   }
   return averageNote !== null && averageNote >= minNote
 }
+
+/**
+ * Note moyenne des visites d'un restaurant faites par un utilisateur
+ * donné (pas la moyenne globale du restaurant) — `null` si cet
+ * utilisateur n'a aucune visite sur ce restaurant.
+ */
+export function averageNoteForUserRestaurant(
+  visites: Visite[],
+  userId: string,
+  restaurantId: string,
+): number | null {
+  const notes = visites
+    .filter(
+      (visite) =>
+        visite.utilisateurId === userId && visite.restaurantId === restaurantId,
+    )
+    .map((visite) => visite.note)
+  if (notes.length === 0) {
+    return null
+  }
+  return notes.reduce((sum, note) => sum + note, 0) / notes.length
+}

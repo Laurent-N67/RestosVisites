@@ -1,17 +1,23 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { changerRole, getUtilisateursAvecFavoris } from '../api/client.ts'
-import type { UtilisateurAvecFavoris } from '../api/types.ts'
+import type { UtilisateurAvecFavoris, Visite } from '../api/types.ts'
 import { Role } from '../api/types.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { errorMessage } from '../utils/errors.ts'
-import { formatDate } from '../utils/format.ts'
+import { formatDate, stars } from '../utils/format.ts'
+import { averageNoteForUserRestaurant } from '../utils/visites.ts'
 
 const ROLE_LABELS: Record<Role, string> = {
   [Role.Simple]: 'Simple',
   [Role.Admin]: 'Admin',
 }
 
-function UtilisateursPage() {
+interface UtilisateursPageProps {
+  visites: Visite[]
+}
+
+function UtilisateursPage({ visites }: UtilisateursPageProps) {
   const { user } = useAuth()
   const isAdmin = user?.role === Role.Admin
 
@@ -107,11 +113,29 @@ function UtilisateursPage() {
                 <p className="popup-status">Aucun favori.</p>
               ) : (
                 <ul className="popup-categories">
-                  {utilisateur.favoris.map((favori) => (
-                    <li key={favori.restaurantId}>
-                      {favori.restaurantNom} · {formatDate(favori.dateAjout)}
-                    </li>
-                  ))}
+                  {utilisateur.favoris.map((favori) => {
+                    const noteMoyenne = averageNoteForUserRestaurant(
+                      visites,
+                      utilisateur.id,
+                      favori.restaurantId,
+                    )
+                    return (
+                      <li key={favori.restaurantId}>
+                        <Link to={`/restaurants/${favori.restaurantId}`}>
+                          {favori.restaurantNom} · {formatDate(favori.dateAjout)}
+                          {noteMoyenne !== null && (
+                            <span
+                              className="popup-stars"
+                              aria-label={`Note moyenne ${noteMoyenne} sur 5`}
+                            >
+                              {' '}
+                              {stars(Math.round(noteMoyenne))} ({noteMoyenne.toFixed(1)})
+                            </span>
+                          )}
+                        </Link>
+                      </li>
+                    )
+                  })}
                 </ul>
               )}
             </li>

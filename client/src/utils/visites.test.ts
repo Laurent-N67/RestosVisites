@@ -1,13 +1,21 @@
 import { describe, expect, it } from 'vitest'
 import type { Visite } from '../api/types.ts'
-import { hasVisiteByUser, meetsRatingThreshold } from './visites.ts'
+import {
+  averageNoteForUserRestaurant,
+  hasVisiteByUser,
+  meetsRatingThreshold,
+} from './visites.ts'
 
-function visite(id: string, utilisateurId: string): Visite {
+function visite(
+  id: string,
+  utilisateurId: string,
+  options: { restaurantId?: string; note?: number } = {},
+): Visite {
   return {
     id,
-    restaurantId: 'restaurant-1',
+    restaurantId: options.restaurantId ?? 'restaurant-1',
     date: '2026-08-01',
-    note: 4,
+    note: options.note ?? 4,
     commentaire: null,
     urlsPhotos: [],
     utilisateurId,
@@ -45,5 +53,36 @@ describe('meetsRatingThreshold', () => {
     expect(meetsRatingThreshold(4, 4)).toBe(true)
     expect(meetsRatingThreshold(3.9, 4)).toBe(false)
     expect(meetsRatingThreshold(5, 4)).toBe(true)
+  })
+})
+
+describe('averageNoteForUserRestaurant', () => {
+  it("renvoie null si l'utilisateur n'a aucune visite sur ce restaurant", () => {
+    const visites = [visite('v1', 'user-b', { restaurantId: 'resto-1' })]
+    expect(averageNoteForUserRestaurant(visites, 'user-a', 'resto-1')).toBeNull()
+  })
+
+  it("ignore les visites d'un autre restaurant", () => {
+    const visites = [
+      visite('v1', 'user-a', { restaurantId: 'resto-1', note: 5 }),
+      visite('v2', 'user-a', { restaurantId: 'resto-2', note: 1 }),
+    ]
+    expect(averageNoteForUserRestaurant(visites, 'user-a', 'resto-1')).toBe(5)
+  })
+
+  it("ignore les visites d'un autre utilisateur sur le même restaurant", () => {
+    const visites = [
+      visite('v1', 'user-a', { restaurantId: 'resto-1', note: 5 }),
+      visite('v2', 'user-b', { restaurantId: 'resto-1', note: 1 }),
+    ]
+    expect(averageNoteForUserRestaurant(visites, 'user-a', 'resto-1')).toBe(5)
+  })
+
+  it('fait la moyenne de plusieurs visites du même utilisateur sur le même restaurant', () => {
+    const visites = [
+      visite('v1', 'user-a', { restaurantId: 'resto-1', note: 5 }),
+      visite('v2', 'user-a', { restaurantId: 'resto-1', note: 3 }),
+    ]
+    expect(averageNoteForUserRestaurant(visites, 'user-a', 'resto-1')).toBe(4)
   })
 })

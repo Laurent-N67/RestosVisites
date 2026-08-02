@@ -184,40 +184,41 @@ function RestaurantMarker({
         <div className="restaurant-popup">
           <div className="popup-header">
             <h3>{restaurant.nom}</h3>
-            {user && (
-              <div className="popup-actions">
-                <button
-                  type="button"
-                  className={isFavori ? 'popup-btn popup-btn-favori-active' : 'popup-btn'}
-                  disabled={favoriLoading || favoriPending}
-                  onClick={() => void toggleFavori()}
-                >
-                  {isFavori ? '★ Retirer des favoris' : '☆ Ajouter aux favoris'}
-                </button>
-                {isAdmin && (
-                  <>
-                    <button
-                      type="button"
-                      className="popup-btn"
-                      onClick={() => onEditRestaurant(restaurant)}
-                    >
-                      Modifier
-                    </button>
-                    <button
-                      type="button"
-                      className="popup-btn popup-btn-danger"
-                      disabled={deletingRestaurant}
-                      onClick={() => void handleDeleteRestaurant(restaurant)}
-                    >
-                      {deletingRestaurant ? 'Suppression…' : 'Supprimer'}
-                    </button>
-                  </>
-                )}
-              </div>
-            )}
           </div>
 
           <p className="popup-adresse">{restaurant.adresse}</p>
+
+          {user && (
+            <div className="popup-actions">
+              <button
+                type="button"
+                className={isFavori ? 'popup-btn popup-btn-favori-active' : 'popup-btn'}
+                disabled={favoriLoading || favoriPending}
+                onClick={() => void toggleFavori()}
+              >
+                {isFavori ? '★ Retirer des favoris' : '☆ Ajouter aux favoris'}
+              </button>
+              {isAdmin && (
+                <>
+                  <button
+                    type="button"
+                    className="popup-btn"
+                    onClick={() => onEditRestaurant(restaurant)}
+                  >
+                    Modifier
+                  </button>
+                  <button
+                    type="button"
+                    className="popup-btn popup-btn-danger"
+                    disabled={deletingRestaurant}
+                    onClick={() => void handleDeleteRestaurant(restaurant)}
+                  >
+                    {deletingRestaurant ? 'Suppression…' : 'Supprimer'}
+                  </button>
+                </>
+              )}
+            </div>
+          )}
           {restaurant.categories.length > 0 && (
             <ul className="popup-categories">
               {restaurant.categories.map((categorie) => (

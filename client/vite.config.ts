@@ -20,7 +20,7 @@ export default defineConfig({
         name: 'RestosVisites',
         short_name: 'RestosVisites',
         description: 'Carnet de visites de restaurants : notez et retrouvez vos adresses.',
-        theme_color: '#aa3bff',
+        theme_color: '#ff6740',
         background_color: '#ffffff',
         display: 'standalone',
         start_url: '/',

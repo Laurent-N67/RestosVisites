@@ -301,7 +301,7 @@ function App() {
             path="/utilisateurs"
             element={
               <ProtectedRoute>
-                <UtilisateursPage />
+                <UtilisateursPage visites={visites} />
               </ProtectedRoute>
             }
           />

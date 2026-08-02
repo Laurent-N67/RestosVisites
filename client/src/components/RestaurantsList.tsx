@@ -130,40 +130,41 @@ function RestaurantCard({
     <article className="restaurant-card">
       <div className="popup-header">
         <h3>{restaurant.nom}</h3>
-        {user && (
-          <div className="popup-actions">
-            <button
-              type="button"
-              className={isFavori ? 'popup-btn popup-btn-favori-active' : 'popup-btn'}
-              disabled={favoriLoading || favoriPending}
-              onClick={() => void toggleFavori()}
-            >
-              {isFavori ? '★ Retirer des favoris' : '☆ Ajouter aux favoris'}
-            </button>
-            {isAdmin && (
-              <>
-                <button
-                  type="button"
-                  className="popup-btn"
-                  onClick={() => onEditRestaurant(restaurant)}
-                >
-                  Modifier
-                </button>
-                <button
-                  type="button"
-                  className="popup-btn popup-btn-danger"
-                  disabled={deleting}
-                  onClick={() => void handleDelete(restaurant)}
-                >
-                  {deleting ? 'Suppression…' : 'Supprimer'}
-                </button>
-              </>
-            )}
-          </div>
-        )}
       </div>
 
       <p className="popup-adresse">{restaurant.adresse}</p>
+
+      {user && (
+        <div className="popup-actions">
+          <button
+            type="button"
+            className={isFavori ? 'popup-btn popup-btn-favori-active' : 'popup-btn'}
+            disabled={favoriLoading || favoriPending}
+            onClick={() => void toggleFavori()}
+          >
+            {isFavori ? '★ Retirer des favoris' : '☆ Ajouter aux favoris'}
+          </button>
+          {isAdmin && (
+            <>
+              <button
+                type="button"
+                className="popup-btn"
+                onClick={() => onEditRestaurant(restaurant)}
+              >
+                Modifier
+              </button>
+              <button
+                type="button"
+                className="popup-btn popup-btn-danger"
+                disabled={deleting}
+                onClick={() => void handleDelete(restaurant)}
+              >
+                {deleting ? 'Suppression…' : 'Supprimer'}
+              </button>
+            </>
+          )}
+        </div>
+      )}
       {error && <p className="popup-status popup-error">{error}</p>}
       {favoriError && <p className="popup-status popup-error">{favoriError}</p>}
 
