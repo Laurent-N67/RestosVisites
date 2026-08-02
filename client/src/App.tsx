@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Link, Route, Routes, useNavigate } from 'react-router-dom'
+import { Link, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { ApiError, getAllVisites, getCategories, getRestaurants } from './api/client.ts'
 import type { Categorie, Restaurant, Visite } from './api/types.ts'
 import RestaurantsMap from './components/RestaurantsMap.tsx'
@@ -18,18 +18,17 @@ import { useTheme } from './hooks/useTheme.ts'
 import './App.css'
 
 type Panel = 'none' | 'restaurant' | 'visite'
-type View = 'carte' | 'liste'
 
 function App() {
   const { theme, toggleTheme } = useTheme()
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
   const [visites, setVisites] = useState<Visite[]>([])
   const [categories, setCategories] = useState<Categorie[]>([])
   const [loadError, setLoadError] = useState<string | null>(null)
   const [activePanel, setActivePanel] = useState<Panel>('none')
-  const [activeView, setActiveView] = useState<View>('carte')
   const [editingRestaurant, setEditingRestaurant] = useState<Restaurant | null>(
     null,
   )
@@ -170,27 +169,33 @@ function App() {
       <header className="app-header">
         <h1>RestosVisites</h1>
         {user && (
-          <div className="app-view-switch">
-            <button
-              type="button"
-              className={activeView === 'carte' ? 'active' : ''}
-              onClick={() => setActiveView('carte')}
+          <nav className="app-nav">
+            <Link
+              to="/"
+              className={location.pathname === '/' ? 'active' : ''}
             >
               Carte
-            </button>
-            <button
-              type="button"
-              className={activeView === 'liste' ? 'active' : ''}
-              onClick={() => setActiveView('liste')}
+            </Link>
+            <Link
+              to="/liste"
+              className={location.pathname === '/liste' ? 'active' : ''}
             >
               Liste
-            </button>
-          </div>
-        )}
-        {user && (
-          <nav className="app-nav">
-            <Link to="/favoris">Favoris</Link>
-            <Link to="/utilisateurs">Utilisateurs</Link>
+            </Link>
+            <Link
+              to="/favoris"
+              className={location.pathname.startsWith('/favoris') ? 'active' : ''}
+            >
+              Favoris
+            </Link>
+            <Link
+              to="/utilisateurs"
+              className={
+                location.pathname.startsWith('/utilisateurs') ? 'active' : ''
+              }
+            >
+              Utilisateurs
+            </Link>
           </nav>
         )}
         <div className="app-actions">
@@ -248,25 +253,27 @@ function App() {
           <Route
             path="/"
             element={
-              activeView === 'carte' ? (
-                <RestaurantsMap
-                  theme={theme}
-                  restaurants={restaurants}
-                  visites={visites}
-                  visiteMutation={visiteMutation}
-                  onEditRestaurant={handleEditRestaurant}
-                  onEditVisite={handleEditVisite}
-                  onRestaurantDeleted={handleRestaurantDeleted}
-                  onVisiteDeleted={() => void loadAllVisites()}
-                />
-              ) : (
-                <RestaurantsList
-                  restaurants={restaurants}
-                  visites={visites}
-                  onEditRestaurant={handleEditRestaurant}
-                  onRestaurantDeleted={handleRestaurantDeleted}
-                />
-              )
+              <RestaurantsMap
+                theme={theme}
+                restaurants={restaurants}
+                visites={visites}
+                visiteMutation={visiteMutation}
+                onEditRestaurant={handleEditRestaurant}
+                onEditVisite={handleEditVisite}
+                onRestaurantDeleted={handleRestaurantDeleted}
+                onVisiteDeleted={() => void loadAllVisites()}
+              />
+            }
+          />
+          <Route
+            path="/liste"
+            element={
+              <RestaurantsList
+                restaurants={restaurants}
+                visites={visites}
+                onEditRestaurant={handleEditRestaurant}
+                onRestaurantDeleted={handleRestaurantDeleted}
+              />
             }
           />
           <Route
