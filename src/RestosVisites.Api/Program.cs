@@ -122,6 +122,11 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+// Fallback SPA : toute route GET non gérée par un contrôleur ni un fichier statique existant
+// (ex. /restaurants/{id} en accès direct/rafraîchissement) sert index.html, pour que React Router
+// prenne la main côté client plutôt que de renvoyer un 404 serveur.
+app.MapFallbackToFile("index.html");
+
 app.Run();
 
 // Rend la classe Program générée par les top-level statements accessible depuis les tests
