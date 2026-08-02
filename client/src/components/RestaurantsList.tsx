@@ -1,7 +1,11 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { Categorie, Restaurant, Visite } from '../api/types.ts'
-import { groupCategories } from '../utils/categories.ts'
+import {
+  groupCategories,
+  groupSelectedIdsByGroupe,
+  matchesCategoryFilters,
+} from '../utils/categories.ts'
 import { useDeleteRestaurant } from '../hooks/useDeleteRestaurant.ts'
 import { formatDate, stars } from '../utils/format.ts'
 import CategoryFilterDropdown from './CategoryFilterDropdown.tsx'
@@ -202,27 +206,10 @@ function RestaurantsList({
     return map
   }, [allCategoriesGrouped])
 
-  // Catégories sélectionnées, regroupées par `groupe` : un restaurant doit
-  // correspondre à au moins une catégorie sélectionnée de CHAQUE groupe
-  // représenté (ET entre groupes, ex. prix et cuisine), mais il suffit qu'il
-  // corresponde à une seule des catégories sélectionnées au sein d'un même
-  // groupe (OU entre deux cuisines par exemple).
-  const selectedIdsByGroupe = useMemo(() => {
-    const map = new Map<string, Set<string>>()
-    for (const id of selectedCategories) {
-      const groupe = categorieGroupeById.get(id)
-      if (!groupe) {
-        continue
-      }
-      const set = map.get(groupe)
-      if (set) {
-        set.add(id)
-      } else {
-        map.set(groupe, new Set([id]))
-      }
-    }
-    return map
-  }, [selectedCategories, categorieGroupeById])
+  const selectedIdsByGroupe = useMemo(
+    () => groupSelectedIdsByGroupe(selectedCategories, categorieGroupeById),
+    [selectedCategories, categorieGroupeById],
+  )
 
   function toggleCategory(categorieId: string) {
     setSelectedCategories((prev) => {
@@ -247,9 +234,9 @@ function RestaurantsList({
         query.length === 0 ||
         item.restaurant.nom.toLowerCase().includes(query)
       const itemCategoryIds = new Set(item.categories.map((c) => c.id))
-      const matchesCategory = Array.from(selectedIdsByGroupe.values()).every(
-        (idsDuGroupe) =>
-          Array.from(idsDuGroupe).some((id) => itemCategoryIds.has(id)),
+      const matchesCategory = matchesCategoryFilters(
+        itemCategoryIds,
+        selectedIdsByGroupe,
       )
       return matchesSearch && matchesCategory
     })
