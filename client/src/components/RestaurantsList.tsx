@@ -10,6 +10,7 @@ import {
 } from '../utils/categories.ts'
 import { hasVisiteByUser, meetsRatingThreshold } from '../utils/visites.ts'
 import { useDeleteRestaurant } from '../hooks/useDeleteRestaurant.ts'
+import { useFavoriToggle } from '../hooks/useFavoriToggle.ts'
 import { formatDate, stars } from '../utils/format.ts'
 import CategoryFilterDropdown from './CategoryFilterDropdown.tsx'
 
@@ -116,35 +117,55 @@ function RestaurantCard({
   const isAdmin = user?.role === Role.Admin
   const { deleting, error, handleDelete } =
     useDeleteRestaurant(onRestaurantDeleted)
+  const {
+    isFavori,
+    loading: favoriLoading,
+    pending: favoriPending,
+    error: favoriError,
+    toggle: toggleFavori,
+  } = useFavoriToggle(item.restaurant.id)
   const { restaurant, count, lastVisite, categories } = item
 
   return (
     <article className="restaurant-card">
       <div className="popup-header">
         <h3>{restaurant.nom}</h3>
-        {isAdmin && (
+        {user && (
           <div className="popup-actions">
             <button
               type="button"
-              className="popup-btn"
-              onClick={() => onEditRestaurant(restaurant)}
+              className={isFavori ? 'popup-btn popup-btn-favori-active' : 'popup-btn'}
+              disabled={favoriLoading || favoriPending}
+              onClick={() => void toggleFavori()}
             >
-              Modifier
+              {isFavori ? '★ Retirer des favoris' : '☆ Ajouter aux favoris'}
             </button>
-            <button
-              type="button"
-              className="popup-btn popup-btn-danger"
-              disabled={deleting}
-              onClick={() => void handleDelete(restaurant)}
-            >
-              {deleting ? 'Suppression…' : 'Supprimer'}
-            </button>
+            {isAdmin && (
+              <>
+                <button
+                  type="button"
+                  className="popup-btn"
+                  onClick={() => onEditRestaurant(restaurant)}
+                >
+                  Modifier
+                </button>
+                <button
+                  type="button"
+                  className="popup-btn popup-btn-danger"
+                  disabled={deleting}
+                  onClick={() => void handleDelete(restaurant)}
+                >
+                  {deleting ? 'Suppression…' : 'Supprimer'}
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>
 
       <p className="popup-adresse">{restaurant.adresse}</p>
       {error && <p className="popup-status popup-error">{error}</p>}
+      {favoriError && <p className="popup-status popup-error">{favoriError}</p>}
 
       <p className="list-card-count">
         {count} {count > 1 ? 'visites' : 'visite'}

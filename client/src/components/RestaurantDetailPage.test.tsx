@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError } from '../api/client.ts'
 import type { Restaurant, Utilisateur, Visite } from '../api/types.ts'
 import { Role } from '../api/types.ts'
+import { FavorisProvider } from '../contexts/FavorisContext.tsx'
 import RestaurantDetailPage from './RestaurantDetailPage.tsx'
 
 const { deleteRestaurantMock, deleteVisiteMock, getMesFavorisMock } = vi.hoisted(
@@ -92,12 +93,14 @@ function renderPage(
   }
   return render(
     <MemoryRouter initialEntries={[route]}>
-      <Routes>
-        <Route
-          path="/restaurants/:id"
-          element={<RestaurantDetailPage {...defaultProps} {...props} />}
-        />
-      </Routes>
+      <FavorisProvider>
+        <Routes>
+          <Route
+            path="/restaurants/:id"
+            element={<RestaurantDetailPage {...defaultProps} {...props} />}
+          />
+        </Routes>
+      </FavorisProvider>
     </MemoryRouter>,
   )
 }

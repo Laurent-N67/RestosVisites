@@ -6,12 +6,15 @@ import './leaflet-icon-fix.ts'
 import './index.css'
 import App from './App.tsx'
 import { AuthProvider } from './contexts/AuthContext.tsx'
+import { FavorisProvider } from './contexts/FavorisContext.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <AuthProvider>
-        <App />
+        <FavorisProvider>
+          <App />
+        </FavorisProvider>
       </AuthProvider>
     </BrowserRouter>
   </StrictMode>,

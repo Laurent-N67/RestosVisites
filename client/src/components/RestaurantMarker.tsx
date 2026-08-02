@@ -6,6 +6,7 @@ import { Role } from '../api/types.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { useDeleteRestaurant } from '../hooks/useDeleteRestaurant.ts'
 import { useDeleteVisite } from '../hooks/useDeleteVisite.ts'
+import { useFavoriToggle } from '../hooks/useFavoriToggle.ts'
 import { formatDate, stars } from '../utils/format.ts'
 
 export type VisitesState =
@@ -153,6 +154,13 @@ function RestaurantMarker({
     onVisitesRefresh(restaurantId)
     onVisiteDeleted()
   })
+  const {
+    isFavori,
+    loading: favoriLoading,
+    pending: favoriPending,
+    error: favoriError,
+    toggle: toggleFavori,
+  } = useFavoriToggle(restaurant.id)
 
   const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${restaurant.latitude},${restaurant.longitude}`
 
@@ -176,23 +184,35 @@ function RestaurantMarker({
         <div className="restaurant-popup">
           <div className="popup-header">
             <h3>{restaurant.nom}</h3>
-            {isAdmin && (
+            {user && (
               <div className="popup-actions">
                 <button
                   type="button"
-                  className="popup-btn"
-                  onClick={() => onEditRestaurant(restaurant)}
+                  className={isFavori ? 'popup-btn popup-btn-favori-active' : 'popup-btn'}
+                  disabled={favoriLoading || favoriPending}
+                  onClick={() => void toggleFavori()}
                 >
-                  Modifier
+                  {isFavori ? '★ Retirer des favoris' : '☆ Ajouter aux favoris'}
                 </button>
-                <button
-                  type="button"
-                  className="popup-btn popup-btn-danger"
-                  disabled={deletingRestaurant}
-                  onClick={() => void handleDeleteRestaurant(restaurant)}
-                >
-                  {deletingRestaurant ? 'Suppression…' : 'Supprimer'}
-                </button>
+                {isAdmin && (
+                  <>
+                    <button
+                      type="button"
+                      className="popup-btn"
+                      onClick={() => onEditRestaurant(restaurant)}
+                    >
+                      Modifier
+                    </button>
+                    <button
+                      type="button"
+                      className="popup-btn popup-btn-danger"
+                      disabled={deletingRestaurant}
+                      onClick={() => void handleDeleteRestaurant(restaurant)}
+                    >
+                      {deletingRestaurant ? 'Suppression…' : 'Supprimer'}
+                    </button>
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -207,6 +227,9 @@ function RestaurantMarker({
           )}
           {restaurantError && (
             <p className="popup-status popup-error">{restaurantError}</p>
+          )}
+          {favoriError && (
+            <p className="popup-status popup-error">{favoriError}</p>
           )}
 
           <VisitesSection
