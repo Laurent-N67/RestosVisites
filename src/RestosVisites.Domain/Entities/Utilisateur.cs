@@ -14,9 +14,9 @@ public sealed class Utilisateur
     public Guid Id { get; }
     public string Email { get; }
     public string NomAffiche { get; private set; }
-    public string MotDePasseHash { get; }
-    public string MotDePasseSel { get; }
-    public int MotDePasseIterations { get; }
+    public string MotDePasseHash { get; private set; }
+    public string MotDePasseSel { get; private set; }
+    public int MotDePasseIterations { get; private set; }
     public RoleUtilisateur Role { get; private set; }
 
     public Utilisateur(
@@ -56,6 +56,20 @@ public sealed class Utilisateur
         Role = nouveauRole;
     }
 
+    /// <summary>
+    /// Remplace le hash/sel/itérations du mot de passe (ex : réinitialisation par un Admin). Le
+    /// mot de passe en clair et sa politique de complexité ne sont jamais vus par le Domain : cette
+    /// méthode reçoit déjà le résultat du hachage, calculé en Application.
+    /// </summary>
+    public void DefinirMotDePasse(string motDePasseHash, string motDePasseSel, int motDePasseIterations)
+    {
+        ValiderMotDePasse(motDePasseHash, motDePasseSel, motDePasseIterations);
+
+        MotDePasseHash = motDePasseHash;
+        MotDePasseSel = motDePasseSel;
+        MotDePasseIterations = motDePasseIterations;
+    }
+
     private static void Valider(
         string email,
         string nomAffiche,
@@ -73,6 +87,11 @@ public sealed class Utilisateur
             throw new ArgumentException("Le nom affiché ne peut pas être vide.", nameof(nomAffiche));
         }
 
+        ValiderMotDePasse(motDePasseHash, motDePasseSel, motDePasseIterations);
+    }
+
+    private static void ValiderMotDePasse(string motDePasseHash, string motDePasseSel, int motDePasseIterations)
+    {
         if (string.IsNullOrWhiteSpace(motDePasseHash))
         {
             throw new ArgumentException("Le hash du mot de passe ne peut pas être vide.", nameof(motDePasseHash));

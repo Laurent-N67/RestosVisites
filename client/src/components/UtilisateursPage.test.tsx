@@ -15,10 +15,12 @@ function renderPage(visites: Visite[] = []) {
   )
 }
 
-const { getUtilisateursAvecFavorisMock, changerRoleMock } = vi.hoisted(() => ({
-  getUtilisateursAvecFavorisMock: vi.fn(),
-  changerRoleMock: vi.fn(),
-}))
+const { getUtilisateursAvecFavorisMock, changerRoleMock, reinitialiserMotDePasseMock } =
+  vi.hoisted(() => ({
+    getUtilisateursAvecFavorisMock: vi.fn(),
+    changerRoleMock: vi.fn(),
+    reinitialiserMotDePasseMock: vi.fn(),
+  }))
 
 vi.mock('../api/client.ts', async () => {
   const actual =
@@ -27,6 +29,7 @@ vi.mock('../api/client.ts', async () => {
     ...actual,
     getUtilisateursAvecFavoris: getUtilisateursAvecFavorisMock,
     changerRole: changerRoleMock,
+    reinitialiserMotDePasse: reinitialiserMotDePasseMock,
   }
 })
 
@@ -66,6 +69,7 @@ describe('UtilisateursPage', () => {
   beforeEach(() => {
     getUtilisateursAvecFavorisMock.mockReset()
     changerRoleMock.mockReset()
+    reinitialiserMotDePasseMock.mockReset()
     currentUser = {
       id: 'user-2',
       email: 'admin@example.com',
@@ -171,6 +175,109 @@ describe('UtilisateursPage', () => {
 
     expect(
       await screen.findByText('Impossible de charger les utilisateurs.'),
+    ).toBeInTheDocument()
+  })
+
+  it('ouvre et ferme le formulaire de réinitialisation du mot de passe pour un utilisateur', async () => {
+    getUtilisateursAvecFavorisMock.mockResolvedValue(utilisateurs)
+    const user = userEvent.setup()
+    renderPage()
+
+    await screen.findByText('Une Personne')
+    const toggles = screen.getAllByRole('button', {
+      name: 'Réinitialiser le mot de passe',
+    })
+    await user.click(toggles[0])
+
+    expect(
+      screen.getByLabelText('Nouveau mot de passe'),
+    ).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Annuler' }))
+
+    expect(
+      screen.queryByLabelText('Nouveau mot de passe'),
+    ).not.toBeInTheDocument()
+  })
+
+  it('bloque la soumission tant que le mot de passe ne respecte pas la politique', async () => {
+    getUtilisateursAvecFavorisMock.mockResolvedValue(utilisateurs)
+    const user = userEvent.setup()
+    renderPage()
+
+    await screen.findByText('Une Personne')
+    const toggles = screen.getAllByRole('button', {
+      name: 'Réinitialiser le mot de passe',
+    })
+    await user.click(toggles[0])
+
+    await user.type(screen.getByLabelText('Nouveau mot de passe'), 'faible')
+    expect(screen.getByText('Au moins 12 caractères.')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Valider' }))
+
+    expect(
+      screen.getByText(
+        'Le mot de passe ne respecte pas encore toutes les règles ci-dessous.',
+      ),
+    ).toBeInTheDocument()
+    expect(reinitialiserMotDePasseMock).not.toHaveBeenCalled()
+  })
+
+  it('réinitialise le mot de passe et affiche un message de succès', async () => {
+    getUtilisateursAvecFavorisMock.mockResolvedValue(utilisateurs)
+    reinitialiserMotDePasseMock.mockResolvedValue(undefined)
+    const user = userEvent.setup()
+    renderPage()
+
+    await screen.findByText('Une Personne')
+    const toggles = screen.getAllByRole('button', {
+      name: 'Réinitialiser le mot de passe',
+    })
+    await user.click(toggles[0])
+
+    await user.type(
+      screen.getByLabelText('Nouveau mot de passe'),
+      'MotDePasse123!',
+    )
+    await user.click(screen.getByRole('button', { name: 'Valider' }))
+
+    await waitFor(() =>
+      expect(reinitialiserMotDePasseMock).toHaveBeenCalledWith(
+        'user-1',
+        'MotDePasse123!',
+      ),
+    )
+    expect(
+      await screen.findByText('Mot de passe réinitialisé avec succès.'),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByLabelText('Nouveau mot de passe'),
+    ).not.toBeInTheDocument()
+  })
+
+  it("affiche une erreur si la réinitialisation du mot de passe échoue", async () => {
+    getUtilisateursAvecFavorisMock.mockResolvedValue(utilisateurs)
+    reinitialiserMotDePasseMock.mockRejectedValue(
+      new ApiError(422, 'Erreur', 'Le mot de passe ne respecte pas la politique.'),
+    )
+    const user = userEvent.setup()
+    renderPage()
+
+    await screen.findByText('Une Personne')
+    const toggles = screen.getAllByRole('button', {
+      name: 'Réinitialiser le mot de passe',
+    })
+    await user.click(toggles[0])
+
+    await user.type(
+      screen.getByLabelText('Nouveau mot de passe'),
+      'MotDePasse123!',
+    )
+    await user.click(screen.getByRole('button', { name: 'Valider' }))
+
+    expect(
+      await screen.findByText('Le mot de passe ne respecte pas la politique.'),
     ).toBeInTheDocument()
   })
 })

@@ -104,4 +104,53 @@ public class UtilisateurTests
 
         Assert.Equal(RoleUtilisateur.Admin, utilisateur.Role);
     }
+
+    [Fact]
+    public void DefinirMotDePasse_ValeursValides_MetAJourLeHashLeSelEtLesIterations()
+    {
+        var utilisateur = new Utilisateur(
+            EmailValide, NomAfficheValide, HashValide, SelValide, IterationsValides, RoleUtilisateur.Simple);
+
+        utilisateur.DefinirMotDePasse("nouveau-hash", "nouveau-sel", 700_000);
+
+        Assert.Equal("nouveau-hash", utilisateur.MotDePasseHash);
+        Assert.Equal("nouveau-sel", utilisateur.MotDePasseSel);
+        Assert.Equal(700_000, utilisateur.MotDePasseIterations);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(" ")]
+    [InlineData(null)]
+    public void DefinirMotDePasse_HashVideOuBlanc_LeveArgumentException(string? hash)
+    {
+        var utilisateur = new Utilisateur(
+            EmailValide, NomAfficheValide, HashValide, SelValide, IterationsValides, RoleUtilisateur.Simple);
+
+        Assert.Throws<ArgumentException>(() => utilisateur.DefinirMotDePasse(hash!, SelValide, IterationsValides));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(" ")]
+    [InlineData(null)]
+    public void DefinirMotDePasse_SelVideOuBlanc_LeveArgumentException(string? sel)
+    {
+        var utilisateur = new Utilisateur(
+            EmailValide, NomAfficheValide, HashValide, SelValide, IterationsValides, RoleUtilisateur.Simple);
+
+        Assert.Throws<ArgumentException>(() => utilisateur.DefinirMotDePasse(HashValide, sel!, IterationsValides));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void DefinirMotDePasse_IterationsNonPositives_LeveArgumentOutOfRangeException(int iterations)
+    {
+        var utilisateur = new Utilisateur(
+            EmailValide, NomAfficheValide, HashValide, SelValide, IterationsValides, RoleUtilisateur.Simple);
+
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => utilisateur.DefinirMotDePasse(HashValide, SelValide, iterations));
+    }
 }

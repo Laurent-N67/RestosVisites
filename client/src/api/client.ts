@@ -217,3 +217,13 @@ export function changerRole(id: string, nouveauRole: Role): Promise<void> {
     body: JSON.stringify({ nouveauRole }),
   })
 }
+
+export function reinitialiserMotDePasse(
+  id: string,
+  nouveauMotDePasse: string,
+): Promise<void> {
+  return request<void>(`/api/utilisateurs/${id}/mot-de-passe`, {
+    method: 'PUT',
+    body: JSON.stringify({ nouveauMotDePasse }),
+  })
+}
