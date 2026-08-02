@@ -11,7 +11,7 @@ import {
 import { hasVisiteByUser, meetsRatingThreshold } from '../utils/visites.ts'
 import { useDeleteRestaurant } from '../hooks/useDeleteRestaurant.ts'
 import { useFavoriToggle } from '../hooks/useFavoriToggle.ts'
-import { formatDate, stars } from '../utils/format.ts'
+import { stars } from '../utils/format.ts'
 import CategoryFilterDropdown from './CategoryFilterDropdown.tsx'
 
 interface RestaurantsListProps {
@@ -179,9 +179,6 @@ function RestaurantCard({
             aria-label={`Note ${lastVisite.note} sur 5`}
           >
             {stars(lastVisite.note)}
-          </span>
-          <span className="popup-visite-date">
-            {formatDate(lastVisite.date)}
           </span>
         </div>
       ) : (

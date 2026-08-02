@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Marker, Popup, Tooltip } from 'react-leaflet'
 import { resolvePhotoUrl } from '../api/client.ts'
@@ -8,6 +9,12 @@ import { useDeleteRestaurant } from '../hooks/useDeleteRestaurant.ts'
 import { useDeleteVisite } from '../hooks/useDeleteVisite.ts'
 import { useFavoriToggle } from '../hooks/useFavoriToggle.ts'
 import { formatDate, stars } from '../utils/format.ts'
+import PhotoLightbox from './PhotoLightbox.tsx'
+
+interface LightboxState {
+  photos: string[]
+  index: number
+}
 
 export type VisitesState =
   | { status: 'idle' }
@@ -46,6 +53,8 @@ function VisitesSection({
   currentUserId,
   isAdmin,
 }: VisitesSectionProps) {
+  const [lightbox, setLightbox] = useState<LightboxState | null>(null)
+
   if (visitesState.status === 'idle') {
     return null
   }
@@ -91,13 +100,20 @@ function VisitesSection({
 
             {visite.urlsPhotos.length > 0 && (
               <div className="popup-photos">
-                {visite.urlsPhotos.map((url) => (
-                  <img
+                {visite.urlsPhotos.map((url, index) => (
+                  <button
                     key={url}
-                    src={resolvePhotoUrl(url)}
-                    alt=""
-                    loading="lazy"
-                  />
+                    type="button"
+                    className="detail-photo-thumb"
+                    onClick={() =>
+                      setLightbox({
+                        photos: visite.urlsPhotos.map(resolvePhotoUrl),
+                        index,
+                      })
+                    }
+                  >
+                    <img src={resolvePhotoUrl(url)} alt="" loading="lazy" />
+                  </button>
                 ))}
               </div>
             )}
@@ -124,6 +140,13 @@ function VisitesSection({
           </li>
         ))}
       </ul>
+      {lightbox && (
+        <PhotoLightbox
+          photos={lightbox.photos}
+          startIndex={lightbox.index}
+          onClose={() => setLightbox(null)}
+        />
+      )}
     </div>
   )
 }
