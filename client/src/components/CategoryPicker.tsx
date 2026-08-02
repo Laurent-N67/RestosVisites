@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react'
 import type { Categorie } from '../api/types.ts'
 import { groupCategories } from '../utils/categories.ts'
 
@@ -8,8 +9,24 @@ interface CategoryPickerProps {
 }
 
 function CategoryPicker({ categories, selectedIds, onChange }: CategoryPickerProps) {
-  const groups = groupCategories(categories)
+  const [query, setQuery] = useState('')
+  const groups = useMemo(() => groupCategories(categories), [categories])
   const selected = new Set(selectedIds)
+
+  const filteredGroups = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase()
+    if (normalizedQuery.length === 0) {
+      return groups
+    }
+    return groups
+      .map<[string, Categorie[]]>(([groupe, list]) => [
+        groupe,
+        list.filter((categorie) =>
+          categorie.nom.toLowerCase().includes(normalizedQuery),
+        ),
+      ])
+      .filter(([, list]) => list.length > 0)
+  }, [groups, query])
 
   function toggle(id: string) {
     if (selected.has(id)) {
@@ -25,7 +42,21 @@ function CategoryPicker({ categories, selectedIds, onChange }: CategoryPickerPro
 
   return (
     <div className="category-picker">
-      {groups.map(([groupe, groupCategoriesList]) => (
+      <input
+        type="search"
+        className="category-filter-search"
+        placeholder="Rechercher une catégorie…"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+      />
+
+      {filteredGroups.length === 0 && (
+        <p className="category-filter-empty">
+          Aucune catégorie ne correspond à la recherche.
+        </p>
+      )}
+
+      {filteredGroups.map(([groupe, groupCategoriesList]) => (
         <div key={groupe} className="category-picker-group">
           <p className="category-picker-group-title">{groupe}</p>
           <ul className="chips category-picker-chips">

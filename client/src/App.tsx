@@ -1,9 +1,11 @@
 import { useEffect, useState, useCallback } from 'react'
+import { Route, Routes } from 'react-router-dom'
 import { ApiError, getAllVisites, getCategories, getRestaurants } from './api/client.ts'
 import type { Categorie, Restaurant, Visite } from './api/types.ts'
 import RestaurantsMap from './components/RestaurantsMap.tsx'
 import type { VisiteMutation } from './components/RestaurantsMap.tsx'
 import RestaurantsList from './components/RestaurantsList.tsx'
+import RestaurantDetailPage from './components/RestaurantDetailPage.tsx'
 import AddRestaurantForm from './components/AddRestaurantForm.tsx'
 import AddVisitForm from './components/AddVisitForm.tsx'
 import { useTheme } from './hooks/useTheme.ts'
@@ -194,25 +196,45 @@ function App() {
       </header>
 
       <main className="app-main">
-        {activeView === 'carte' ? (
-          <RestaurantsMap
-            theme={theme}
-            restaurants={restaurants}
-            visites={visites}
-            visiteMutation={visiteMutation}
-            onEditRestaurant={handleEditRestaurant}
-            onEditVisite={handleEditVisite}
-            onRestaurantDeleted={handleRestaurantDeleted}
-            onVisiteDeleted={() => void loadAllVisites()}
+        <Routes>
+          <Route
+            path="/"
+            element={
+              activeView === 'carte' ? (
+                <RestaurantsMap
+                  theme={theme}
+                  restaurants={restaurants}
+                  visites={visites}
+                  visiteMutation={visiteMutation}
+                  onEditRestaurant={handleEditRestaurant}
+                  onEditVisite={handleEditVisite}
+                  onRestaurantDeleted={handleRestaurantDeleted}
+                  onVisiteDeleted={() => void loadAllVisites()}
+                />
+              ) : (
+                <RestaurantsList
+                  restaurants={restaurants}
+                  visites={visites}
+                  onEditRestaurant={handleEditRestaurant}
+                  onRestaurantDeleted={handleRestaurantDeleted}
+                />
+              )
+            }
           />
-        ) : (
-          <RestaurantsList
-            restaurants={restaurants}
-            visites={visites}
-            onEditRestaurant={handleEditRestaurant}
-            onRestaurantDeleted={handleRestaurantDeleted}
+          <Route
+            path="/restaurants/:id"
+            element={
+              <RestaurantDetailPage
+                restaurants={restaurants}
+                visites={visites}
+                onEditRestaurant={handleEditRestaurant}
+                onEditVisite={handleEditVisite}
+                onRestaurantDeleted={handleRestaurantDeleted}
+                onVisiteDeleted={() => void loadAllVisites()}
+              />
+            }
           />
-        )}
+        </Routes>
         {loadError && <p className="map-error-banner">{loadError}</p>}
       </main>
 

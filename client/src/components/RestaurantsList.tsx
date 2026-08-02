@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import type { Categorie, Restaurant, Visite } from '../api/types.ts'
 import { groupCategories } from '../utils/categories.ts'
 import { useDeleteRestaurant } from '../hooks/useDeleteRestaurant.ts'
@@ -150,6 +151,15 @@ function RestaurantCard({
             <li key={categorie.id}>{categorie.nom}</li>
           ))}
         </ul>
+      )}
+
+      {count > 0 && (
+        <Link
+          className="popup-directions"
+          to={`/restaurants/${restaurant.id}`}
+        >
+          Voir toutes les visites
+        </Link>
       )}
     </article>
   )

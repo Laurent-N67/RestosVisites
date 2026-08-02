@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Marker, Popup, Tooltip } from 'react-leaflet'
-import { deleteVisite, resolvePhotoUrl } from '../api/client.ts'
+import { resolvePhotoUrl } from '../api/client.ts'
 import type { Restaurant, Visite } from '../api/types.ts'
 import { useDeleteRestaurant } from '../hooks/useDeleteRestaurant.ts'
-import { errorMessage } from '../utils/errors.ts'
+import { useDeleteVisite } from '../hooks/useDeleteVisite.ts'
 import { formatDate, stars } from '../utils/format.ts'
 
 export type VisitesState =
@@ -132,28 +132,16 @@ function RestaurantMarker({
     error: restaurantError,
     handleDelete: handleDeleteRestaurant,
   } = useDeleteRestaurant(onRestaurantDeleted)
-  const [deletingVisiteId, setDeletingVisiteId] = useState<string | null>(null)
-  const [visiteError, setVisiteError] = useState<string | null>(null)
+  const {
+    deletingId: deletingVisiteId,
+    error: visiteError,
+    handleDelete: handleDeleteVisite,
+  } = useDeleteVisite((restaurantId) => {
+    onVisitesRefresh(restaurantId)
+    onVisiteDeleted()
+  })
 
   const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${restaurant.latitude},${restaurant.longitude}`
-
-  async function handleDeleteVisite(visite: Visite) {
-    if (!window.confirm('Supprimer cette visite ?')) {
-      return
-    }
-
-    setDeletingVisiteId(visite.id)
-    setVisiteError(null)
-    try {
-      await deleteVisite(visite.id)
-      onVisitesRefresh(restaurant.id)
-      onVisiteDeleted()
-    } catch (err) {
-      setVisiteError(errorMessage(err, 'La suppression de la visite a échoué.'))
-    } finally {
-      setDeletingVisiteId(null)
-    }
-  }
 
   return (
     <Marker
@@ -214,14 +202,22 @@ function RestaurantMarker({
             visiteError={visiteError}
           />
 
-          <a
-            className="popup-directions"
-            href={directionsUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Itinéraire
-          </a>
+          <div className="popup-links">
+            <a
+              className="popup-directions"
+              href={directionsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Itinéraire
+            </a>
+            <Link
+              className="popup-directions"
+              to={`/restaurants/${restaurant.id}`}
+            >
+              Voir toutes les visites
+            </Link>
+          </div>
         </div>
       </Popup>
     </Marker>
