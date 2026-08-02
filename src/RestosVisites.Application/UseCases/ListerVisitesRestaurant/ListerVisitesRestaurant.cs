@@ -11,11 +11,16 @@ public sealed class ListerVisitesRestaurant
 {
     private readonly IRestaurantRepository _restaurantRepository;
     private readonly IVisiteRepository _visiteRepository;
+    private readonly IUtilisateurRepository _utilisateurRepository;
 
-    public ListerVisitesRestaurant(IRestaurantRepository restaurantRepository, IVisiteRepository visiteRepository)
+    public ListerVisitesRestaurant(
+        IRestaurantRepository restaurantRepository,
+        IVisiteRepository visiteRepository,
+        IUtilisateurRepository utilisateurRepository)
     {
         _restaurantRepository = restaurantRepository;
         _visiteRepository = visiteRepository;
+        _utilisateurRepository = utilisateurRepository;
     }
 
     public async Task<IReadOnlyList<VisiteDto>> ExecuterAsync(Guid restaurantId, CancellationToken ct = default)
@@ -29,13 +34,17 @@ public sealed class ListerVisitesRestaurant
         }
 
         var visites = await _visiteRepository.ListerParRestaurantAsync(restaurantId, ct);
+        var utilisateurs = await _utilisateurRepository.ListerAsync(ct);
+        var nomsParUtilisateur = utilisateurs.ToDictionary(u => u.Id, u => u.NomAffiche);
 
-        return visites.Select(VersDto).ToList();
+        return visites.Select(v => VersDto(v, nomsParUtilisateur)).ToList();
     }
 
-    private static VisiteDto VersDto(Visite visite) => new(
+    private static VisiteDto VersDto(Visite visite, IReadOnlyDictionary<Guid, string> nomsParUtilisateur) => new(
         visite.Id,
         visite.RestaurantId,
+        visite.UtilisateurId,
+        nomsParUtilisateur.TryGetValue(visite.UtilisateurId, out var nom) ? nom : "Utilisateur inconnu",
         visite.Date,
         visite.Note.Valeur,
         visite.Commentaire,

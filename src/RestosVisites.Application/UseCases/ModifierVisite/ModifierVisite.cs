@@ -1,6 +1,7 @@
 using RestosVisites.Application.Abstractions;
 using RestosVisites.Application.Exceptions;
 using RestosVisites.Domain.Entities;
+using RestosVisites.Domain.Enums;
 using RestosVisites.Domain.ValueObjects;
 
 namespace RestosVisites.Application.UseCases.ModifierVisite;
@@ -26,6 +27,13 @@ public sealed class ModifierVisite
             throw new ErreurApplicationException(
                 TypeErreurApplication.RessourceNonTrouvee,
                 $"Aucune visite trouvée avec l'identifiant '{request.VisiteId}'.");
+        }
+
+        if (visite.UtilisateurId != request.UtilisateurCourantId && request.RoleCourant != RoleUtilisateur.Admin)
+        {
+            throw new ErreurApplicationException(
+                TypeErreurApplication.AccesRefuse,
+                "Seul l'auteur de la visite ou un administrateur peut la modifier.");
         }
 
         var urlsActuelles = visite.Photos.Select(p => p.Url).ToHashSet(StringComparer.OrdinalIgnoreCase);

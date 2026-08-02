@@ -1,17 +1,27 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using RestosVisites.Api.Middleware;
+using RestosVisites.Application.UseCases.AjouterFavori;
+using RestosVisites.Application.UseCases.ChangerRole;
 using RestosVisites.Application.UseCases.CreerRestaurant;
 using RestosVisites.Application.UseCases.EnregistrerVisite;
+using RestosVisites.Application.UseCases.Inscrire;
 using RestosVisites.Application.UseCases.ListerCategories;
+using RestosVisites.Application.UseCases.ListerMesFavoris;
 using RestosVisites.Application.UseCases.ListerRestaurants;
 using RestosVisites.Application.UseCases.ListerToutesLesVisites;
+using RestosVisites.Application.UseCases.ListerUtilisateursAvecFavoris;
 using RestosVisites.Application.UseCases.ListerVisitesRestaurant;
 using RestosVisites.Application.UseCases.ModifierRestaurant;
 using RestosVisites.Application.UseCases.ModifierVisite;
+using RestosVisites.Application.UseCases.ObtenirUtilisateurCourant;
+using RestosVisites.Application.UseCases.RetirerFavori;
+using RestosVisites.Application.UseCases.SeConnecter;
 using RestosVisites.Application.UseCases.SupprimerRestaurant;
 using RestosVisites.Application.UseCases.SupprimerVisite;
+using RestosVisites.Domain.Enums;
 using RestosVisites.Infrastructure;
 using RestosVisites.Infrastructure.Persistence;
 
@@ -49,9 +59,45 @@ builder.Services.AddScoped<ModifierRestaurant>();
 builder.Services.AddScoped<SupprimerRestaurant>();
 builder.Services.AddScoped<ModifierVisite>();
 builder.Services.AddScoped<SupprimerVisite>();
+builder.Services.AddScoped<Inscrire>();
+builder.Services.AddScoped<SeConnecter>();
+builder.Services.AddScoped<ObtenirUtilisateurCourant>();
+builder.Services.AddScoped<ChangerRole>();
+builder.Services.AddScoped<ListerUtilisateursAvecFavoris>();
+builder.Services.AddScoped<ListerMesFavoris>();
+builder.Services.AddScoped<AjouterFavori>();
+builder.Services.AddScoped<RetirerFavori>();
 
 builder.Services.AddExceptionHandler<ErreurApplicationExceptionHandler>();
 builder.Services.AddProblemDetails();
+
+// Authentification par cookie : pas de JWT, cohérent avec le style "fait main" du projet (pas
+// d'ASP.NET Identity). Par défaut, le handler cookie répond aux 401/403 par une redirection (302)
+// vers une page de login MVC qui n'existe pas dans cette Api : sans la correction ci-dessous, le
+// frontend ne verrait jamais un vrai 401/403, seulement une redirection vers une page HTML absente.
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.Cookie.SecurePolicy = builder.Environment.IsDevelopment() || builder.Environment.IsEnvironment("Testing")
+            ? CookieSecurePolicy.SameAsRequest
+            : CookieSecurePolicy.Always;
+
+        options.Events.OnRedirectToLogin = context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return Task.CompletedTask;
+        };
+        options.Events.OnRedirectToAccessDenied = context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            return Task.CompletedTask;
+        };
+    });
+
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("Admin", policy => policy.RequireRole(nameof(RoleUtilisateur.Admin)));
 
 builder.Services.AddCors(options =>
 {
@@ -59,7 +105,8 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins("http://localhost:5173")
             .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 
@@ -118,6 +165,7 @@ app.UseStaticFiles(new StaticFileOptions
 
 app.UseCors(NomPolitiqueCorsClient);
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

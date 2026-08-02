@@ -59,6 +59,8 @@ public sealed class PhotosControllerTests : IClassFixture<RestosVisitesWebApplic
     [Fact]
     public async Task Post_FichierImageValide_Retourne201EtEcritLeFichierSurDisque()
     {
+        await AuthTestHelper.InscrireEtConnecterAsync(_client, ct: TestContext.Current.CancellationToken);
+
         using var contenu = new MultipartFormDataContent();
         var fichier = new ByteArrayContent(ContenuJpegValide);
         fichier.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/jpeg");
@@ -81,6 +83,8 @@ public sealed class PhotosControllerTests : IClassFixture<RestosVisitesWebApplic
     [Fact]
     public async Task Post_FichierTropGros_Retourne400()
     {
+        await AuthTestHelper.InscrireEtConnecterAsync(_client, ct: TestContext.Current.CancellationToken);
+
         // Volontairement juste au-dessus de la limite de 50 Mo (mais sous la limite globale de requête,
         // qui inclut une marge pour l'en-tête multipart) afin d'exercer précisément la vérification
         // explicite de taille du contrôleur plutôt que le rejet bas niveau de la requête.
@@ -101,6 +105,8 @@ public sealed class PhotosControllerTests : IClassFixture<RestosVisitesWebApplic
     [Fact]
     public async Task Post_TypeDeFichierNonAutorise_Retourne400()
     {
+        await AuthTestHelper.InscrireEtConnecterAsync(_client, ct: TestContext.Current.CancellationToken);
+
         using var contenu = new MultipartFormDataContent();
         var fichier = new ByteArrayContent("Ceci n'est pas une image."u8.ToArray());
         fichier.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/plain");
@@ -114,6 +120,8 @@ public sealed class PhotosControllerTests : IClassFixture<RestosVisitesWebApplic
     [Fact]
     public async Task Post_FichierRenommeAvecExtensionImageMaisContenuInvalide_Retourne400()
     {
+        await AuthTestHelper.InscrireEtConnecterAsync(_client, ct: TestContext.Current.CancellationToken);
+
         using var contenu = new MultipartFormDataContent();
         var fichier = new ByteArrayContent("Ceci n'est pas vraiment une image JPEG."u8.ToArray());
         fichier.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/jpeg");
@@ -127,10 +135,25 @@ public sealed class PhotosControllerTests : IClassFixture<RestosVisitesWebApplic
     [Fact]
     public async Task Post_AucunFichier_Retourne400()
     {
+        await AuthTestHelper.InscrireEtConnecterAsync(_client, ct: TestContext.Current.CancellationToken);
+
         using var contenu = new MultipartFormDataContent();
 
         var response = await _client.PostAsync("/api/photos", contenu, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Post_UtilisateurNonAuthentifie_Retourne401()
+    {
+        using var contenu = new MultipartFormDataContent();
+        var fichier = new ByteArrayContent(ContenuJpegValide);
+        fichier.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/jpeg");
+        contenu.Add(fichier, "file", "photo.jpg");
+
+        var response = await _client.PostAsync("/api/photos", contenu, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 }

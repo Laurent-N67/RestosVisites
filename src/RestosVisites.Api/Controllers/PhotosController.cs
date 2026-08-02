@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RestosVisites.Application.Abstractions;
 
@@ -10,6 +11,7 @@ namespace RestosVisites.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/photos")]
+[Authorize]
 public sealed class PhotosController : ControllerBase
 {
     // Volontairement limité aux formats image courants et sans dépendance externe : la validation se

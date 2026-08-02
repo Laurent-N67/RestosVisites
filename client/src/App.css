@@ -20,9 +20,51 @@
 }
 
 .app-actions,
-.app-view-switch {
+.app-view-switch,
+.app-nav {
   display: flex;
   gap: 10px;
+}
+
+.app-nav {
+  gap: 16px;
+}
+
+.app-nav a {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.app-auth {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.app-auth a {
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.app-auth-name {
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.app-auth button {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-card);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.app-auth button:hover {
+  background: var(--accent-bg);
+  color: var(--accent);
 }
 
 .app-actions button,
@@ -1063,4 +1105,146 @@
   background: rgba(0, 0, 0, 0.5);
   padding: 4px 10px;
   border-radius: 999px;
+}
+
+/* Vue Liste : filtre "déjà visité" */
+
+.list-visited-switch {
+  display: flex;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.list-visited-switch button {
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.list-visited-switch button.active,
+.list-visited-switch button:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+.popup-visite-auteur {
+  margin: 0 0 4px;
+  font-size: 12px;
+  color: var(--text);
+}
+
+.popup-btn-favori-active {
+  border-color: var(--star);
+  background: rgba(245, 166, 35, 0.15);
+  color: var(--star);
+}
+
+/* Authentification */
+
+.auth-page {
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.auth-form {
+  width: min(360px, 100%);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  padding: 24px;
+  margin-top: 0;
+}
+
+.auth-switch {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.auth-switch a {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.password-rules {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  font-size: 12px;
+  color: var(--danger);
+}
+
+/* Page Favoris */
+
+.favoris-count {
+  margin: 0 0 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+/* Page Utilisateurs */
+
+.utilisateurs-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.utilisateur-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card);
+  box-shadow: var(--shadow);
+  padding: 14px;
+}
+
+.utilisateur-card h3 {
+  margin: 0 0 2px;
+  font-size: 15px;
+}
+
+.utilisateur-role-select {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-h);
+  flex-shrink: 0;
+}
+
+.utilisateur-role-select select {
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-weight: 400;
+  background: var(--field-bg);
+  color: var(--text-h);
+}
+
+.utilisateur-role-badge {
+  align-self: flex-start;
+  background: var(--accent-bg);
+  color: var(--accent);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
 }

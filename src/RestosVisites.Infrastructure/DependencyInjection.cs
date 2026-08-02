@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using RestosVisites.Application.Abstractions;
 using RestosVisites.Infrastructure.Persistence;
 using RestosVisites.Infrastructure.Persistence.Repositories;
+using RestosVisites.Infrastructure.Security;
 using RestosVisites.Infrastructure.Storage;
 
 namespace RestosVisites.Infrastructure;
@@ -25,6 +26,9 @@ public static class DependencyInjection
         services.AddScoped<IRestaurantRepository, RestaurantRepository>();
         services.AddScoped<ICategorieRepository, CategorieRepository>();
         services.AddScoped<IVisiteRepository, VisiteRepository>();
+        services.AddScoped<IUtilisateurRepository, UtilisateurRepository>();
+        services.AddScoped<IFavoriRestaurantRepository, FavoriRestaurantRepository>();
+        services.AddSingleton<IMotDePasseHasher, Pbkdf2MotDePasseHasher>();
 
         return services;
     }

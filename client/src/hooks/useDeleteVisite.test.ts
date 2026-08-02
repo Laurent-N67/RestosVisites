@@ -23,6 +23,8 @@ const visite: Visite = {
   note: 4,
   commentaire: null,
   urlsPhotos: [],
+  utilisateurId: 'user-1',
+  utilisateurNomAffiche: 'Une Personne',
 }
 
 describe('useDeleteVisite', () => {

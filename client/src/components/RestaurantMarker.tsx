@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom'
 import { Marker, Popup, Tooltip } from 'react-leaflet'
 import { resolvePhotoUrl } from '../api/client.ts'
 import type { Restaurant, Visite } from '../api/types.ts'
+import { Role } from '../api/types.ts'
+import { useAuth } from '../contexts/AuthContext.tsx'
 import { useDeleteRestaurant } from '../hooks/useDeleteRestaurant.ts'
 import { useDeleteVisite } from '../hooks/useDeleteVisite.ts'
 import { formatDate, stars } from '../utils/format.ts'
@@ -30,6 +32,8 @@ interface VisitesSectionProps {
   onDeleteVisite: (visite: Visite) => void
   deletingVisiteId: string | null
   visiteError: string | null
+  currentUserId: string | undefined
+  isAdmin: boolean
 }
 
 function VisitesSection({
@@ -38,6 +42,8 @@ function VisitesSection({
   onDeleteVisite,
   deletingVisiteId,
   visiteError,
+  currentUserId,
+  isAdmin,
 }: VisitesSectionProps) {
   if (visitesState.status === 'idle') {
     return null
@@ -74,6 +80,9 @@ function VisitesSection({
               </span>
               <span className="popup-visite-date">{formatDate(visite.date)}</span>
             </div>
+            <p className="popup-visite-auteur">
+              Visité par {visite.utilisateurNomAffiche}
+            </p>
 
             {visite.commentaire && (
               <p className="popup-visite-commentaire">{visite.commentaire}</p>
@@ -92,23 +101,25 @@ function VisitesSection({
               </div>
             )}
 
-            <div className="popup-visite-actions">
-              <button
-                type="button"
-                className="popup-btn"
-                onClick={() => onEditVisite(visite)}
-              >
-                Modifier
-              </button>
-              <button
-                type="button"
-                className="popup-btn popup-btn-danger"
-                disabled={deletingVisiteId === visite.id}
-                onClick={() => onDeleteVisite(visite)}
-              >
-                {deletingVisiteId === visite.id ? 'Suppression…' : 'Supprimer'}
-              </button>
-            </div>
+            {(isAdmin || currentUserId === visite.utilisateurId) && (
+              <div className="popup-visite-actions">
+                <button
+                  type="button"
+                  className="popup-btn"
+                  onClick={() => onEditVisite(visite)}
+                >
+                  Modifier
+                </button>
+                <button
+                  type="button"
+                  className="popup-btn popup-btn-danger"
+                  disabled={deletingVisiteId === visite.id}
+                  onClick={() => onDeleteVisite(visite)}
+                >
+                  {deletingVisiteId === visite.id ? 'Suppression…' : 'Supprimer'}
+                </button>
+              </div>
+            )}
           </li>
         ))}
       </ul>
@@ -127,6 +138,8 @@ function RestaurantMarker({
   onVisitesRefresh,
   onVisiteDeleted,
 }: RestaurantMarkerProps) {
+  const { user } = useAuth()
+  const isAdmin = user?.role === Role.Admin
   const {
     deleting: deletingRestaurant,
     error: restaurantError,
@@ -163,23 +176,25 @@ function RestaurantMarker({
         <div className="restaurant-popup">
           <div className="popup-header">
             <h3>{restaurant.nom}</h3>
-            <div className="popup-actions">
-              <button
-                type="button"
-                className="popup-btn"
-                onClick={() => onEditRestaurant(restaurant)}
-              >
-                Modifier
-              </button>
-              <button
-                type="button"
-                className="popup-btn popup-btn-danger"
-                disabled={deletingRestaurant}
-                onClick={() => void handleDeleteRestaurant(restaurant)}
-              >
-                {deletingRestaurant ? 'Suppression…' : 'Supprimer'}
-              </button>
-            </div>
+            {isAdmin && (
+              <div className="popup-actions">
+                <button
+                  type="button"
+                  className="popup-btn"
+                  onClick={() => onEditRestaurant(restaurant)}
+                >
+                  Modifier
+                </button>
+                <button
+                  type="button"
+                  className="popup-btn popup-btn-danger"
+                  disabled={deletingRestaurant}
+                  onClick={() => void handleDeleteRestaurant(restaurant)}
+                >
+                  {deletingRestaurant ? 'Suppression…' : 'Supprimer'}
+                </button>
+              </div>
+            )}
           </div>
 
           <p className="popup-adresse">{restaurant.adresse}</p>
@@ -200,6 +215,8 @@ function RestaurantMarker({
             onDeleteVisite={(visite) => void handleDeleteVisite(visite)}
             deletingVisiteId={deletingVisiteId}
             visiteError={visiteError}
+            currentUserId={user?.id}
+            isAdmin={isAdmin}
           />
 
           <div className="popup-links">

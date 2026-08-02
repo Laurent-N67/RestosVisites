@@ -1,6 +1,7 @@
 using RestosVisites.Application.Tests.Fakes;
 using RestosVisites.Application.UseCases.ListerToutesLesVisites;
 using RestosVisites.Domain.Entities;
+using RestosVisites.Domain.Enums;
 using RestosVisites.Domain.ValueObjects;
 
 namespace RestosVisites.Application.Tests.UseCases;
@@ -11,7 +12,7 @@ public class ListerToutesLesVisitesTests
     public async Task ExecuterAsync_ListeVide_RetourneUneListeVide()
     {
         var visiteRepository = new FakeVisiteRepository();
-        var useCase = new ListerToutesLesVisites(visiteRepository);
+        var useCase = new ListerToutesLesVisites(visiteRepository, new FakeUtilisateurRepository());
 
         var resultat = await useCase.ExecuterAsync(TestContext.Current.CancellationToken);
 
@@ -27,18 +28,22 @@ public class ListerToutesLesVisitesTests
         await restaurantRepository.AjouterAsync(restaurant, TestContext.Current.CancellationToken);
         await restaurantRepository.AjouterAsync(autreRestaurant, TestContext.Current.CancellationToken);
 
+        var utilisateurRepository = new FakeUtilisateurRepository();
+        var utilisateur = new Utilisateur("personne@exemple.test", "Personne", "hash", "sel", 600_000, RoleUtilisateur.Simple);
+        await utilisateurRepository.AjouterAsync(utilisateur, TestContext.Current.CancellationToken);
+
         var visiteRepository = new FakeVisiteRepository();
-        var visite = new Visite(restaurant.Id, new DateOnly(2026, 1, 15), new Note(4), "Sympa");
-        var visiteAutreRestaurant = new Visite(autreRestaurant.Id, new DateOnly(2026, 2, 1), new Note(3));
+        var visite = new Visite(restaurant.Id, utilisateur.Id, new DateOnly(2026, 1, 15), new Note(4), "Sympa");
+        var visiteAutreRestaurant = new Visite(autreRestaurant.Id, utilisateur.Id, new DateOnly(2026, 2, 1), new Note(3));
         await visiteRepository.AjouterAsync(visite, TestContext.Current.CancellationToken);
         await visiteRepository.AjouterAsync(visiteAutreRestaurant, TestContext.Current.CancellationToken);
 
-        var useCase = new ListerToutesLesVisites(visiteRepository);
+        var useCase = new ListerToutesLesVisites(visiteRepository, utilisateurRepository);
 
         var resultat = await useCase.ExecuterAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(2, resultat.Count);
-        Assert.Contains(resultat, v => v.Id == visite.Id && v.RestaurantId == restaurant.Id);
+        Assert.Contains(resultat, v => v.Id == visite.Id && v.RestaurantId == restaurant.Id && v.UtilisateurNomAffiche == "Personne");
         Assert.Contains(resultat, v => v.Id == visiteAutreRestaurant.Id && v.RestaurantId == autreRestaurant.Id);
     }
 }

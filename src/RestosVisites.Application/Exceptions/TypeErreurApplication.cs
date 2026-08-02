@@ -11,4 +11,13 @@ public enum TypeErreurApplication
 
     /// <summary>L'opération entre en conflit avec une ressource déjà existante.</summary>
     ConflitDeDonnees,
+
+    /// <summary>L'utilisateur n'est pas authentifié, ou ses identifiants de connexion sont invalides.</summary>
+    NonAutorise,
+
+    /// <summary>L'utilisateur est authentifié mais n'a pas le droit d'effectuer cette opération.</summary>
+    AccesRefuse,
+
+    /// <summary>L'opération viole une règle métier (ex : mot de passe trop faible, quota dépassé).</summary>
+    RegleMetierViolee,
 }

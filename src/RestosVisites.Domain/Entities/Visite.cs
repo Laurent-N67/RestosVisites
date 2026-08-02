@@ -12,28 +12,35 @@ public sealed class Visite
 
     public Guid Id { get; }
     public Guid RestaurantId { get; }
+    public Guid UtilisateurId { get; }
     public DateOnly Date { get; private set; }
     public Note Note { get; private set; }
     public string? Commentaire { get; private set; }
 
     public IReadOnlyCollection<Photo> Photos => _photos;
 
-    public Visite(Guid restaurantId, DateOnly date, Note note, string? commentaire = null)
-        : this(Guid.NewGuid(), restaurantId, date, note, commentaire)
+    public Visite(Guid restaurantId, Guid utilisateurId, DateOnly date, Note note, string? commentaire = null)
+        : this(Guid.NewGuid(), restaurantId, utilisateurId, date, note, commentaire)
     {
     }
 
-    public Visite(Guid id, Guid restaurantId, DateOnly date, Note note, string? commentaire = null)
+    public Visite(Guid id, Guid restaurantId, Guid utilisateurId, DateOnly date, Note note, string? commentaire = null)
     {
         if (restaurantId == Guid.Empty)
         {
             throw new ArgumentException("L'identifiant du restaurant est obligatoire.", nameof(restaurantId));
         }
 
+        if (utilisateurId == Guid.Empty)
+        {
+            throw new ArgumentException("L'identifiant de l'utilisateur est obligatoire.", nameof(utilisateurId));
+        }
+
         ArgumentNullException.ThrowIfNull(note);
 
         Id = id;
         RestaurantId = restaurantId;
+        UtilisateurId = utilisateurId;
         Date = date;
         Note = note;
         Commentaire = string.IsNullOrWhiteSpace(commentaire) ? null : commentaire.Trim();

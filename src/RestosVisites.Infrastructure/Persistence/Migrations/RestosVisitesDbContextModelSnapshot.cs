@@ -55,6 +55,30 @@ namespace RestosVisites.Infrastructure.Persistence.Migrations
                     b.ToTable("Categories", (string)null);
                 });
 
+            modelBuilder.Entity("RestosVisites.Domain.Entities.FavoriRestaurant", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("DateAjout")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("RestaurantId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("UtilisateurId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RestaurantId");
+
+                    b.HasIndex("UtilisateurId", "RestaurantId")
+                        .IsUnique();
+
+                    b.ToTable("FavorisRestaurants", (string)null);
+                });
+
             modelBuilder.Entity("RestosVisites.Domain.Entities.Photo", b =>
                 {
                     b.Property<Guid>("Id")
@@ -101,6 +125,47 @@ namespace RestosVisites.Infrastructure.Persistence.Migrations
                     b.ToTable("Restaurants", (string)null);
                 });
 
+            modelBuilder.Entity("RestosVisites.Domain.Entities.Utilisateur", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("MotDePasseHash")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("MotDePasseIterations")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("MotDePasseSel")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NomAffiche")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.ToTable("Utilisateurs", (string)null);
+                });
+
             modelBuilder.Entity("RestosVisites.Domain.Entities.Visite", b =>
                 {
                     b.Property<Guid>("Id")
@@ -120,9 +185,14 @@ namespace RestosVisites.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("RestaurantId")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid>("UtilisateurId")
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
                     b.HasIndex("RestaurantId");
+
+                    b.HasIndex("UtilisateurId");
 
                     b.ToTable("Visites", (string)null);
                 });
@@ -142,6 +212,21 @@ namespace RestosVisites.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("RestosVisites.Domain.Entities.FavoriRestaurant", b =>
+                {
+                    b.HasOne("RestosVisites.Domain.Entities.Restaurant", null)
+                        .WithMany()
+                        .HasForeignKey("RestaurantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("RestosVisites.Domain.Entities.Utilisateur", null)
+                        .WithMany()
+                        .HasForeignKey("UtilisateurId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("RestosVisites.Domain.Entities.Photo", b =>
                 {
                     b.HasOne("RestosVisites.Domain.Entities.Visite", null)
@@ -157,6 +242,12 @@ namespace RestosVisites.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("RestaurantId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("RestosVisites.Domain.Entities.Utilisateur", null)
+                        .WithMany()
+                        .HasForeignKey("UtilisateurId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 

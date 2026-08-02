@@ -48,7 +48,18 @@ export default defineConfig({
       workbox: {
         runtimeCaching: [
           {
-            urlPattern: /^https?:\/\/[^/]+\/api\/.*/,
+            // Données liées à la session/l'utilisateur courant : jamais mises
+            // en cache, pour éviter de servir une session ou des favoris
+            // périmés après connexion/déconnexion (voir AuthContext.logout
+            // qui vide aussi le cache 'api-cache' par précaution).
+            urlPattern:
+              /^https?:\/\/[^/]+\/api\/(auth|favoris|utilisateurs)(\/.*)?$/,
+            method: 'GET',
+            handler: 'NetworkOnly',
+          },
+          {
+            urlPattern:
+              /^https?:\/\/[^/]+\/api\/(?!auth|favoris|utilisateurs).*/,
             method: 'GET',
             handler: 'NetworkFirst',
             options: {

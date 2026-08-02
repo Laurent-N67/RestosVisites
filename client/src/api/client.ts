@@ -3,10 +3,16 @@ import type {
   CreateRestaurantRequest,
   CreateVisiteRequest,
   CreatedResponse,
+  Favori,
+  LoginRequest,
   ProblemDetails,
+  RegisterRequest,
   Restaurant,
+  Role,
   UpdateRestaurantRequest,
   UpdateVisiteRequest,
+  Utilisateur,
+  UtilisateurAvecFavoris,
   Visite,
 } from './types.ts'
 
@@ -46,6 +52,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
       ...init,
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
         ...init?.headers,
@@ -90,6 +97,7 @@ export async function uploadPhoto(file: File): Promise<UploadPhotoResponse> {
     // boundary multipart/form-data lui-même.
     response = await fetch(`${API_BASE_URL}/api/photos`, {
       method: 'POST',
+      credentials: 'include',
       body: formData,
     })
   } catch {
@@ -163,4 +171,49 @@ export function updateVisite(
 
 export function deleteVisite(id: string): Promise<void> {
   return request<void>(`/api/visites/${id}`, { method: 'DELETE' })
+}
+
+export function register(payload: RegisterRequest): Promise<Utilisateur> {
+  return request<Utilisateur>('/api/auth/register', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export function login(payload: LoginRequest): Promise<Utilisateur> {
+  return request<Utilisateur>('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export function logout(): Promise<void> {
+  return request<void>('/api/auth/logout', { method: 'POST' })
+}
+
+export function getMe(): Promise<Utilisateur> {
+  return request<Utilisateur>('/api/auth/me')
+}
+
+export function getMesFavoris(): Promise<Favori[]> {
+  return request<Favori[]>('/api/favoris')
+}
+
+export function addFavori(restaurantId: string): Promise<void> {
+  return request<void>(`/api/favoris/${restaurantId}`, { method: 'PUT' })
+}
+
+export function removeFavori(restaurantId: string): Promise<void> {
+  return request<void>(`/api/favoris/${restaurantId}`, { method: 'DELETE' })
+}
+
+export function getUtilisateursAvecFavoris(): Promise<UtilisateurAvecFavoris[]> {
+  return request<UtilisateurAvecFavoris[]>('/api/utilisateurs')
+}
+
+export function changerRole(id: string, nouveauRole: Role): Promise<void> {
+  return request<void>(`/api/utilisateurs/${id}/role`, {
+    method: 'PUT',
+    body: JSON.stringify({ nouveauRole }),
+  })
 }

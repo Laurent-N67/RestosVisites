@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Route, Routes } from 'react-router-dom'
+import { Link, Route, Routes, useNavigate } from 'react-router-dom'
 import { ApiError, getAllVisites, getCategories, getRestaurants } from './api/client.ts'
 import type { Categorie, Restaurant, Visite } from './api/types.ts'
 import RestaurantsMap from './components/RestaurantsMap.tsx'
@@ -8,6 +8,12 @@ import RestaurantsList from './components/RestaurantsList.tsx'
 import RestaurantDetailPage from './components/RestaurantDetailPage.tsx'
 import AddRestaurantForm from './components/AddRestaurantForm.tsx'
 import AddVisitForm from './components/AddVisitForm.tsx'
+import LoginPage from './components/LoginPage.tsx'
+import RegisterPage from './components/RegisterPage.tsx'
+import FavorisPage from './components/FavorisPage.tsx'
+import UtilisateursPage from './components/UtilisateursPage.tsx'
+import ProtectedRoute from './components/ProtectedRoute.tsx'
+import { useAuth } from './contexts/AuthContext.tsx'
 import { useTheme } from './hooks/useTheme.ts'
 import './App.css'
 
@@ -16,6 +22,8 @@ type View = 'carte' | 'liste'
 
 function App() {
   const { theme, toggleTheme } = useTheme()
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
   const [visites, setVisites] = useState<Visite[]>([])
   const [categories, setCategories] = useState<Categorie[]>([])
@@ -74,10 +82,17 @@ function App() {
   }, [])
 
   useEffect(() => {
+    if (!user) {
+      setRestaurants([])
+      setVisites([])
+      setCategories([])
+      setLoadError(null)
+      return
+    }
     void loadRestaurants()
     void loadAllVisites()
     void loadCategories()
-  }, [loadRestaurants, loadAllVisites, loadCategories])
+  }, [user, loadRestaurants, loadAllVisites, loadCategories])
 
   useEffect(() => {
     if (visiteMutation) {
@@ -144,41 +159,59 @@ function App() {
     }
   }
 
+  async function handleLogout() {
+    closePanel()
+    await logout()
+    navigate('/')
+  }
+
   return (
     <div className="app-shell">
       <header className="app-header">
         <h1>RestosVisites</h1>
-        <div className="app-view-switch">
-          <button
-            type="button"
-            className={activeView === 'carte' ? 'active' : ''}
-            onClick={() => setActiveView('carte')}
-          >
-            Carte
-          </button>
-          <button
-            type="button"
-            className={activeView === 'liste' ? 'active' : ''}
-            onClick={() => setActiveView('liste')}
-          >
-            Liste
-          </button>
-        </div>
+        {user && (
+          <div className="app-view-switch">
+            <button
+              type="button"
+              className={activeView === 'carte' ? 'active' : ''}
+              onClick={() => setActiveView('carte')}
+            >
+              Carte
+            </button>
+            <button
+              type="button"
+              className={activeView === 'liste' ? 'active' : ''}
+              onClick={() => setActiveView('liste')}
+            >
+              Liste
+            </button>
+          </div>
+        )}
+        {user && (
+          <nav className="app-nav">
+            <Link to="/favoris">Favoris</Link>
+            <Link to="/utilisateurs">Utilisateurs</Link>
+          </nav>
+        )}
         <div className="app-actions">
-          <button
-            type="button"
-            className={activePanel === 'restaurant' ? 'active' : ''}
-            onClick={handleToggleRestaurantPanel}
-          >
-            + Restaurant
-          </button>
-          <button
-            type="button"
-            className={activePanel === 'visite' ? 'active' : ''}
-            onClick={handleToggleVisitePanel}
-          >
-            + Visite
-          </button>
+          {user && (
+            <>
+              <button
+                type="button"
+                className={activePanel === 'restaurant' ? 'active' : ''}
+                onClick={handleToggleRestaurantPanel}
+              >
+                + Restaurant
+              </button>
+              <button
+                type="button"
+                className={activePanel === 'visite' ? 'active' : ''}
+                onClick={handleToggleVisitePanel}
+              >
+                + Visite
+              </button>
+            </>
+          )}
           <button
             type="button"
             className="theme-toggle"
@@ -192,11 +225,26 @@ function App() {
           >
             {theme === 'dark' ? '☀️' : '🌙'}
           </button>
+          {user ? (
+            <div className="app-auth">
+              <span className="app-auth-name">{user.nomAffiche}</span>
+              <button type="button" onClick={() => void handleLogout()}>
+                Déconnexion
+              </button>
+            </div>
+          ) : (
+            <div className="app-auth">
+              <Link to="/login">Connexion</Link>
+              <Link to="/register">Inscription</Link>
+            </div>
+          )}
         </div>
       </header>
 
       <main className="app-main">
         <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
           <Route
             path="/"
             element={
@@ -232,6 +280,22 @@ function App() {
                 onRestaurantDeleted={handleRestaurantDeleted}
                 onVisiteDeleted={() => void loadAllVisites()}
               />
+            }
+          />
+          <Route
+            path="/favoris"
+            element={
+              <ProtectedRoute>
+                <FavorisPage restaurants={restaurants} visites={visites} />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/utilisateurs"
+            element={
+              <ProtectedRoute>
+                <UtilisateursPage />
+              </ProtectedRoute>
             }
           />
         </Routes>

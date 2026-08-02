@@ -3,13 +3,17 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError } from '../api/client.ts'
-import type { Restaurant, Visite } from '../api/types.ts'
+import type { Restaurant, Utilisateur, Visite } from '../api/types.ts'
+import { Role } from '../api/types.ts'
 import RestaurantDetailPage from './RestaurantDetailPage.tsx'
 
-const { deleteRestaurantMock, deleteVisiteMock } = vi.hoisted(() => ({
-  deleteRestaurantMock: vi.fn(),
-  deleteVisiteMock: vi.fn(),
-}))
+const { deleteRestaurantMock, deleteVisiteMock, getMesFavorisMock } = vi.hoisted(
+  () => ({
+    deleteRestaurantMock: vi.fn(),
+    deleteVisiteMock: vi.fn(),
+    getMesFavorisMock: vi.fn(),
+  }),
+)
 
 vi.mock('../api/client.ts', async () => {
   const actual =
@@ -20,8 +24,27 @@ vi.mock('../api/client.ts', async () => {
     ...actual,
     deleteRestaurant: deleteRestaurantMock,
     deleteVisite: deleteVisiteMock,
+    getMesFavoris: getMesFavorisMock,
   }
 })
+
+const adminUser: Utilisateur = {
+  id: 'admin-1',
+  email: 'admin@example.com',
+  nomAffiche: 'Admin',
+  role: Role.Admin,
+}
+
+vi.mock('../contexts/AuthContext.tsx', () => ({
+  useAuth: () => ({
+    user: adminUser,
+    loading: false,
+    login: vi.fn(),
+    register: vi.fn(),
+    logout: vi.fn(),
+    refresh: vi.fn(),
+  }),
+}))
 
 const restaurant: Restaurant = {
   id: 'restaurant-1',
@@ -40,6 +63,8 @@ const visites: Visite[] = [
     note: 4,
     commentaire: 'Très bon',
     urlsPhotos: ['/uploads/photo-1.jpg'],
+    utilisateurId: 'user-2',
+    utilisateurNomAffiche: 'Une Autre Personne',
   },
   {
     id: 'visite-2',
@@ -48,6 +73,8 @@ const visites: Visite[] = [
     note: 5,
     commentaire: null,
     urlsPhotos: [],
+    utilisateurId: 'user-2',
+    utilisateurNomAffiche: 'Une Autre Personne',
   },
 ]
 
@@ -79,6 +106,8 @@ describe('RestaurantDetailPage', () => {
   beforeEach(() => {
     deleteRestaurantMock.mockReset()
     deleteVisiteMock.mockReset()
+    getMesFavorisMock.mockReset()
+    getMesFavorisMock.mockResolvedValue([])
     vi.spyOn(window, 'confirm').mockReturnValue(true)
   })
 

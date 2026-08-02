@@ -21,6 +21,9 @@ public sealed class VisiteConfiguration : IEntityTypeConfiguration<Visite>
         builder.Property(v => v.RestaurantId)
             .IsRequired();
 
+        builder.Property(v => v.UtilisateurId)
+            .IsRequired();
+
         builder.Property(v => v.Date)
             .IsRequired();
 
@@ -40,6 +43,14 @@ public sealed class VisiteConfiguration : IEntityTypeConfiguration<Visite>
             .WithMany()
             .HasForeignKey(v => v.RestaurantId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // FK explicite vers Utilisateur, en Restrict (pas Cascade) : il n'existe aucune
+        // fonctionnalité de suppression de compte, et si elle existait un jour, on ne voudrait
+        // surtout pas qu'elle efface silencieusement l'historique de visites de cet utilisateur.
+        builder.HasOne<Utilisateur>()
+            .WithMany()
+            .HasForeignKey(v => v.UtilisateurId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         // Une visite possède ses photos (one-to-many, FK shadow "VisiteId" car Photo n'a pas de
         // référence à sa visite dans le Domain). La collection est privée (_photos) : on demande à

@@ -2,6 +2,7 @@ using RestosVisites.Application.Exceptions;
 using RestosVisites.Application.Tests.Fakes;
 using RestosVisites.Application.UseCases.ModifierVisite;
 using RestosVisites.Domain.Entities;
+using RestosVisites.Domain.Enums;
 using RestosVisites.Domain.ValueObjects;
 
 namespace RestosVisites.Application.Tests.UseCases;
@@ -9,12 +10,13 @@ namespace RestosVisites.Application.Tests.UseCases;
 public class ModifierVisiteTests
 {
     private static readonly Guid RestaurantIdValide = Guid.NewGuid();
+    private static readonly Guid AuteurId = Guid.NewGuid();
     private static readonly DateOnly DateValide = new(2026, 1, 15);
 
     private static async Task<(FakeVisiteRepository VisiteRepository, Visite Visite)> CreerVisiteExistanteAsync()
     {
         var visiteRepository = new FakeVisiteRepository();
-        var visite = new Visite(RestaurantIdValide, DateValide, new Note(3), "Correct");
+        var visite = new Visite(RestaurantIdValide, AuteurId, DateValide, new Note(3), "Correct");
         await visiteRepository.AjouterAsync(visite, TestContext.Current.CancellationToken);
         return (visiteRepository, visite);
     }
@@ -27,6 +29,8 @@ public class ModifierVisiteTests
         var nouvelleDate = new DateOnly(2026, 2, 1);
         var request = new ModifierVisiteRequest(
             visite.Id,
+            AuteurId,
+            RoleUtilisateur.Simple,
             nouvelleDate,
             5,
             "Excellent accueil",
@@ -46,11 +50,40 @@ public class ModifierVisiteTests
     {
         var visiteRepository = new FakeVisiteRepository();
         var useCase = new ModifierVisite(visiteRepository);
-        var request = new ModifierVisiteRequest(Guid.NewGuid(), DateValide, 4, null, []);
+        var request = new ModifierVisiteRequest(Guid.NewGuid(), AuteurId, RoleUtilisateur.Simple, DateValide, 4, null, []);
 
         var exception = await Assert.ThrowsAsync<ErreurApplicationException>(
             () => useCase.ExecuterAsync(request, TestContext.Current.CancellationToken));
         Assert.Equal(TypeErreurApplication.RessourceNonTrouvee, exception.Type);
+    }
+
+    [Fact]
+    public async Task ExecuterAsync_UtilisateurNiAuteurNiAdmin_LeveErreurApplicationExceptionAccesRefuse()
+    {
+        var (visiteRepository, visite) = await CreerVisiteExistanteAsync();
+        var useCase = new ModifierVisite(visiteRepository);
+        var autreUtilisateurId = Guid.NewGuid();
+        var request = new ModifierVisiteRequest(
+            visite.Id, autreUtilisateurId, RoleUtilisateur.Simple, DateValide, 4, null, []);
+
+        var exception = await Assert.ThrowsAsync<ErreurApplicationException>(
+            () => useCase.ExecuterAsync(request, TestContext.Current.CancellationToken));
+        Assert.Equal(TypeErreurApplication.AccesRefuse, exception.Type);
+    }
+
+    [Fact]
+    public async Task ExecuterAsync_AdminModifieLaVisiteDeQuelquUnDautre_Reussit()
+    {
+        var (visiteRepository, visite) = await CreerVisiteExistanteAsync();
+        var useCase = new ModifierVisite(visiteRepository);
+        var adminId = Guid.NewGuid();
+        var request = new ModifierVisiteRequest(
+            visite.Id, adminId, RoleUtilisateur.Admin, DateValide, 5, "Modéré par un admin", []);
+
+        await useCase.ExecuterAsync(request, TestContext.Current.CancellationToken);
+
+        var visiteModifiee = Assert.Single(visiteRepository.Visites);
+        Assert.Equal("Modéré par un admin", visiteModifiee.Commentaire);
     }
 
     [Fact]
@@ -59,7 +92,7 @@ public class ModifierVisiteTests
         var (visiteRepository, visite) = await CreerVisiteExistanteAsync();
         visite.AjouterPhoto(new Photo("https://exemple.test/photo.jpg"));
         var useCase = new ModifierVisite(visiteRepository);
-        var request = new ModifierVisiteRequest(visite.Id, DateValide, 3, null, []);
+        var request = new ModifierVisiteRequest(visite.Id, AuteurId, RoleUtilisateur.Simple, DateValide, 3, null, []);
 
         await useCase.ExecuterAsync(request, TestContext.Current.CancellationToken);
 
@@ -73,7 +106,7 @@ public class ModifierVisiteTests
         visite.AjouterPhoto(new Photo("https://exemple.test/photo.jpg"));
         var useCase = new ModifierVisite(visiteRepository);
         var request = new ModifierVisiteRequest(
-            visite.Id, DateValide, 3, null, ["https://exemple.test/photo.jpg"]);
+            visite.Id, AuteurId, RoleUtilisateur.Simple, DateValide, 3, null, ["https://exemple.test/photo.jpg"]);
 
         await useCase.ExecuterAsync(request, TestContext.Current.CancellationToken);
 
@@ -86,7 +119,8 @@ public class ModifierVisiteTests
         var (visiteRepository, visite) = await CreerVisiteExistanteAsync();
         var useCase = new ModifierVisite(visiteRepository);
         var request = new ModifierVisiteRequest(
-            visite.Id, DateValide, 3, null, ["https://exemple.test/photo1.jpg", "https://exemple.test/photo2.jpg"]);
+            visite.Id, AuteurId, RoleUtilisateur.Simple, DateValide, 3, null,
+            ["https://exemple.test/photo1.jpg", "https://exemple.test/photo2.jpg"]);
 
         await useCase.ExecuterAsync(request, TestContext.Current.CancellationToken);
 
@@ -101,7 +135,8 @@ public class ModifierVisiteTests
         var (visiteRepository, visite) = await CreerVisiteExistanteAsync();
         var useCase = new ModifierVisite(visiteRepository);
         var request = new ModifierVisiteRequest(
-            visite.Id, DateValide, 3, null, ["https://exemple.test/photo.jpg", "https://exemple.test/photo.jpg"]);
+            visite.Id, AuteurId, RoleUtilisateur.Simple, DateValide, 3, null,
+            ["https://exemple.test/photo.jpg", "https://exemple.test/photo.jpg"]);
 
         await useCase.ExecuterAsync(request, TestContext.Current.CancellationToken);
 

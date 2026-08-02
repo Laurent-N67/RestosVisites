@@ -22,6 +22,9 @@ public sealed class ErreurApplicationExceptionHandler : IExceptionHandler
         {
             TypeErreurApplication.RessourceNonTrouvee => StatusCodes.Status404NotFound,
             TypeErreurApplication.ConflitDeDonnees => StatusCodes.Status409Conflict,
+            TypeErreurApplication.NonAutorise => StatusCodes.Status401Unauthorized,
+            TypeErreurApplication.AccesRefuse => StatusCodes.Status403Forbidden,
+            TypeErreurApplication.RegleMetierViolee => StatusCodes.Status422UnprocessableEntity,
             _ => StatusCodes.Status400BadRequest,
         };
 

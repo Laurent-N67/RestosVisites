@@ -9,6 +9,10 @@ describe('formatDate', () => {
   it('renvoie la chaîne originale si la date est invalide', () => {
     expect(formatDate('pas-une-date')).toBe('pas-une-date')
   })
+
+  it('formate une date-heure ISO complète (DateTimeOffset)', () => {
+    expect(formatDate('2026-08-02T15:08:20.182806+00:00')).toBe('02/08/2026')
+  })
 })
 
 describe('stars', () => {

@@ -20,6 +20,54 @@ export interface Visite {
   note: number
   commentaire: string | null
   urlsPhotos: string[]
+  utilisateurId: string
+  utilisateurNomAffiche: string
+}
+
+// `RoleUtilisateur` côté serveur est un enum C# sans JsonStringEnumConverter,
+// il sérialise donc en nombre (0 = Simple, 1 = Admin), jamais en chaîne.
+export const Role = {
+  Simple: 0,
+  Admin: 1,
+} as const
+
+export type Role = (typeof Role)[keyof typeof Role]
+
+export interface Utilisateur {
+  id: string
+  email: string
+  nomAffiche: string
+  role: Role
+}
+
+export interface RegisterRequest {
+  email: string
+  nomAffiche: string
+  motDePasse: string
+}
+
+export interface LoginRequest {
+  email: string
+  motDePasse: string
+}
+
+export interface Favori {
+  restaurantId: string
+  dateAjout: string
+}
+
+export interface FavoriAvecRestaurant {
+  restaurantId: string
+  restaurantNom: string
+  dateAjout: string
+}
+
+export interface UtilisateurAvecFavoris {
+  id: string
+  email: string
+  nomAffiche: string
+  role: Role
+  favoris: FavoriAvecRestaurant[]
 }
 
 export interface CreateRestaurantRequest {

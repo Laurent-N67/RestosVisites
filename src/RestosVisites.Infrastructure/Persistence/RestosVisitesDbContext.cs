@@ -19,6 +19,10 @@ public sealed class RestosVisitesDbContext : DbContext
 
     public DbSet<Categorie> Categories => Set<Categorie>();
 
+    public DbSet<Utilisateur> Utilisateurs => Set<Utilisateur>();
+
+    public DbSet<FavoriRestaurant> FavorisRestaurants => Set<FavoriRestaurant>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(RestosVisitesDbContext).Assembly);

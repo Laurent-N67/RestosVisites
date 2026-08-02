@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RestosVisites.Application.UseCases.CreerRestaurant;
 using RestosVisites.Application.UseCases.ListerRestaurants;
@@ -9,6 +10,7 @@ namespace RestosVisites.Api.Controllers;
 
 [ApiController]
 [Route("api/restaurants")]
+[Authorize]
 public sealed class RestaurantsController : ControllerBase
 {
     private readonly CreerRestaurant _creerRestaurant;
@@ -63,9 +65,11 @@ public sealed class RestaurantsController : ControllerBase
         return Ok(visites);
     }
 
-    /// <summary>Modifie un restaurant existant.</summary>
+    /// <summary>Modifie un restaurant existant. Réservé aux Admins.</summary>
     [HttpPut("{id:guid}")]
+    [Authorize(Policy = "Admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Modifier(Guid id, ModifierRestaurantBody body, CancellationToken ct)
@@ -76,9 +80,11 @@ public sealed class RestaurantsController : ControllerBase
         return NoContent();
     }
 
-    /// <summary>Supprime un restaurant existant (et ses visites, en cascade).</summary>
+    /// <summary>Supprime un restaurant existant (et ses visites, en cascade). Réservé aux Admins.</summary>
     [HttpDelete("{id:guid}")]
+    [Authorize(Policy = "Admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Supprimer(Guid id, CancellationToken ct)
     {

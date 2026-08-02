@@ -15,6 +15,8 @@ public class EnregistrerVisiteTests
         return (restaurantRepository, restaurant.Id);
     }
 
+    private static readonly Guid UtilisateurIdValide = Guid.NewGuid();
+
     [Fact]
     public async Task ExecuterAsync_CasNominal_PersisteLaVisiteEtRetourneUnId()
     {
@@ -23,6 +25,7 @@ public class EnregistrerVisiteTests
         var useCase = new EnregistrerVisite(restaurantRepository, visiteRepository);
         var request = new EnregistrerVisiteRequest(
             restaurantId,
+            UtilisateurIdValide,
             new DateOnly(2026, 1, 15),
             4,
             "Très bon accueil",
@@ -33,6 +36,7 @@ public class EnregistrerVisiteTests
         Assert.NotEqual(Guid.Empty, response.Id);
         Assert.Single(visiteRepository.Visites);
         Assert.Equal(response.Id, visiteRepository.Visites[0].Id);
+        Assert.Equal(UtilisateurIdValide, visiteRepository.Visites[0].UtilisateurId);
     }
 
     [Fact]
@@ -43,6 +47,7 @@ public class EnregistrerVisiteTests
         var useCase = new EnregistrerVisite(restaurantRepository, visiteRepository);
         var request = new EnregistrerVisiteRequest(
             Guid.NewGuid(),
+            UtilisateurIdValide,
             new DateOnly(2026, 1, 15),
             4,
             null,
@@ -62,6 +67,7 @@ public class EnregistrerVisiteTests
         var useCase = new EnregistrerVisite(restaurantRepository, visiteRepository);
         var request = new EnregistrerVisiteRequest(
             restaurantId,
+            UtilisateurIdValide,
             new DateOnly(2026, 1, 15),
             4,
             null,

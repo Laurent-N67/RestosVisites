@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RestosVisites.Application.UseCases.ListerCategories;
 
@@ -5,6 +6,7 @@ namespace RestosVisites.Api.Controllers;
 
 [ApiController]
 [Route("api/categories")]
+[Authorize]
 public sealed class CategoriesController : ControllerBase
 {
     private readonly ListerCategories _listerCategories;

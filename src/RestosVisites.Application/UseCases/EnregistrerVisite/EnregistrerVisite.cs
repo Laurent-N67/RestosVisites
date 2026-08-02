@@ -29,7 +29,7 @@ public sealed class EnregistrerVisite
                 $"Aucun restaurant trouvé avec l'identifiant '{request.RestaurantId}'.");
         }
 
-        var visite = new Visite(restaurant.Id, request.Date, new Note(request.Note), request.Commentaire);
+        var visite = new Visite(restaurant.Id, request.UtilisateurId, request.Date, new Note(request.Note), request.Commentaire);
 
         foreach (var urlPhoto in request.UrlsPhotos)
         {

@@ -1,11 +1,14 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { Categorie, Restaurant, Visite } from '../api/types.ts'
+import { Role } from '../api/types.ts'
+import { useAuth } from '../contexts/AuthContext.tsx'
 import {
   groupCategories,
   groupSelectedIdsByGroupe,
   matchesCategoryFilters,
 } from '../utils/categories.ts'
+import { hasVisiteByUser, meetsRatingThreshold } from '../utils/visites.ts'
 import { useDeleteRestaurant } from '../hooks/useDeleteRestaurant.ts'
 import { formatDate, stars } from '../utils/format.ts'
 import CategoryFilterDropdown from './CategoryFilterDropdown.tsx'
@@ -18,12 +21,15 @@ interface RestaurantsListProps {
 }
 
 type SortOption = 'nom' | 'derniereVisite' | 'nombreVisites'
+type VisitedFilter = 'tous' | 'visite' | 'nonVisite'
 
 interface RestaurantAggregate {
   restaurant: Restaurant
   count: number
   lastVisite: Visite | null
   categories: Categorie[]
+  averageNote: number | null
+  restaurantVisites: Visite[]
 }
 
 function aggregate(
@@ -52,12 +58,19 @@ function aggregate(
     const categories = [...restaurant.categories].sort((a, b) =>
       a.nom.localeCompare(b.nom, 'fr'),
     )
+    const averageNote =
+      restaurantVisites.length > 0
+        ? restaurantVisites.reduce((sum, visite) => sum + visite.note, 0) /
+          restaurantVisites.length
+        : null
 
     return {
       restaurant,
       count: restaurantVisites.length,
       lastVisite,
       categories,
+      averageNote,
+      restaurantVisites,
     }
   })
 }
@@ -99,6 +112,8 @@ function RestaurantCard({
   onEditRestaurant,
   onRestaurantDeleted,
 }: RestaurantCardProps) {
+  const { user } = useAuth()
+  const isAdmin = user?.role === Role.Admin
   const { deleting, error, handleDelete } =
     useDeleteRestaurant(onRestaurantDeleted)
   const { restaurant, count, lastVisite, categories } = item
@@ -107,23 +122,25 @@ function RestaurantCard({
     <article className="restaurant-card">
       <div className="popup-header">
         <h3>{restaurant.nom}</h3>
-        <div className="popup-actions">
-          <button
-            type="button"
-            className="popup-btn"
-            onClick={() => onEditRestaurant(restaurant)}
-          >
-            Modifier
-          </button>
-          <button
-            type="button"
-            className="popup-btn popup-btn-danger"
-            disabled={deleting}
-            onClick={() => void handleDelete(restaurant)}
-          >
-            {deleting ? 'Suppression…' : 'Supprimer'}
-          </button>
-        </div>
+        {isAdmin && (
+          <div className="popup-actions">
+            <button
+              type="button"
+              className="popup-btn"
+              onClick={() => onEditRestaurant(restaurant)}
+            >
+              Modifier
+            </button>
+            <button
+              type="button"
+              className="popup-btn popup-btn-danger"
+              disabled={deleting}
+              onClick={() => void handleDelete(restaurant)}
+            >
+              {deleting ? 'Suppression…' : 'Supprimer'}
+            </button>
+          </div>
+        )}
       </div>
 
       <p className="popup-adresse">{restaurant.adresse}</p>
@@ -175,11 +192,14 @@ function RestaurantsList({
   onEditRestaurant,
   onRestaurantDeleted,
 }: RestaurantsListProps) {
+  const { user } = useAuth()
   const [search, setSearch] = useState('')
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(
     new Set(),
   )
   const [sortOption, setSortOption] = useState<SortOption>('nom')
+  const [visitedFilter, setVisitedFilter] = useState<VisitedFilter>('tous')
+  const [minNote, setMinNote] = useState(0)
 
   const aggregates = useMemo(
     () => aggregate(restaurants, visites),
@@ -238,9 +258,16 @@ function RestaurantsList({
         itemCategoryIds,
         selectedIdsByGroupe,
       )
-      return matchesSearch && matchesCategory
+      const matchesVisited =
+        visitedFilter === 'tous' || !user
+          ? true
+          : visitedFilter === 'visite'
+            ? hasVisiteByUser(item.restaurantVisites, user.id)
+            : !hasVisiteByUser(item.restaurantVisites, user.id)
+      const matchesNote = meetsRatingThreshold(item.averageNote, minNote)
+      return matchesSearch && matchesCategory && matchesVisited && matchesNote
     })
-  }, [aggregates, search, selectedIdsByGroupe])
+  }, [aggregates, search, selectedIdsByGroupe, visitedFilter, minNote, user])
 
   const sorted = useMemo(
     () => sortAggregates(filtered, sortOption),
@@ -264,6 +291,47 @@ function RestaurantsList({
           onToggle={toggleCategory}
           onClear={clearCategories}
         />
+
+        {user && (
+          <div className="list-visited-switch">
+            <button
+              type="button"
+              className={visitedFilter === 'tous' ? 'active' : ''}
+              onClick={() => setVisitedFilter('tous')}
+            >
+              Tous
+            </button>
+            <button
+              type="button"
+              className={visitedFilter === 'visite' ? 'active' : ''}
+              onClick={() => setVisitedFilter('visite')}
+            >
+              Déjà visité
+            </button>
+            <button
+              type="button"
+              className={visitedFilter === 'nonVisite' ? 'active' : ''}
+              onClick={() => setVisitedFilter('nonVisite')}
+            >
+              Pas encore visité
+            </button>
+          </div>
+        )}
+
+        <label className="list-sort-label">
+          Note minimale
+          <select
+            value={minNote}
+            onChange={(e) => setMinNote(Number(e.target.value))}
+          >
+            <option value={0}>Toutes notes</option>
+            <option value={1}>1 étoile et plus</option>
+            <option value={2}>2 étoiles et plus</option>
+            <option value={3}>3 étoiles et plus</option>
+            <option value={4}>4 étoiles et plus</option>
+            <option value={5}>5 étoiles</option>
+          </select>
+        </label>
 
         <label className="list-sort-label">
           Trier par
