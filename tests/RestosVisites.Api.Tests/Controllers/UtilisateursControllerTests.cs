@@ -36,6 +36,45 @@ public sealed class UtilisateursControllerTests
     }
 
     [Fact]
+    public async Task Get_UtilisateurSimple_NeVoitPasLEmailDesAutres()
+    {
+        using var factory = new RestosVisitesWebApplicationFactory();
+        using var admin = factory.CreateClient();
+        await AuthTestHelper.InscrireEtConnecterAsync(admin, ct: TestContext.Current.CancellationToken); // premier => Admin
+
+        using var simpleClient = factory.CreateClient();
+        var simple = await AuthTestHelper.InscrireEtConnecterAsync(simpleClient, ct: TestContext.Current.CancellationToken);
+
+        var response = await simpleClient.GetAsync("/api/utilisateurs", TestContext.Current.CancellationToken);
+
+        var utilisateurs = await response.Content.ReadFromJsonAsync<List<UtilisateurAvecFavorisDto>>(
+            TestContext.Current.CancellationToken);
+        Assert.NotNull(utilisateurs);
+        var moi = Assert.Single(utilisateurs, u => u.Id == simple.Id);
+        var lAutre = Assert.Single(utilisateurs, u => u.Id != simple.Id);
+        Assert.NotNull(moi.Email);
+        Assert.Null(lAutre.Email);
+    }
+
+    [Fact]
+    public async Task Get_UtilisateurAdmin_VoitLEmailDeTousLesUtilisateurs()
+    {
+        using var factory = new RestosVisitesWebApplicationFactory();
+        using var admin = factory.CreateClient();
+        await AuthTestHelper.InscrireEtConnecterAsync(admin, ct: TestContext.Current.CancellationToken); // premier => Admin
+
+        using var simpleClient = factory.CreateClient();
+        await AuthTestHelper.InscrireEtConnecterAsync(simpleClient, ct: TestContext.Current.CancellationToken);
+
+        var response = await admin.GetAsync("/api/utilisateurs", TestContext.Current.CancellationToken);
+
+        var utilisateurs = await response.Content.ReadFromJsonAsync<List<UtilisateurAvecFavorisDto>>(
+            TestContext.Current.CancellationToken);
+        Assert.NotNull(utilisateurs);
+        Assert.All(utilisateurs, u => Assert.NotNull(u.Email));
+    }
+
+    [Fact]
     public async Task PutRole_Admin_ChangeLeRoleDunAutreUtilisateur()
     {
         using var factory = new RestosVisitesWebApplicationFactory();

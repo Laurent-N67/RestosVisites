@@ -1,4 +1,4 @@
-import type { Visite } from '../api/types.ts'
+import type { UtilisateurAvecFavoris, Visite } from '../api/types.ts'
 
 /**
  * Détermine si un utilisateur donné a au moins une visite parmi celles d'un
@@ -46,4 +46,22 @@ export function averageNoteForUserRestaurant(
     return null
   }
   return notes.reduce((sum, note) => sum + note, 0) / notes.length
+}
+
+/**
+ * Détermine si un utilisateur donné (généralement l'auteur d'une visite, pas
+ * forcément l'utilisateur connecté) a ce restaurant dans ses propres favoris.
+ */
+export function estFavoriDeUtilisateur(
+  utilisateursAvecFavoris: UtilisateurAvecFavoris[],
+  utilisateurId: string,
+  restaurantId: string,
+): boolean {
+  const utilisateur = utilisateursAvecFavoris.find(
+    (u) => u.id === utilisateurId,
+  )
+  if (!utilisateur) {
+    return false
+  }
+  return utilisateur.favoris.some((favori) => favori.restaurantId === restaurantId)
 }

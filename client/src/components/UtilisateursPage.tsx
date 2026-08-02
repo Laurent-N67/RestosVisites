@@ -9,7 +9,7 @@ import { formatDate, stars } from '../utils/format.ts'
 import { averageNoteForUserRestaurant } from '../utils/visites.ts'
 
 const ROLE_LABELS: Record<Role, string> = {
-  [Role.Simple]: 'Simple',
+  [Role.Simple]: 'Utilisateur',
   [Role.Admin]: 'Admin',
 }
 
@@ -82,7 +82,9 @@ function UtilisateursPage({ visites }: UtilisateursPageProps) {
               <div className="popup-header">
                 <div>
                   <h3>{utilisateur.nomAffiche}</h3>
-                  <p className="popup-adresse">{utilisateur.email}</p>
+                  {utilisateur.email && (
+                    <p className="popup-adresse">{utilisateur.email}</p>
+                  )}
                 </div>
 
                 {isAdmin ? (
@@ -98,7 +100,7 @@ function UtilisateursPage({ visites }: UtilisateursPageProps) {
                         )
                       }
                     >
-                      <option value={Role.Simple}>Simple</option>
+                      <option value={Role.Simple}>Utilisateur</option>
                       <option value={Role.Admin}>Admin</option>
                     </select>
                   </label>

@@ -24,8 +24,9 @@ public class ListerUtilisateursAvecFavorisTests
             new FavoriRestaurant(utilisateur.Id, restaurant.Id, dateAjout), TestContext.Current.CancellationToken);
 
         var useCase = new ListerUtilisateursAvecFavoris(utilisateurRepository, favoriRepository, restaurantRepository);
+        var request = new ListerUtilisateursAvecFavorisRequest(utilisateur.Id, RoleUtilisateur.Admin);
 
-        var resultat = await useCase.ExecuterAsync(TestContext.Current.CancellationToken);
+        var resultat = await useCase.ExecuterAsync(request, TestContext.Current.CancellationToken);
 
         var utilisateurDto = Assert.Single(resultat);
         Assert.Equal(utilisateur.Id, utilisateurDto.Id);
@@ -44,8 +45,9 @@ public class ListerUtilisateursAvecFavorisTests
 
         var useCase = new ListerUtilisateursAvecFavoris(
             utilisateurRepository, new FakeFavoriRestaurantRepository(), new FakeRestaurantRepository());
+        var request = new ListerUtilisateursAvecFavorisRequest(utilisateur.Id, RoleUtilisateur.Admin);
 
-        var resultat = await useCase.ExecuterAsync(TestContext.Current.CancellationToken);
+        var resultat = await useCase.ExecuterAsync(request, TestContext.Current.CancellationToken);
 
         var utilisateurDto = Assert.Single(resultat);
         Assert.Empty(utilisateurDto.Favoris);
@@ -63,10 +65,50 @@ public class ListerUtilisateursAvecFavorisTests
 
         var useCase = new ListerUtilisateursAvecFavoris(
             utilisateurRepository, new FakeFavoriRestaurantRepository(), new FakeRestaurantRepository());
+        var request = new ListerUtilisateursAvecFavorisRequest(utilisateurReel.Id, RoleUtilisateur.Admin);
 
-        var resultat = await useCase.ExecuterAsync(TestContext.Current.CancellationToken);
+        var resultat = await useCase.ExecuterAsync(request, TestContext.Current.CancellationToken);
 
         var utilisateurDto = Assert.Single(resultat);
         Assert.Equal(utilisateurReel.Id, utilisateurDto.Id);
+    }
+
+    [Fact]
+    public async Task ExecuterAsync_AppelantAdmin_VoitLesEmailsDeTousLesUtilisateurs()
+    {
+        var utilisateurRepository = new FakeUtilisateurRepository();
+        var admin = new Utilisateur("admin@exemple.test", "Admin", "hash", "sel", 600_000, RoleUtilisateur.Admin);
+        var autre = new Utilisateur("autre@exemple.test", "Autre", "hash", "sel", 600_000, RoleUtilisateur.Simple);
+        await utilisateurRepository.AjouterAsync(admin, TestContext.Current.CancellationToken);
+        await utilisateurRepository.AjouterAsync(autre, TestContext.Current.CancellationToken);
+
+        var useCase = new ListerUtilisateursAvecFavoris(
+            utilisateurRepository, new FakeFavoriRestaurantRepository(), new FakeRestaurantRepository());
+        var request = new ListerUtilisateursAvecFavorisRequest(admin.Id, RoleUtilisateur.Admin);
+
+        var resultat = await useCase.ExecuterAsync(request, TestContext.Current.CancellationToken);
+
+        Assert.All(resultat, u => Assert.NotNull(u.Email));
+    }
+
+    [Fact]
+    public async Task ExecuterAsync_AppelantSimple_NeVoitQueSonPropreEmail()
+    {
+        var utilisateurRepository = new FakeUtilisateurRepository();
+        var moi = new Utilisateur("moi@exemple.test", "Moi", "hash", "sel", 600_000, RoleUtilisateur.Simple);
+        var autre = new Utilisateur("autre@exemple.test", "Autre", "hash", "sel", 600_000, RoleUtilisateur.Simple);
+        await utilisateurRepository.AjouterAsync(moi, TestContext.Current.CancellationToken);
+        await utilisateurRepository.AjouterAsync(autre, TestContext.Current.CancellationToken);
+
+        var useCase = new ListerUtilisateursAvecFavoris(
+            utilisateurRepository, new FakeFavoriRestaurantRepository(), new FakeRestaurantRepository());
+        var request = new ListerUtilisateursAvecFavorisRequest(moi.Id, RoleUtilisateur.Simple);
+
+        var resultat = await useCase.ExecuterAsync(request, TestContext.Current.CancellationToken);
+
+        var monDto = resultat.Single(u => u.Id == moi.Id);
+        var autreDto = resultat.Single(u => u.Id == autre.Id);
+        Assert.Equal(moi.Email, monDto.Email);
+        Assert.Null(autreDto.Email);
     }
 }

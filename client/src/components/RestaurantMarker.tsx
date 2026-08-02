@@ -2,13 +2,14 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Marker, Popup, Tooltip } from 'react-leaflet'
 import { resolvePhotoUrl } from '../api/client.ts'
-import type { Restaurant, Visite } from '../api/types.ts'
+import type { Restaurant, UtilisateurAvecFavoris, Visite } from '../api/types.ts'
 import { Role } from '../api/types.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { useDeleteRestaurant } from '../hooks/useDeleteRestaurant.ts'
 import { useDeleteVisite } from '../hooks/useDeleteVisite.ts'
 import { useFavoriToggle } from '../hooks/useFavoriToggle.ts'
 import { formatDate, stars } from '../utils/format.ts'
+import { estFavoriDeUtilisateur } from '../utils/visites.ts'
 import PhotoLightbox from './PhotoLightbox.tsx'
 
 interface LightboxState {
@@ -26,6 +27,7 @@ interface RestaurantMarkerProps {
   restaurant: Restaurant
   visitesState: VisitesState
   lastVisite: Visite | null
+  utilisateursAvecFavoris: UtilisateurAvecFavoris[]
   onOpen: (restaurantId: string) => void
   onEditRestaurant: (restaurant: Restaurant) => void
   onRestaurantDeleted: () => void
@@ -35,7 +37,9 @@ interface RestaurantMarkerProps {
 }
 
 interface VisitesSectionProps {
+  restaurantId: string
   visitesState: VisitesState
+  utilisateursAvecFavoris: UtilisateurAvecFavoris[]
   onEditVisite: (visite: Visite) => void
   onDeleteVisite: (visite: Visite) => void
   deletingVisiteId: string | null
@@ -45,7 +49,9 @@ interface VisitesSectionProps {
 }
 
 function VisitesSection({
+  restaurantId,
   visitesState,
+  utilisateursAvecFavoris,
   onEditVisite,
   onDeleteVisite,
   deletingVisiteId,
@@ -92,6 +98,11 @@ function VisitesSection({
             </div>
             <p className="popup-visite-auteur">
               Visité par {visite.utilisateurNomAffiche}
+              {estFavoriDeUtilisateur(
+                utilisateursAvecFavoris,
+                visite.utilisateurId,
+                restaurantId,
+              ) && <span className="popup-favori-badge">★ Restaurant favori !</span>}
             </p>
 
             {visite.commentaire && (
@@ -155,6 +166,7 @@ function RestaurantMarker({
   restaurant,
   visitesState,
   lastVisite,
+  utilisateursAvecFavoris,
   onOpen,
   onEditRestaurant,
   onRestaurantDeleted,
@@ -257,7 +269,9 @@ function RestaurantMarker({
           )}
 
           <VisitesSection
+            restaurantId={restaurant.id}
             visitesState={visitesState}
+            utilisateursAvecFavoris={utilisateursAvecFavoris}
             onEditVisite={onEditVisite}
             onDeleteVisite={(visite) => void handleDeleteVisite(visite)}
             deletingVisiteId={deletingVisiteId}

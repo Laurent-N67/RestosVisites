@@ -26,7 +26,8 @@ public sealed class UtilisateursController : ControllerBase
     [ProducesResponseType(typeof(IReadOnlyList<UtilisateurAvecFavorisDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<UtilisateurAvecFavorisDto>>> Lister(CancellationToken ct)
     {
-        var utilisateurs = await _listerUtilisateursAvecFavoris.ExecuterAsync(ct);
+        var request = new ListerUtilisateursAvecFavorisRequest(User.ObtenirUtilisateurId(), User.ObtenirRole());
+        var utilisateurs = await _listerUtilisateursAvecFavoris.ExecuterAsync(request, ct);
 
         return Ok(utilisateurs);
     }

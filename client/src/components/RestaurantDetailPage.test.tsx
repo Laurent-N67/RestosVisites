@@ -86,6 +86,7 @@ function renderPage(
   const defaultProps = {
     restaurants: [restaurant],
     visites,
+    utilisateursAvecFavoris: [],
     onEditRestaurant: vi.fn(),
     onEditVisite: vi.fn(),
     onRestaurantDeleted: vi.fn(),
@@ -196,6 +197,44 @@ describe('RestaurantDetailPage', () => {
     expect(
       await screen.findByText('La visite est introuvable.'),
     ).toBeInTheDocument()
+  })
+
+  it("affiche le badge favori quand l'auteur de la visite a le restaurant en favori", () => {
+    renderPage({
+      utilisateursAvecFavoris: [
+        {
+          id: 'user-2',
+          email: 'user2@example.com',
+          nomAffiche: 'Une Autre Personne',
+          role: Role.Simple,
+          favoris: [
+            {
+              restaurantId: 'restaurant-1',
+              restaurantNom: 'Le Bon Coin',
+              dateAjout: '2026-07-01',
+            },
+          ],
+        },
+      ],
+    })
+
+    expect(screen.getAllByText('★ Restaurant favori !')).toHaveLength(2)
+  })
+
+  it("n'affiche pas le badge favori si l'auteur n'a pas le restaurant en favori", () => {
+    renderPage({
+      utilisateursAvecFavoris: [
+        {
+          id: 'user-2',
+          email: 'user2@example.com',
+          nomAffiche: 'Une Autre Personne',
+          role: Role.Simple,
+          favoris: [],
+        },
+      ],
+    })
+
+    expect(screen.queryByText('★ Restaurant favori !')).not.toBeInTheDocument()
   })
 
   it('ouvre la lightbox sur la photo cliquée', async () => {

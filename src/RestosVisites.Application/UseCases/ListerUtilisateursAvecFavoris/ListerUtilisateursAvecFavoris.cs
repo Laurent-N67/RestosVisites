@@ -1,4 +1,5 @@
 using RestosVisites.Application.Abstractions;
+using RestosVisites.Domain.Enums;
 
 namespace RestosVisites.Application.UseCases.ListerUtilisateursAvecFavoris;
 
@@ -23,7 +24,8 @@ public sealed class ListerUtilisateursAvecFavoris
         _restaurantRepository = restaurantRepository;
     }
 
-    public async Task<IReadOnlyList<UtilisateurAvecFavorisDto>> ExecuterAsync(CancellationToken ct = default)
+    public async Task<IReadOnlyList<UtilisateurAvecFavorisDto>> ExecuterAsync(
+        ListerUtilisateursAvecFavorisRequest request, CancellationToken ct = default)
     {
         var utilisateurs = await _utilisateurRepository.ListerUtilisateursReelsAsync(ct);
         var restaurants = await _restaurantRepository.ListerAsync(ct);
@@ -39,7 +41,11 @@ public sealed class ListerUtilisateursAvecFavoris
                 .Select(f => new FavoriDto(f.RestaurantId, restaurantsParId[f.RestaurantId].Nom, f.DateAjout))
                 .ToList();
 
-            resultat.Add(new UtilisateurAvecFavorisDto(utilisateur.Id, utilisateur.Email, utilisateur.NomAffiche, utilisateur.Role, favorisDto));
+            var emailVisible = request.RoleCourant == RoleUtilisateur.Admin
+                || utilisateur.Id == request.UtilisateurCourantId;
+            var email = emailVisible ? utilisateur.Email : null;
+
+            resultat.Add(new UtilisateurAvecFavorisDto(utilisateur.Id, email, utilisateur.NomAffiche, utilisateur.Role, favorisDto));
         }
 
         return resultat;

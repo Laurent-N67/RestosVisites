@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { MapContainer, TileLayer, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import { ApiError, getVisites } from '../api/client.ts'
-import type { Restaurant, Visite } from '../api/types.ts'
+import type { Restaurant, UtilisateurAvecFavoris, Visite } from '../api/types.ts'
 import RestaurantMarker from './RestaurantMarker.tsx'
 import type { VisitesState } from './RestaurantMarker.tsx'
 import type { Theme } from '../hooks/useTheme.ts'
@@ -24,6 +24,7 @@ interface RestaurantsMapProps {
   theme: Theme
   restaurants: Restaurant[]
   visites: Visite[]
+  utilisateursAvecFavoris: UtilisateurAvecFavoris[]
   visiteMutation: VisiteMutation | null
   onEditRestaurant: (restaurant: Restaurant) => void
   onEditVisite: (visite: Visite) => void
@@ -66,6 +67,7 @@ function RestaurantsMap({
   theme,
   restaurants,
   visites,
+  utilisateursAvecFavoris,
   visiteMutation,
   onEditRestaurant,
   onEditVisite,
@@ -138,6 +140,7 @@ function RestaurantsMap({
           restaurant={restaurant}
           visitesState={visitesByRestaurant[restaurant.id] ?? { status: 'idle' }}
           lastVisite={lastVisites.get(restaurant.id) ?? null}
+          utilisateursAvecFavoris={utilisateursAvecFavoris}
           onOpen={handleOpen}
           onEditRestaurant={onEditRestaurant}
           onEditVisite={onEditVisite}

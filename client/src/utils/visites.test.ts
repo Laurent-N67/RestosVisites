@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import type { Visite } from '../api/types.ts'
+import type { UtilisateurAvecFavoris, Visite } from '../api/types.ts'
+import { Role } from '../api/types.ts'
 import {
   averageNoteForUserRestaurant,
+  estFavoriDeUtilisateur,
   hasVisiteByUser,
   meetsRatingThreshold,
 } from './visites.ts'
@@ -84,5 +86,47 @@ describe('averageNoteForUserRestaurant', () => {
       visite('v2', 'user-a', { restaurantId: 'resto-1', note: 3 }),
     ]
     expect(averageNoteForUserRestaurant(visites, 'user-a', 'resto-1')).toBe(4)
+  })
+})
+
+function utilisateurAvecFavoris(
+  id: string,
+  restaurantIds: string[],
+): UtilisateurAvecFavoris {
+  return {
+    id,
+    email: `${id}@example.com`,
+    nomAffiche: id,
+    role: Role.Simple,
+    favoris: restaurantIds.map((restaurantId) => ({
+      restaurantId,
+      restaurantNom: restaurantId,
+      dateAjout: '2026-08-01',
+    })),
+  }
+}
+
+describe('estFavoriDeUtilisateur', () => {
+  it("renvoie true si le restaurant est dans les favoris de l'utilisateur", () => {
+    const utilisateurs = [utilisateurAvecFavoris('user-a', ['resto-1', 'resto-2'])]
+    expect(estFavoriDeUtilisateur(utilisateurs, 'user-a', 'resto-2')).toBe(true)
+  })
+
+  it("renvoie false si le restaurant n'est pas dans les favoris de l'utilisateur", () => {
+    const utilisateurs = [utilisateurAvecFavoris('user-a', ['resto-1'])]
+    expect(estFavoriDeUtilisateur(utilisateurs, 'user-a', 'resto-2')).toBe(false)
+  })
+
+  it("renvoie false si l'utilisateur est introuvable", () => {
+    const utilisateurs = [utilisateurAvecFavoris('user-b', ['resto-1'])]
+    expect(estFavoriDeUtilisateur(utilisateurs, 'user-a', 'resto-1')).toBe(false)
+  })
+
+  it('ignore les favoris des autres utilisateurs', () => {
+    const utilisateurs = [
+      utilisateurAvecFavoris('user-a', []),
+      utilisateurAvecFavoris('user-b', ['resto-1']),
+    ]
+    expect(estFavoriDeUtilisateur(utilisateurs, 'user-a', 'resto-1')).toBe(false)
   })
 })

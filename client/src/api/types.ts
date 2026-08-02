@@ -64,7 +64,7 @@ export interface FavoriAvecRestaurant {
 
 export interface UtilisateurAvecFavoris {
   id: string
-  email: string
+  email: string | null
   nomAffiche: string
   role: Role
   favoris: FavoriAvecRestaurant[]

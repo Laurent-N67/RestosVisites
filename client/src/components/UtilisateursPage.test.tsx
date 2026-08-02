@@ -148,7 +148,19 @@ describe('UtilisateursPage', () => {
 
     await screen.findByText('Une Personne')
     expect(screen.queryByLabelText('Rôle')).not.toBeInTheDocument()
-    expect(screen.getAllByText('Simple').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Utilisateur').length).toBeGreaterThan(0)
+  })
+
+  it("n'affiche pas l'email d'un utilisateur quand le backend le renvoie à null (masqué pour un non-admin)", async () => {
+    getUtilisateursAvecFavorisMock.mockResolvedValue([
+      { ...utilisateurs[0], email: null },
+      utilisateurs[1],
+    ])
+    renderPage()
+
+    await screen.findByText('Une Personne')
+    expect(screen.queryByText('simple@example.com')).not.toBeInTheDocument()
+    expect(screen.getByText('admin@example.com')).toBeInTheDocument()
   })
 
   it("affiche une erreur si le chargement échoue", async () => {

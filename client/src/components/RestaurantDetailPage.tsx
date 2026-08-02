@@ -1,18 +1,20 @@
 import { useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { resolvePhotoUrl } from '../api/client.ts'
-import type { Restaurant, Visite } from '../api/types.ts'
+import type { Restaurant, UtilisateurAvecFavoris, Visite } from '../api/types.ts'
 import { Role } from '../api/types.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { useDeleteRestaurant } from '../hooks/useDeleteRestaurant.ts'
 import { useDeleteVisite } from '../hooks/useDeleteVisite.ts'
 import { useFavoriToggle } from '../hooks/useFavoriToggle.ts'
 import { formatDate, stars } from '../utils/format.ts'
+import { estFavoriDeUtilisateur } from '../utils/visites.ts'
 import PhotoLightbox from './PhotoLightbox.tsx'
 
 interface RestaurantDetailPageProps {
   restaurants: Restaurant[]
   visites: Visite[]
+  utilisateursAvecFavoris: UtilisateurAvecFavoris[]
   onEditRestaurant: (restaurant: Restaurant) => void
   onEditVisite: (visite: Visite) => void
   onRestaurantDeleted: () => void
@@ -27,6 +29,7 @@ interface LightboxState {
 function RestaurantDetailPage({
   restaurants,
   visites,
+  utilisateursAvecFavoris,
   onEditRestaurant,
   onEditVisite,
   onRestaurantDeleted,
@@ -34,9 +37,18 @@ function RestaurantDetailPage({
 }: RestaurantDetailPageProps) {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
   const [lightbox, setLightbox] = useState<LightboxState | null>(null)
   const { user } = useAuth()
   const isAdmin = user?.role === Role.Admin
+
+  function handleBack() {
+    if (location.key !== 'default') {
+      navigate(-1)
+    } else {
+      navigate('/')
+    }
+  }
 
   const restaurant = restaurants.find((r) => r.id === id) ?? null
 
@@ -67,9 +79,9 @@ function RestaurantDetailPage({
     return (
       <div className="detail-page">
         <p className="popup-status popup-error">Restaurant introuvable.</p>
-        <Link to="/" className="detail-back-link">
-          ← Retour à la carte
-        </Link>
+        <button type="button" className="detail-back-link" onClick={handleBack}>
+          ← Retour
+        </button>
       </div>
     )
   }
@@ -82,9 +94,9 @@ function RestaurantDetailPage({
 
   return (
     <div className="detail-page">
-      <Link to="/" className="detail-back-link">
-        ← Retour à la carte
-      </Link>
+      <button type="button" className="detail-back-link" onClick={handleBack}>
+        ← Retour
+      </button>
 
       <div className="popup-header detail-header">
         <h2>{restaurant.nom}</h2>
@@ -163,6 +175,11 @@ function RestaurantDetailPage({
               </div>
               <p className="popup-visite-auteur">
                 Visité par {visite.utilisateurNomAffiche}
+                {estFavoriDeUtilisateur(
+                  utilisateursAvecFavoris,
+                  visite.utilisateurId,
+                  restaurant.id,
+                ) && <span className="popup-favori-badge">★ Restaurant favori !</span>}
               </p>
 
               {visite.commentaire && (

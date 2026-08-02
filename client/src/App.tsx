@@ -1,7 +1,13 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Link, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
-import { ApiError, getAllVisites, getCategories, getRestaurants } from './api/client.ts'
-import type { Categorie, Restaurant, Visite } from './api/types.ts'
+import {
+  ApiError,
+  getAllVisites,
+  getCategories,
+  getRestaurants,
+  getUtilisateursAvecFavoris,
+} from './api/client.ts'
+import type { Categorie, Restaurant, UtilisateurAvecFavoris, Visite } from './api/types.ts'
 import RestaurantsMap from './components/RestaurantsMap.tsx'
 import type { VisiteMutation } from './components/RestaurantsMap.tsx'
 import RestaurantsList from './components/RestaurantsList.tsx'
@@ -27,6 +33,9 @@ function App() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
   const [visites, setVisites] = useState<Visite[]>([])
   const [categories, setCategories] = useState<Categorie[]>([])
+  const [utilisateursAvecFavoris, setUtilisateursAvecFavoris] = useState<
+    UtilisateurAvecFavoris[]
+  >([])
   const [loadError, setLoadError] = useState<string | null>(null)
   const [activePanel, setActivePanel] = useState<Panel>('none')
   const [editingRestaurant, setEditingRestaurant] = useState<Restaurant | null>(
@@ -80,18 +89,39 @@ function App() {
     }
   }, [])
 
+  const loadUtilisateursAvecFavoris = useCallback(async () => {
+    try {
+      const data = await getUtilisateursAvecFavoris()
+      setUtilisateursAvecFavoris(data)
+    } catch (err) {
+      setLoadError(
+        err instanceof ApiError
+          ? (err.detail ?? err.message)
+          : 'Impossible de charger les utilisateurs.',
+      )
+    }
+  }, [])
+
   useEffect(() => {
     if (!user) {
       setRestaurants([])
       setVisites([])
       setCategories([])
+      setUtilisateursAvecFavoris([])
       setLoadError(null)
       return
     }
     void loadRestaurants()
     void loadAllVisites()
     void loadCategories()
-  }, [user, loadRestaurants, loadAllVisites, loadCategories])
+    void loadUtilisateursAvecFavoris()
+  }, [
+    user,
+    loadRestaurants,
+    loadAllVisites,
+    loadCategories,
+    loadUtilisateursAvecFavoris,
+  ])
 
   useEffect(() => {
     if (visiteMutation) {
@@ -257,6 +287,7 @@ function App() {
                 theme={theme}
                 restaurants={restaurants}
                 visites={visites}
+                utilisateursAvecFavoris={utilisateursAvecFavoris}
                 visiteMutation={visiteMutation}
                 onEditRestaurant={handleEditRestaurant}
                 onEditVisite={handleEditVisite}
@@ -282,6 +313,7 @@ function App() {
               <RestaurantDetailPage
                 restaurants={restaurants}
                 visites={visites}
+                utilisateursAvecFavoris={utilisateursAvecFavoris}
                 onEditRestaurant={handleEditRestaurant}
                 onEditVisite={handleEditVisite}
                 onRestaurantDeleted={handleRestaurantDeleted}
