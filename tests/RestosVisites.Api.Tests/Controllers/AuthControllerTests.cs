@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using RestosVisites.Api.Controllers;
 using RestosVisites.Application.UseCases.Inscrire;
 using RestosVisites.Application.UseCases.ObtenirUtilisateurCourant;
 using RestosVisites.Application.UseCases.SeConnecter;
@@ -71,6 +72,18 @@ public sealed class AuthControllerTests
         using var client = factory.CreateClient();
 
         var request = new InscrireRequest("faible@exemple.test", "Personne", "faible");
+        var response = await client.PostAsJsonAsync("/api/auth/register", request, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Register_NomAfficheVide_Retourne422()
+    {
+        using var factory = new RestosVisitesWebApplicationFactory();
+        using var client = factory.CreateClient();
+
+        var request = new InscrireRequest("nomvide@exemple.test", "   ", MotDePasseValide);
         var response = await client.PostAsJsonAsync("/api/auth/register", request, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
@@ -151,5 +164,121 @@ public sealed class AuthControllerTests
 
         var meResponse = await client.GetAsync("/api/auth/me", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Unauthorized, meResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task PutMe_UtilisateurSimpleAuthentifie_Retourne204EtChangeLeNomAffiche()
+    {
+        using var factory = new RestosVisitesWebApplicationFactory();
+        using var adminClient = factory.CreateClient();
+        await AuthTestHelper.InscrireEtConnecterAsync(adminClient, ct: TestContext.Current.CancellationToken); // premier => Admin
+
+        using var client = factory.CreateClient();
+        await AuthTestHelper.InscrireEtConnecterAsync(client, ct: TestContext.Current.CancellationToken); // second => Simple
+
+        var response = await client.PutAsJsonAsync(
+            "/api/auth/me", new ChangerNomAfficheBody("Nouveau Nom"), TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+
+        var meResponse = await client.GetAsync("/api/auth/me", TestContext.Current.CancellationToken);
+        var me = await meResponse.Content.ReadFromJsonAsync<ObtenirUtilisateurCourantResponse>(TestContext.Current.CancellationToken);
+        Assert.NotNull(me);
+        Assert.Equal("Nouveau Nom", me.NomAffiche);
+    }
+
+    [Fact]
+    public async Task PutMe_UtilisateurNonAuthentifie_Retourne401()
+    {
+        using var factory = new RestosVisitesWebApplicationFactory();
+        using var client = factory.CreateClient();
+
+        var response = await client.PutAsJsonAsync(
+            "/api/auth/me", new ChangerNomAfficheBody("Nouveau Nom"), TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task PutMe_NouveauNomAfficheVide_Retourne422()
+    {
+        using var factory = new RestosVisitesWebApplicationFactory();
+        using var client = factory.CreateClient();
+        await AuthTestHelper.InscrireEtConnecterAsync(client, ct: TestContext.Current.CancellationToken);
+
+        var response = await client.PutAsJsonAsync(
+            "/api/auth/me", new ChangerNomAfficheBody("   "), TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task PutMeMotDePasse_UtilisateurSimpleAuthentifie_Retourne204EtPermetLaReconnexion()
+    {
+        using var factory = new RestosVisitesWebApplicationFactory();
+        using var adminClient = factory.CreateClient();
+        await AuthTestHelper.InscrireEtConnecterAsync(adminClient, ct: TestContext.Current.CancellationToken); // premier => Admin
+
+        using var client = factory.CreateClient();
+        var email = $"{Guid.NewGuid():N}@exemple.test";
+        var utilisateur = await AuthTestHelper.InscrireEtConnecterAsync(
+            client, email: email, ct: TestContext.Current.CancellationToken); // second => Simple
+        const string nouveauMotDePasse = "NouveauMotDePasse123!";
+
+        var response = await client.PutAsJsonAsync(
+            "/api/auth/me/mot-de-passe",
+            new ChangerMotDePasseBody(AuthTestHelper.MotDePasseValide, nouveauMotDePasse),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(RoleUtilisateur.Simple, utilisateur.Role);
+
+        using var reconnexionClient = factory.CreateClient();
+        var loginResponse = await reconnexionClient.PostAsJsonAsync(
+            "/api/auth/login", new SeConnecterRequest(email, nouveauMotDePasse), TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.OK, loginResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task PutMeMotDePasse_UtilisateurNonAuthentifie_Retourne401()
+    {
+        using var factory = new RestosVisitesWebApplicationFactory();
+        using var client = factory.CreateClient();
+
+        var response = await client.PutAsJsonAsync(
+            "/api/auth/me/mot-de-passe",
+            new ChangerMotDePasseBody(AuthTestHelper.MotDePasseValide, "NouveauMotDePasse123!"),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task PutMeMotDePasse_MotDePasseActuelIncorrect_Retourne401()
+    {
+        using var factory = new RestosVisitesWebApplicationFactory();
+        using var client = factory.CreateClient();
+        await AuthTestHelper.InscrireEtConnecterAsync(client, ct: TestContext.Current.CancellationToken);
+
+        var response = await client.PutAsJsonAsync(
+            "/api/auth/me/mot-de-passe",
+            new ChangerMotDePasseBody("MauvaisMotDePasse123!", "NouveauMotDePasse123!"),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task PutMeMotDePasse_NouveauMotDePasseTropFaible_Retourne422()
+    {
+        using var factory = new RestosVisitesWebApplicationFactory();
+        using var client = factory.CreateClient();
+        await AuthTestHelper.InscrireEtConnecterAsync(client, ct: TestContext.Current.CancellationToken);
+
+        var response = await client.PutAsJsonAsync(
+            "/api/auth/me/mot-de-passe",
+            new ChangerMotDePasseBody(AuthTestHelper.MotDePasseValide, "faible"),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
     }
 }

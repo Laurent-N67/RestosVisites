@@ -227,3 +227,20 @@ export function reinitialiserMotDePasse(
     body: JSON.stringify({ nouveauMotDePasse }),
   })
 }
+
+export function changerNomAffiche(nouveauNomAffiche: string): Promise<void> {
+  return request<void>('/api/auth/me', {
+    method: 'PUT',
+    body: JSON.stringify({ nouveauNomAffiche }),
+  })
+}
+
+export function changerMotDePasse(
+  motDePasseActuel: string,
+  nouveauMotDePasse: string,
+): Promise<void> {
+  return request<void>('/api/auth/me/mot-de-passe', {
+    method: 'PUT',
+    body: JSON.stringify({ motDePasseActuel, nouveauMotDePasse }),
+  })
+}

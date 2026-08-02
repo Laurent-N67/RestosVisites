@@ -18,6 +18,7 @@ import LoginPage from './components/LoginPage.tsx'
 import RegisterPage from './components/RegisterPage.tsx'
 import FavorisPage from './components/FavorisPage.tsx'
 import UtilisateursPage from './components/UtilisateursPage.tsx'
+import AccountPage from './components/AccountPage.tsx'
 import ProtectedRoute from './components/ProtectedRoute.tsx'
 import { useAuth } from './contexts/AuthContext.tsx'
 import { useTheme } from './hooks/useTheme.ts'
@@ -262,7 +263,9 @@ function App() {
           </button>
           {user ? (
             <div className="app-auth">
-              <span className="app-auth-name">{user.nomAffiche}</span>
+              <Link to="/mon-compte" className="app-auth-name">
+                {user.nomAffiche}
+              </Link>
               <button type="button" onClick={() => void handleLogout()}>
                 Déconnexion
               </button>
@@ -334,6 +337,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <UtilisateursPage visites={visites} />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/mon-compte"
+            element={
+              <ProtectedRoute>
+                <AccountPage />
               </ProtectedRoute>
             }
           />

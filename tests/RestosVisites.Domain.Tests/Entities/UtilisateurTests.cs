@@ -106,6 +106,41 @@ public class UtilisateurTests
     }
 
     [Fact]
+    public void Renommer_NouveauNomAffiche_MetAJourLeNomAffiche()
+    {
+        var utilisateur = new Utilisateur(
+            EmailValide, NomAfficheValide, HashValide, SelValide, IterationsValides, RoleUtilisateur.Simple);
+
+        utilisateur.Renommer("Nouveau Nom");
+
+        Assert.Equal("Nouveau Nom", utilisateur.NomAffiche);
+    }
+
+    [Fact]
+    public void Renommer_AvecEspaces_EstTrim()
+    {
+        var utilisateur = new Utilisateur(
+            EmailValide, NomAfficheValide, HashValide, SelValide, IterationsValides, RoleUtilisateur.Simple);
+
+        utilisateur.Renommer("  Nouveau Nom  ");
+
+        Assert.Equal("Nouveau Nom", utilisateur.NomAffiche);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(" ")]
+    [InlineData(null)]
+    public void Renommer_NomAfficheVideOuBlanc_LeveArgumentException(string? nouveauNomAffiche)
+    {
+        var utilisateur = new Utilisateur(
+            EmailValide, NomAfficheValide, HashValide, SelValide, IterationsValides, RoleUtilisateur.Simple);
+
+        Assert.Throws<ArgumentException>(() => utilisateur.Renommer(nouveauNomAffiche!));
+        Assert.Equal(NomAfficheValide, utilisateur.NomAffiche);
+    }
+
+    [Fact]
     public void DefinirMotDePasse_ValeursValides_MetAJourLeHashLeSelEtLesIterations()
     {
         var utilisateur = new Utilisateur(

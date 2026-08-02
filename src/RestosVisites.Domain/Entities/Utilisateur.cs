@@ -56,6 +56,14 @@ public sealed class Utilisateur
         Role = nouveauRole;
     }
 
+    /// <summary>Change le nom affiché de l'utilisateur (ex : modification en libre-service par l'utilisateur lui-même).</summary>
+    public void Renommer(string nouveauNomAffiche)
+    {
+        ValiderNomAffiche(nouveauNomAffiche);
+
+        NomAffiche = nouveauNomAffiche.Trim();
+    }
+
     /// <summary>
     /// Remplace le hash/sel/itérations du mot de passe (ex : réinitialisation par un Admin). Le
     /// mot de passe en clair et sa politique de complexité ne sont jamais vus par le Domain : cette
@@ -82,12 +90,17 @@ public sealed class Utilisateur
             throw new ArgumentException("L'email doit être une adresse valide.", nameof(email));
         }
 
+        ValiderNomAffiche(nomAffiche);
+
+        ValiderMotDePasse(motDePasseHash, motDePasseSel, motDePasseIterations);
+    }
+
+    private static void ValiderNomAffiche(string nomAffiche)
+    {
         if (string.IsNullOrWhiteSpace(nomAffiche))
         {
             throw new ArgumentException("Le nom affiché ne peut pas être vide.", nameof(nomAffiche));
         }
-
-        ValiderMotDePasse(motDePasseHash, motDePasseSel, motDePasseIterations);
     }
 
     private static void ValiderMotDePasse(string motDePasseHash, string motDePasseSel, int motDePasseIterations)

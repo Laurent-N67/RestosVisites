@@ -1211,6 +1211,32 @@
   color: var(--text-h);
 }
 
+/* Page Mon compte */
+
+.account-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.account-form h3 {
+  margin: 0 0 4px;
+  font-size: 15px;
+}
+
+.account-form .panel-form {
+  margin-top: 8px;
+}
+
+.account-form input[type='password'] {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  width: 100%;
+  background: var(--field-bg);
+  color: var(--text-h);
+}
+
 /* Page Utilisateurs */
 
 .utilisateurs-list {
