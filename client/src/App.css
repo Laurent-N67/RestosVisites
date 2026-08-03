@@ -1486,29 +1486,6 @@
 
 /* Page Utilisateurs */
 
-.maintenance-card {
-  padding: var(--space-4);
-  margin-bottom: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.maintenance-card h3 {
-  margin: 0;
-  font-size: 15px;
-}
-
-.maintenance-card p {
-  margin: 0;
-  font-size: 13px;
-  color: var(--text);
-}
-
-.maintenance-card button {
-  align-self: flex-start;
-}
-
 .utilisateurs-list {
   list-style: none;
   margin: 0;

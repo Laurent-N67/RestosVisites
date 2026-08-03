@@ -4,15 +4,14 @@ import { Link, useNavigate } from 'react-router-dom'
 import {
   changerRole,
   getUtilisateursAvecFavoris,
-  recompresserPhotosExistantes,
   reinitialiserMotDePasse,
 } from '../api/client.ts'
-import type { RecompresserPhotosResponse, UtilisateurAvecFavoris, Visite } from '../api/types.ts'
+import type { UtilisateurAvecFavoris, Visite } from '../api/types.ts'
 import { Role } from '../api/types.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { useDeleteUtilisateur } from '../hooks/useDeleteUtilisateur.ts'
 import { errorMessage } from '../utils/errors.ts'
-import { formatDate, formatOctets, stars } from '../utils/format.ts'
+import { formatDate, stars } from '../utils/format.ts'
 import { validerMotDePasse } from '../utils/motDePasse.ts'
 import { averageNoteForUserRestaurant } from '../utils/visites.ts'
 import Avatar from './Avatar.tsx'
@@ -20,38 +19,6 @@ import Avatar from './Avatar.tsx'
 const ROLE_LABELS: Record<Role, string> = {
   [Role.Simple]: 'Utilisateur',
   [Role.Admin]: 'Admin',
-}
-
-function formatRecompressionResult(resultat: RecompresserPhotosResponse): string {
-  const { photosRecompressees, tailleAvantOctetsTotale, tailleApresOctetsTotale, photosEnErreur } =
-    resultat
-
-  if (photosRecompressees === 0) {
-    return photosEnErreur > 0
-      ? `Aucune photo à recompresser. ${formatPhotosEnErreur(photosEnErreur)}`
-      : 'Aucune photo à recompresser : tout est déjà à jour.'
-  }
-
-  const reduction =
-    tailleAvantOctetsTotale > 0
-      ? Math.round((1 - tailleApresOctetsTotale / tailleAvantOctetsTotale) * 100)
-      : 0
-
-  let resume =
-    `${photosRecompressees} photo${photosRecompressees > 1 ? 's' : ''} recompressée${photosRecompressees > 1 ? 's' : ''}, ` +
-    `${formatOctets(tailleAvantOctetsTotale)} → ${formatOctets(tailleApresOctetsTotale)} (${reduction} % de réduction)`
-
-  if (photosEnErreur > 0) {
-    resume += ` — ${formatPhotosEnErreur(photosEnErreur)}`
-  }
-
-  return resume
-}
-
-function formatPhotosEnErreur(photosEnErreur: number): string {
-  return photosEnErreur > 1
-    ? `${photosEnErreur} photos n'ont pas pu être traitées.`
-    : "1 photo n'a pas pu être traitée."
 }
 
 interface UtilisateursPageProps {
@@ -74,11 +41,6 @@ function UtilisateursPage({ visites }: UtilisateursPageProps) {
   const [resetPasswordPendingId, setResetPasswordPendingId] = useState<string | null>(null)
   const [resetPasswordError, setResetPasswordError] = useState<string | null>(null)
   const [resetPasswordSuccessId, setResetPasswordSuccessId] = useState<string | null>(null)
-
-  const [recompressionPending, setRecompressionPending] = useState(false)
-  const [recompressionError, setRecompressionError] = useState<string | null>(null)
-  const [recompressionResult, setRecompressionResult] =
-    useState<RecompresserPhotosResponse | null>(null)
 
   const resetPasswordViolations = useMemo(
     () => validerMotDePasse(resetPasswordValue),
@@ -145,20 +107,6 @@ function UtilisateursPage({ visites }: UtilisateursPageProps) {
     }
   }
 
-  async function handleRecompresserPhotos() {
-    setRecompressionPending(true)
-    setRecompressionError(null)
-    setRecompressionResult(null)
-    try {
-      const resultat = await recompresserPhotosExistantes()
-      setRecompressionResult(resultat)
-    } catch (err) {
-      setRecompressionError(errorMessage(err, 'La recompression des photos a échoué.'))
-    } finally {
-      setRecompressionPending(false)
-    }
-  }
-
   function toggleResetPasswordForm(id: string) {
     if (resetPasswordForId === id) {
       closeResetPasswordForm()
@@ -199,38 +147,6 @@ function UtilisateursPage({ visites }: UtilisateursPageProps) {
 
   return (
     <div className="detail-page utilisateurs-page">
-      {isAdmin && (
-        <section className="card maintenance-card">
-          <h3>Maintenance</h3>
-          <p>
-            Les photos uploadées avant le 3 août 2026 n'ont pas encore été
-            compressées au format WebP. Cette opération ponctuelle les
-            retraite en une fois ; elle peut prendre du temps mais peut être
-            relancée sans risque.
-          </p>
-
-          <button
-            type="button"
-            onClick={() => void handleRecompresserPhotos()}
-            disabled={recompressionPending}
-          >
-            {recompressionPending
-              ? 'Recompression en cours…'
-              : 'Recompresser les anciennes photos'}
-          </button>
-
-          {recompressionError && (
-            <p className="form-error">{recompressionError}</p>
-          )}
-
-          {recompressionResult && (
-            <p className="form-success">
-              {formatRecompressionResult(recompressionResult)}
-            </p>
-          )}
-        </section>
-      )}
-
       <h2>Annuaire des utilisateurs</h2>
 
       {loading && <p className="popup-status">Chargement…</p>}

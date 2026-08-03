@@ -19,7 +19,6 @@ using RestosVisites.Application.UseCases.ListerVisitesRestaurant;
 using RestosVisites.Application.UseCases.ModifierRestaurant;
 using RestosVisites.Application.UseCases.ModifierVisite;
 using RestosVisites.Application.UseCases.ObtenirUtilisateurCourant;
-using RestosVisites.Application.UseCases.RecompresserPhotosExistantes;
 using RestosVisites.Application.UseCases.ReinitialiserMotDePasse;
 using RestosVisites.Application.UseCases.RetirerFavori;
 using RestosVisites.Application.UseCases.SeConnecter;
@@ -76,7 +75,6 @@ builder.Services.AddScoped<ListerMesFavoris>();
 builder.Services.AddScoped<AjouterFavori>();
 builder.Services.AddScoped<RetirerFavori>();
 builder.Services.AddScoped<SupprimerUtilisateur>();
-builder.Services.AddScoped<RecompresserPhotosExistantes>();
 
 builder.Services.AddExceptionHandler<ErreurApplicationExceptionHandler>();
 builder.Services.AddProblemDetails();

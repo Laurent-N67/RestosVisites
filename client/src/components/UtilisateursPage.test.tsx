@@ -20,13 +20,11 @@ const {
   changerRoleMock,
   reinitialiserMotDePasseMock,
   supprimerUtilisateurMock,
-  recompresserPhotosExistantesMock,
 } = vi.hoisted(() => ({
   getUtilisateursAvecFavorisMock: vi.fn(),
   changerRoleMock: vi.fn(),
   reinitialiserMotDePasseMock: vi.fn(),
   supprimerUtilisateurMock: vi.fn(),
-  recompresserPhotosExistantesMock: vi.fn(),
 }))
 
 vi.mock('../api/client.ts', async () => {
@@ -38,7 +36,6 @@ vi.mock('../api/client.ts', async () => {
     changerRole: changerRoleMock,
     reinitialiserMotDePasse: reinitialiserMotDePasseMock,
     supprimerUtilisateur: supprimerUtilisateurMock,
-    recompresserPhotosExistantes: recompresserPhotosExistantesMock,
   }
 })
 
@@ -92,7 +89,6 @@ describe('UtilisateursPage', () => {
     changerRoleMock.mockReset()
     reinitialiserMotDePasseMock.mockReset()
     supprimerUtilisateurMock.mockReset()
-    recompresserPhotosExistantesMock.mockReset()
     navigateMock.mockReset()
     clearSessionMock.mockReset()
     currentUser = {
@@ -402,74 +398,6 @@ describe('UtilisateursPage', () => {
 
     expect(
       await screen.findByText('Impossible de supprimer le dernier compte Admin.'),
-    ).toBeInTheDocument()
-  })
-
-  it('affiche la carte de maintenance pour un admin', async () => {
-    getUtilisateursAvecFavorisMock.mockResolvedValue(utilisateurs)
-    renderPage()
-
-    await screen.findByText('Une Personne')
-    expect(screen.getByText('Maintenance')).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: 'Recompresser les anciennes photos' }),
-    ).toBeInTheDocument()
-  })
-
-  it('masque la carte de maintenance pour un utilisateur non-admin', async () => {
-    currentUser = {
-      id: 'user-1',
-      email: 'simple@example.com',
-      nomAffiche: 'Une Personne',
-      role: Role.Simple,
-    }
-    getUtilisateursAvecFavorisMock.mockResolvedValue(utilisateurs)
-    renderPage()
-
-    await screen.findByText('Une Personne')
-    expect(screen.queryByText('Maintenance')).not.toBeInTheDocument()
-  })
-
-  it('recompresse les anciennes photos et affiche le résumé', async () => {
-    getUtilisateursAvecFavorisMock.mockResolvedValue(utilisateurs)
-    recompresserPhotosExistantesMock.mockResolvedValue({
-      photosRecompressees: 12,
-      tailleAvantOctetsTotale: 45_300_000,
-      tailleApresOctetsTotale: 3_100_000,
-      photosEnErreur: 2,
-    })
-    const user = userEvent.setup()
-    renderPage()
-
-    await screen.findByText('Une Personne')
-    await user.click(
-      screen.getByRole('button', { name: 'Recompresser les anciennes photos' }),
-    )
-
-    expect(
-      await screen.findByText(/12 photos recompressées/),
-    ).toBeInTheDocument()
-    expect(screen.getByText(/93 % de réduction/)).toBeInTheDocument()
-    expect(
-      screen.getByText(/2 photos n'ont pas pu être traitées/),
-    ).toBeInTheDocument()
-  })
-
-  it("affiche une erreur si la recompression des photos échoue", async () => {
-    getUtilisateursAvecFavorisMock.mockResolvedValue(utilisateurs)
-    recompresserPhotosExistantesMock.mockRejectedValue(
-      new ApiError(500, 'Erreur', 'La recompression des photos a échoué.'),
-    )
-    const user = userEvent.setup()
-    renderPage()
-
-    await screen.findByText('Une Personne')
-    await user.click(
-      screen.getByRole('button', { name: 'Recompresser les anciennes photos' }),
-    )
-
-    expect(
-      await screen.findByText('La recompression des photos a échoué.'),
     ).toBeInTheDocument()
   })
 })

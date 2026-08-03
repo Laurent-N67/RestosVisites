@@ -99,10 +99,3 @@ export interface ProblemDetails {
   title?: string
   detail?: string
 }
-
-export interface RecompresserPhotosResponse {
-  photosRecompressees: number
-  tailleAvantOctetsTotale: number
-  tailleApresOctetsTotale: number
-  photosEnErreur: number
-}

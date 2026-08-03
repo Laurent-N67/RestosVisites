@@ -14,18 +14,3 @@ export function stars(note: number): string {
 export function formatNoteMoyenne(note: number): string {
   return note.toFixed(1)
 }
-
-/** Formate une taille en octets en une chaîne lisible (Ko, Mo, Go…), à la française. */
-export function formatOctets(octets: number): string {
-  if (octets < 1000) {
-    return `${octets} o`
-  }
-  const unites = ['Ko', 'Mo', 'Go', 'To']
-  let valeur = octets
-  let uniteIndex = -1
-  do {
-    valeur /= 1000
-    uniteIndex += 1
-  } while (valeur >= 1000 && uniteIndex < unites.length - 1)
-  return `${valeur.toFixed(1).replace('.', ',')} ${unites[uniteIndex]}`
-}
