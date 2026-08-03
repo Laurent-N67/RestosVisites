@@ -52,7 +52,7 @@ public sealed class PhotosController : ControllerBase
             return BadRequest("Le fichier dépasse la taille maximale autorisée (50 Mo).");
         }
 
-        if (!ExtensionsParTypeMime.TryGetValue(file.ContentType, out var extension))
+        if (!ExtensionsParTypeMime.ContainsKey(file.ContentType))
         {
             return BadRequest("Type de fichier non autorisé. Formats acceptés : JPEG, PNG, WebP.");
         }
@@ -63,7 +63,7 @@ public sealed class PhotosController : ControllerBase
             return BadRequest("Le contenu du fichier ne correspond pas à une image valide.");
         }
 
-        var url = await _photoStorage.EnregistrerAsync(contenu, extension, ct);
+        var url = await _photoStorage.EnregistrerAsync(contenu, ct);
 
         return Created(url, new UploaderPhotoResponse(url));
     }

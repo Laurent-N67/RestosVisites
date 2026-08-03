@@ -4,6 +4,9 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using RestosVisites.Api.Controllers;
 using RestosVisites.Infrastructure.Storage;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace RestosVisites.Api.Tests.Controllers;
 
@@ -15,11 +18,17 @@ namespace RestosVisites.Api.Tests.Controllers;
 /// </summary>
 public sealed class PhotosControllerTests : IClassFixture<RestosVisitesWebApplicationFactory>, IDisposable
 {
-    // Signature JPEG minimale valide (SOI + APP0 + EOI), suffisante pour passer la vérification des magic bytes.
+    // Signature JPEG minimale valide (SOI + APP0 + EOI), suffisante pour passer la vérification des magic
+    // bytes du contrôleur, mais volontairement non décodable (pas de données de scan) : utilisée uniquement
+    // par les tests qui n'atteignent jamais l'étape de décodage/compression (rejet avant, ou non authentifié).
     private static readonly byte[] ContenuJpegValide =
     [
         0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01, 0xFF, 0xD9,
     ];
+
+    // Signature binaire ("magic bytes") d'un fichier WebP : conteneur RIFF avec sous-type "WEBP".
+    private static readonly byte[] EnTeteRiff = "RIFF"u8.ToArray();
+    private static readonly byte[] EnTeteWebp = "WEBP"u8.ToArray();
 
     private readonly string _dossierUploadsTest;
     private readonly HttpClient _client;
@@ -57,12 +66,17 @@ public sealed class PhotosControllerTests : IClassFixture<RestosVisitesWebApplic
     }
 
     [Fact]
-    public async Task Post_FichierImageValide_Retourne201EtEcritLeFichierSurDisque()
+    public async Task Post_FichierImageValide_Retourne201EtEcritUnFichierWebpCompresseSurDisque()
     {
         await AuthTestHelper.InscrireEtConnecterAsync(_client, ct: TestContext.Current.CancellationToken);
 
+        // Une vraie image décodable (contrairement à ContenuJpegValide, qui n'a pas de données de
+        // scan) : ce test exerce désormais tout le pipeline, y compris le décodage/ré-encodage fait
+        // par FichierPhotoStorage, pas seulement la validation des magic bytes du contrôleur.
+        var contenuJpegDecodable = CreerContenuJpegDecodable();
+
         using var contenu = new MultipartFormDataContent();
-        var fichier = new ByteArrayContent(ContenuJpegValide);
+        var fichier = new ByteArrayContent(contenuJpegDecodable);
         fichier.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/jpeg");
         contenu.Add(fichier, "file", "photo.jpg");
 
@@ -72,12 +86,31 @@ public sealed class PhotosControllerTests : IClassFixture<RestosVisitesWebApplic
         var body = await response.Content.ReadFromJsonAsync<UploaderPhotoResponse>(TestContext.Current.CancellationToken);
         Assert.NotNull(body);
         Assert.StartsWith("/uploads/", body.Url);
-        Assert.EndsWith(".jpg", body.Url);
+        // Le fichier stocké est toujours ré-encodé en WebP, quel que soit le format d'entrée.
+        Assert.EndsWith(".webp", body.Url);
 
         var nomFichier = body.Url["/uploads/".Length..];
         var cheminSurDisque = Path.Combine(_dossierUploadsTest, nomFichier);
         Assert.True(File.Exists(cheminSurDisque));
-        Assert.Equal(ContenuJpegValide, await File.ReadAllBytesAsync(cheminSurDisque, TestContext.Current.CancellationToken));
+
+        var octetsStockes = await File.ReadAllBytesAsync(cheminSurDisque, TestContext.Current.CancellationToken);
+        // Vérifie les vrais magic bytes WebP sur le fichier écrit, pas seulement l'extension du nom.
+        Assert.Equal(EnTeteRiff, octetsStockes[..4]);
+        Assert.Equal(EnTeteWebp, octetsStockes[8..12]);
+        // Le contenu a bien été recompressé (jamais un simple passthrough des octets JPEG d'origine).
+        Assert.NotEqual(contenuJpegDecodable, octetsStockes);
+
+        // Se recharge réellement comme une image WebP valide.
+        using var image = await Image.LoadAsync(cheminSurDisque, TestContext.Current.CancellationToken);
+        Assert.Equal("image/webp", image.Metadata.DecodedImageFormat?.DefaultMimeType);
+    }
+
+    private static byte[] CreerContenuJpegDecodable()
+    {
+        using var image = new Image<Rgba32>(64, 48, Color.CornflowerBlue.ToPixel<Rgba32>());
+        using var flux = new MemoryStream();
+        image.Save(flux, new JpegEncoder());
+        return flux.ToArray();
     }
 
     [Fact]
