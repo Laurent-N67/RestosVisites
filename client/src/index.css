@@ -1,19 +1,38 @@
 :root {
-  --text: #2f2b33;
-  --text-h: #08060d;
-  --bg: #fff;
+  --text: #6b7280;
+  --text-h: #111827;
+  --bg: #f7f8fa;
   --bg-card: #fff;
-  --border: #e5e4e7;
+  --bg-card-hover: #f4f4f5;
+  --border: rgba(0, 0, 0, 0.08);
   --field-bg: #fff;
-  --accent: #e0551e;
-  --accent-bg: rgba(224, 85, 30, 0.1);
-  --accent-border: rgba(224, 85, 30, 0.5);
+  --accent: #ff7a45;
+  --accent-hover: #e8622e;
+  --accent-bg: rgba(255, 122, 69, 0.1);
+  --accent-border: rgba(255, 122, 69, 0.5);
   --danger: #c0392b;
-  --danger-bg: #fff3f2;
-  --success: #1e824c;
+  --danger-bg: rgba(192, 57, 43, 0.1);
+  --success: #22c55e;
   --star: #f5a623;
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  --star-bg: rgba(245, 166, 35, 0.15);
+
+  --shadow-sm: rgba(0, 0, 0, 0.06) 0 1px 2px, rgba(0, 0, 0, 0.04) 0 1px 1px;
+  --shadow-md:
+    rgba(0, 0, 0, 0.08) 0 4px 6px -1px, rgba(0, 0, 0, 0.05) 0 2px 4px -2px;
+  --shadow-lg:
+    rgba(0, 0, 0, 0.12) 0 10px 15px -3px, rgba(0, 0, 0, 0.06) 0 4px 6px -2px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --radius-sm: 6px;
+  --radius-lg: 16px;
+  --radius-full: 999px;
+  --transition-fast: 120ms ease;
+  --transition-base: 200ms ease;
 
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
 
@@ -31,23 +50,50 @@
    cartes légèrement plus claires que le fond, bordures discrètes, texte
    clair, accent orange façon MangaDex. */
 :root[data-theme='dark'] {
-  --text: #c9cbce;
-  --text-h: #f4f5f6;
-  --bg: #18191b;
-  --bg-card: #202224;
-  --border: #35373a;
-  --field-bg: #26282b;
-  --accent: #ff6740;
-  --accent-bg: rgba(255, 103, 64, 0.18);
-  --accent-border: rgba(255, 103, 64, 0.55);
+  --text: #a1a8b8;
+  --text-h: #ffffff;
+  --bg: #0f1117;
+  --bg-card: #171923;
+  --bg-card-hover: #1d2130;
+  --border: rgba(255, 255, 255, 0.09);
+  --field-bg: #1d2130;
+  --accent: #ff7a45;
+  --accent-hover: #ff9266;
+  --accent-bg: rgba(255, 122, 69, 0.18);
+  --accent-border: rgba(255, 122, 69, 0.55);
   --danger: #ff6e5f;
   --danger-bg: rgba(255, 110, 95, 0.15);
-  --success: #4fd88a;
+  --success: #22c55e;
   --star: #f5a623;
-  --shadow:
+  --star-bg: rgba(245, 166, 35, 0.15);
+
+  --shadow-sm: rgba(0, 0, 0, 0.4) 0 1px 2px, rgba(0, 0, 0, 0.3) 0 1px 1px;
+  --shadow-md:
+    rgba(0, 0, 0, 0.5) 0 4px 6px -1px, rgba(0, 0, 0, 0.35) 0 2px 4px -2px;
+  --shadow-lg:
     rgba(0, 0, 0, 0.6) 0 10px 15px -3px, rgba(0, 0, 0, 0.45) 0 4px 6px -2px;
 
   color-scheme: dark;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 *,
@@ -73,6 +119,11 @@ h3 {
 button {
   font-family: inherit;
   cursor: pointer;
+  transition:
+    background var(--transition-base),
+    color var(--transition-base),
+    border-color var(--transition-base),
+    transform var(--transition-fast);
 }
 
 input,

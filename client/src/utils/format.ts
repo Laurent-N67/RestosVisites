@@ -10,3 +10,7 @@ export function stars(note: number): string {
   const filled = Math.max(0, Math.min(5, note))
   return '★'.repeat(filled) + '☆'.repeat(5 - filled)
 }
+
+export function formatNoteMoyenne(note: number): string {
+  return note.toFixed(1)
+}

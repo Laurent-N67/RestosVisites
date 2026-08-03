@@ -8,11 +8,13 @@ import {
   groupSelectedIdsByGroupe,
   matchesCategoryFilters,
 } from '../utils/categories.ts'
-import { hasVisiteByUser, meetsRatingThreshold } from '../utils/visites.ts'
+import { averageNote, hasVisiteByUser, meetsRatingThreshold } from '../utils/visites.ts'
 import { useDeleteRestaurant } from '../hooks/useDeleteRestaurant.ts'
 import { useFavoriToggle } from '../hooks/useFavoriToggle.ts'
-import { stars } from '../utils/format.ts'
+import { formatNoteMoyenne, stars } from '../utils/format.ts'
 import CategoryFilterDropdown from './CategoryFilterDropdown.tsx'
+import CategoryBadges from './CategoryBadges.tsx'
+import CoverPhoto from './CoverPhoto.tsx'
 
 interface RestaurantsListProps {
   restaurants: Restaurant[]
@@ -59,18 +61,13 @@ function aggregate(
     const categories = [...restaurant.categories].sort((a, b) =>
       a.nom.localeCompare(b.nom, 'fr'),
     )
-    const averageNote =
-      restaurantVisites.length > 0
-        ? restaurantVisites.reduce((sum, visite) => sum + visite.note, 0) /
-          restaurantVisites.length
-        : null
 
     return {
       restaurant,
       count: restaurantVisites.length,
       lastVisite,
       categories,
-      averageNote,
+      averageNote: averageNote(restaurantVisites),
       restaurantVisites,
     }
   })
@@ -124,10 +121,12 @@ function RestaurantCard({
     error: favoriError,
     toggle: toggleFavori,
   } = useFavoriToggle(item.restaurant.id)
-  const { restaurant, count, lastVisite, categories } = item
+  const { restaurant, count, lastVisite, categories, averageNote: average } = item
 
   return (
-    <article className="restaurant-card">
+    <article className="restaurant-card card card--interactive">
+      <CoverPhoto url={lastVisite?.urlsPhotos[0]} alt={restaurant.nom} />
+
       <div className="popup-header">
         <h3>{restaurant.nom}</h3>
       </div>
@@ -168,30 +167,26 @@ function RestaurantCard({
       {error && <p className="popup-status popup-error">{error}</p>}
       {favoriError && <p className="popup-status popup-error">{favoriError}</p>}
 
-      <p className="list-card-count">
-        {count} {count > 1 ? 'visites' : 'visite'}
-      </p>
-
-      {lastVisite ? (
-        <div className="list-card-last-visite">
+      {count > 0 && average !== null ? (
+        <div className="list-card-rating">
+          <span className="list-card-rating-value">
+            {formatNoteMoyenne(average)}
+          </span>
           <span
             className="popup-stars"
-            aria-label={`Note ${lastVisite.note} sur 5`}
+            aria-label={`Note moyenne ${formatNoteMoyenne(average)} sur 5`}
           >
-            {stars(lastVisite.note)}
+            {stars(Math.round(average))}
+          </span>
+          <span className="list-card-rating-count">
+            ({count} {count > 1 ? 'visites' : 'visite'})
           </span>
         </div>
       ) : (
         <p className="popup-status">Aucune visite enregistrée.</p>
       )}
 
-      {categories.length > 0 && (
-        <ul className="popup-categories">
-          {categories.map((categorie) => (
-            <li key={categorie.id}>{categorie.nom}</li>
-          ))}
-        </ul>
-      )}
+      {categories.length > 0 && <CategoryBadges categories={categories} />}
 
       {count > 0 && (
         <Link

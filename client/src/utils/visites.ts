@@ -49,6 +49,17 @@ export function averageNoteForUserRestaurant(
 }
 
 /**
+ * Note moyenne globale des visites d'un restaurant, tous utilisateurs
+ * confondus — `null` si aucune visite.
+ */
+export function averageNote(visites: Visite[]): number | null {
+  if (visites.length === 0) {
+    return null
+  }
+  return visites.reduce((sum, visite) => sum + visite.note, 0) / visites.length
+}
+
+/**
  * Détermine si un utilisateur donné (généralement l'auteur d'une visite, pas
  * forcément l'utilisateur connecté) a ce restaurant dans ses propres favoris.
  */

@@ -6,6 +6,7 @@ import type { Restaurant, UtilisateurAvecFavoris, Visite } from '../api/types.ts
 import RestaurantMarker from './RestaurantMarker.tsx'
 import type { VisitesState } from './RestaurantMarker.tsx'
 import type { Theme } from '../hooks/useTheme.ts'
+import { averageNote } from '../utils/visites.ts'
 
 const DEFAULT_CENTER: [number, number] = [46.6034, 1.8883] // Centre de la France
 const DEFAULT_ZOOM = 6
@@ -32,15 +33,36 @@ interface RestaurantsMapProps {
   onVisiteDeleted: () => void
 }
 
-function computeLastVisites(visites: Visite[]): Map<string, Visite> {
-  const lastVisites = new Map<string, Visite>()
+export interface NoteSummary {
+  average: number
+  count: number
+}
+
+/**
+ * Note moyenne + nombre de visites par restaurant, calculés une seule fois pour
+ * toute la carte à partir des visites déjà chargées globalement (pas d'appel
+ * réseau par marqueur) — remplace l'ancien "dernière visite" affiché sur
+ * l'étiquette/la popup, pour rester cohérent avec la vue Liste et la page détail.
+ */
+function computeNoteSummaries(visites: Visite[]): Map<string, NoteSummary> {
+  const visitesParRestaurant = new Map<string, Visite[]>()
   for (const visite of visites) {
-    const current = lastVisites.get(visite.restaurantId)
-    if (!current || visite.date.localeCompare(current.date) > 0) {
-      lastVisites.set(visite.restaurantId, visite)
+    const liste = visitesParRestaurant.get(visite.restaurantId)
+    if (liste) {
+      liste.push(visite)
+    } else {
+      visitesParRestaurant.set(visite.restaurantId, [visite])
     }
   }
-  return lastVisites
+
+  const summaries = new Map<string, NoteSummary>()
+  for (const [restaurantId, visitesDuRestaurant] of visitesParRestaurant) {
+    const average = averageNote(visitesDuRestaurant)
+    if (average !== null) {
+      summaries.set(restaurantId, { average, count: visitesDuRestaurant.length })
+    }
+  }
+  return summaries
 }
 
 function FitBounds({ restaurants }: { restaurants: Restaurant[] }) {
@@ -78,7 +100,7 @@ function RestaurantsMap({
     Record<string, VisitesState>
   >({})
 
-  const lastVisites = useMemo(() => computeLastVisites(visites), [visites])
+  const noteSummaries = useMemo(() => computeNoteSummaries(visites), [visites])
 
   const loadVisites = useCallback((restaurantId: string) => {
     setVisitesByRestaurant((prev) => ({
@@ -139,7 +161,7 @@ function RestaurantsMap({
           key={restaurant.id}
           restaurant={restaurant}
           visitesState={visitesByRestaurant[restaurant.id] ?? { status: 'idle' }}
-          lastVisite={lastVisites.get(restaurant.id) ?? null}
+          noteSummary={noteSummaries.get(restaurant.id) ?? null}
           utilisateursAvecFavoris={utilisateursAvecFavoris}
           onOpen={handleOpen}
           onEditRestaurant={onEditRestaurant}

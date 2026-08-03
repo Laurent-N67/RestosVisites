@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Link, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import {
   ApiError,
   getAllVisites,
@@ -14,8 +14,7 @@ import RestaurantsList from './components/RestaurantsList.tsx'
 import RestaurantDetailPage from './components/RestaurantDetailPage.tsx'
 import AddRestaurantForm from './components/AddRestaurantForm.tsx'
 import AddVisitForm from './components/AddVisitForm.tsx'
-import LoginPage from './components/LoginPage.tsx'
-import RegisterPage from './components/RegisterPage.tsx'
+import AuthPage from './components/AuthPage.tsx'
 import FavorisPage from './components/FavorisPage.tsx'
 import UtilisateursPage from './components/UtilisateursPage.tsx'
 import AccountPage from './components/AccountPage.tsx'
@@ -49,6 +48,7 @@ function App() {
   const [preselectedRestaurantId, setPreselectedRestaurantId] = useState<
     string | null
   >(null)
+  const [fabOpen, setFabOpen] = useState(false)
 
   const loadRestaurants = useCallback(async () => {
     try {
@@ -230,24 +230,6 @@ function App() {
           </nav>
         )}
         <div className="app-actions">
-          {user && (
-            <>
-              <button
-                type="button"
-                className={activePanel === 'restaurant' ? 'active' : ''}
-                onClick={handleToggleRestaurantPanel}
-              >
-                + Restaurant
-              </button>
-              <button
-                type="button"
-                className={activePanel === 'visite' ? 'active' : ''}
-                onClick={handleToggleVisitePanel}
-              >
-                + Visite
-              </button>
-            </>
-          )}
           <button
             type="button"
             className="theme-toggle"
@@ -273,7 +255,7 @@ function App() {
           ) : (
             <div className="app-auth">
               <Link to="/login">Connexion</Link>
-              <Link to="/register">Inscription</Link>
+              <Link to="/login">Inscription</Link>
             </div>
           )}
         </div>
@@ -281,47 +263,53 @@ function App() {
 
       <main className="app-main">
         <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/login" element={<AuthPage />} />
+          <Route path="/register" element={<Navigate to="/login" replace />} />
           <Route
             path="/"
             element={
-              <RestaurantsMap
-                theme={theme}
-                restaurants={restaurants}
-                visites={visites}
-                utilisateursAvecFavoris={utilisateursAvecFavoris}
-                visiteMutation={visiteMutation}
-                onEditRestaurant={handleEditRestaurant}
-                onEditVisite={handleEditVisite}
-                onRestaurantDeleted={handleRestaurantDeleted}
-                onVisiteDeleted={() => void loadAllVisites()}
-              />
+              <ProtectedRoute>
+                <RestaurantsMap
+                  theme={theme}
+                  restaurants={restaurants}
+                  visites={visites}
+                  utilisateursAvecFavoris={utilisateursAvecFavoris}
+                  visiteMutation={visiteMutation}
+                  onEditRestaurant={handleEditRestaurant}
+                  onEditVisite={handleEditVisite}
+                  onRestaurantDeleted={handleRestaurantDeleted}
+                  onVisiteDeleted={() => void loadAllVisites()}
+                />
+              </ProtectedRoute>
             }
           />
           <Route
             path="/liste"
             element={
-              <RestaurantsList
-                restaurants={restaurants}
-                visites={visites}
-                onEditRestaurant={handleEditRestaurant}
-                onRestaurantDeleted={handleRestaurantDeleted}
-              />
+              <ProtectedRoute>
+                <RestaurantsList
+                  restaurants={restaurants}
+                  visites={visites}
+                  onEditRestaurant={handleEditRestaurant}
+                  onRestaurantDeleted={handleRestaurantDeleted}
+                />
+              </ProtectedRoute>
             }
           />
           <Route
             path="/restaurants/:id"
             element={
-              <RestaurantDetailPage
-                restaurants={restaurants}
-                visites={visites}
-                utilisateursAvecFavoris={utilisateursAvecFavoris}
-                onEditRestaurant={handleEditRestaurant}
-                onEditVisite={handleEditVisite}
-                onRestaurantDeleted={handleRestaurantDeleted}
-                onVisiteDeleted={() => void loadAllVisites()}
-              />
+              <ProtectedRoute>
+                <RestaurantDetailPage
+                  restaurants={restaurants}
+                  visites={visites}
+                  utilisateursAvecFavoris={utilisateursAvecFavoris}
+                  onEditRestaurant={handleEditRestaurant}
+                  onEditVisite={handleEditVisite}
+                  onRestaurantDeleted={handleRestaurantDeleted}
+                  onVisiteDeleted={() => void loadAllVisites()}
+                />
+              </ProtectedRoute>
             }
           />
           <Route
@@ -380,6 +368,44 @@ function App() {
             />
           )}
         </aside>
+      )}
+
+      {user && activePanel === 'none' && (
+        <div className={fabOpen ? 'fab-group fab-group--open' : 'fab-group'}>
+          {fabOpen && (
+            <>
+              <button
+                type="button"
+                className="fab-mini"
+                onClick={() => {
+                  handleToggleVisitePanel()
+                  setFabOpen(false)
+                }}
+              >
+                + Visite
+              </button>
+              <button
+                type="button"
+                className="fab-mini"
+                onClick={() => {
+                  handleToggleRestaurantPanel()
+                  setFabOpen(false)
+                }}
+              >
+                + Restaurant
+              </button>
+            </>
+          )}
+          <button
+            type="button"
+            className="fab-main"
+            aria-expanded={fabOpen}
+            aria-label="Ajouter"
+            onClick={() => setFabOpen((o) => !o)}
+          >
+            {fabOpen ? '×' : '+'}
+          </button>
+        </div>
       )}
     </div>
   )

@@ -8,9 +8,11 @@ import { useAuth } from '../contexts/AuthContext.tsx'
 import { useDeleteRestaurant } from '../hooks/useDeleteRestaurant.ts'
 import { useDeleteVisite } from '../hooks/useDeleteVisite.ts'
 import { useFavoriToggle } from '../hooks/useFavoriToggle.ts'
-import { formatDate, stars } from '../utils/format.ts'
+import { formatDate, formatNoteMoyenne, stars } from '../utils/format.ts'
 import { estFavoriDeUtilisateur } from '../utils/visites.ts'
 import PhotoLightbox from './PhotoLightbox.tsx'
+import CategoryBadges from './CategoryBadges.tsx'
+import type { NoteSummary } from './RestaurantsMap.tsx'
 
 interface LightboxState {
   photos: string[]
@@ -26,7 +28,7 @@ export type VisitesState =
 interface RestaurantMarkerProps {
   restaurant: Restaurant
   visitesState: VisitesState
-  lastVisite: Visite | null
+  noteSummary: NoteSummary | null
   utilisateursAvecFavoris: UtilisateurAvecFavoris[]
   onOpen: (restaurantId: string) => void
   onEditRestaurant: (restaurant: Restaurant) => void
@@ -165,7 +167,7 @@ function VisitesSection({
 function RestaurantMarker({
   restaurant,
   visitesState,
-  lastVisite,
+  noteSummary,
   utilisateursAvecFavoris,
   onOpen,
   onEditRestaurant,
@@ -206,12 +208,12 @@ function RestaurantMarker({
     >
       <Tooltip permanent direction="top" offset={[-16, -17]} className="restaurant-label">
         <span className="restaurant-label-nom">{restaurant.nom}</span>
-        {lastVisite && (
+        {noteSummary && (
           <span
             className="restaurant-label-note"
-            aria-label={`Note ${lastVisite.note} sur 5`}
+            aria-label={`Note moyenne ${formatNoteMoyenne(noteSummary.average)} sur 5`}
           >
-            {stars(lastVisite.note)}
+            {formatNoteMoyenne(noteSummary.average)} {stars(Math.round(noteSummary.average))}
           </span>
         )}
       </Tooltip>
@@ -222,6 +224,23 @@ function RestaurantMarker({
           </div>
 
           <p className="popup-adresse">{restaurant.adresse}</p>
+
+          {noteSummary && (
+            <p className="list-card-rating">
+              <span className="list-card-rating-value">
+                {formatNoteMoyenne(noteSummary.average)}
+              </span>
+              <span
+                className="popup-stars"
+                aria-label={`Note moyenne ${formatNoteMoyenne(noteSummary.average)} sur 5`}
+              >
+                {stars(Math.round(noteSummary.average))}
+              </span>
+              <span className="list-card-rating-count">
+                ({noteSummary.count} {noteSummary.count > 1 ? 'visites' : 'visite'})
+              </span>
+            </p>
+          )}
 
           {user && (
             <div className="popup-actions">
@@ -255,11 +274,7 @@ function RestaurantMarker({
             </div>
           )}
           {restaurant.categories.length > 0 && (
-            <ul className="popup-categories">
-              {restaurant.categories.map((categorie) => (
-                <li key={categorie.id}>{categorie.nom}</li>
-              ))}
-            </ul>
+            <CategoryBadges categories={restaurant.categories} />
           )}
           {restaurantError && (
             <p className="popup-status popup-error">{restaurantError}</p>

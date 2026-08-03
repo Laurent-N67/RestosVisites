@@ -4,6 +4,7 @@ import { getMesFavoris, removeFavori } from '../api/client.ts'
 import type { Restaurant, Visite } from '../api/types.ts'
 import { errorMessage } from '../utils/errors.ts'
 import { formatDate, stars } from '../utils/format.ts'
+import CoverPhoto from './CoverPhoto.tsx'
 
 interface FavorisPageProps {
   restaurants: Restaurant[]
@@ -80,7 +81,14 @@ function FavorisPage({ restaurants, visites }: FavorisPageProps) {
               .sort((a, b) => b.date.localeCompare(a.date))
 
             return (
-              <article key={restaurant.id} className="restaurant-card">
+              <article
+                key={restaurant.id}
+                className="restaurant-card card card--interactive"
+              >
+                <CoverPhoto
+                  url={restaurantVisites[0]?.urlsPhotos[0]}
+                  alt={restaurant.nom}
+                />
                 <div className="popup-header">
                   <h3>{restaurant.nom}</h3>
                   <button
