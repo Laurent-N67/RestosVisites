@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Marker, Popup, Tooltip } from 'react-leaflet'
+import type L from 'leaflet'
 import { resolvePhotoUrl } from '../api/client.ts'
 import type { Restaurant, UtilisateurAvecFavoris, Visite } from '../api/types.ts'
 import { Role } from '../api/types.ts'
@@ -36,6 +37,7 @@ interface RestaurantMarkerProps {
   onEditVisite: (visite: Visite) => void
   onVisitesRefresh: (restaurantId: string) => void
   onVisiteDeleted: () => void
+  onMarkerRef?: (restaurantId: string, instance: L.Marker | null) => void
 }
 
 interface VisitesSectionProps {
@@ -175,6 +177,7 @@ function RestaurantMarker({
   onEditVisite,
   onVisitesRefresh,
   onVisiteDeleted,
+  onMarkerRef,
 }: RestaurantMarkerProps) {
   const { user } = useAuth()
   const isAdmin = user?.role === Role.Admin
@@ -203,6 +206,7 @@ function RestaurantMarker({
 
   return (
     <Marker
+      ref={(instance) => onMarkerRef?.(restaurant.id, instance)}
       position={[restaurant.latitude, restaurant.longitude]}
       eventHandlers={{ click: () => onOpen(restaurant.id) }}
     >

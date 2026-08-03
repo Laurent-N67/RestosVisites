@@ -14,6 +14,7 @@ import { errorMessage } from '../utils/errors.ts'
 import { formatDate, stars } from '../utils/format.ts'
 import { validerMotDePasse } from '../utils/motDePasse.ts'
 import { averageNoteForUserRestaurant } from '../utils/visites.ts'
+import Avatar from './Avatar.tsx'
 
 const ROLE_LABELS: Record<Role, string> = {
   [Role.Simple]: 'Utilisateur',
@@ -165,11 +166,14 @@ function UtilisateursPage({ visites }: UtilisateursPageProps) {
               className="utilisateur-card card card--interactive"
             >
               <div className="popup-header">
-                <div>
-                  <h3>{utilisateur.nomAffiche}</h3>
-                  {utilisateur.email && (
-                    <p className="popup-adresse">{utilisateur.email}</p>
-                  )}
+                <div className="utilisateur-avatar">
+                  <Avatar name={utilisateur.nomAffiche} />
+                  <div>
+                    <h3>{utilisateur.nomAffiche}</h3>
+                    {utilisateur.email && (
+                      <p className="popup-adresse">{utilisateur.email}</p>
+                    )}
+                  </div>
                 </div>
 
                 {isAdmin ? (

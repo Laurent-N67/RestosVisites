@@ -17,6 +17,7 @@ import AddVisitForm from './components/AddVisitForm.tsx'
 import AuthPage from './components/AuthPage.tsx'
 import FavorisPage from './components/FavorisPage.tsx'
 import UtilisateursPage from './components/UtilisateursPage.tsx'
+import StatsPage from './components/StatsPage.tsx'
 import AccountPage from './components/AccountPage.tsx'
 import ProtectedRoute from './components/ProtectedRoute.tsx'
 import { useAuth } from './contexts/AuthContext.tsx'
@@ -227,6 +228,12 @@ function App() {
             >
               Utilisateurs
             </Link>
+            <Link
+              to="/stats"
+              className={location.pathname.startsWith('/stats') ? 'active' : ''}
+            >
+              Stats
+            </Link>
           </nav>
         )}
         <div className="app-actions">
@@ -333,6 +340,20 @@ function App() {
             element={
               <ProtectedRoute>
                 <AccountPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/stats"
+            element={
+              <ProtectedRoute>
+                <StatsPage
+                  restaurants={restaurants}
+                  visites={visites}
+                  categories={categories}
+                  utilisateursAvecFavoris={utilisateursAvecFavoris}
+                  theme={theme}
+                />
               </ProtectedRoute>
             }
           />
