@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { errorMessage } from '../utils/errors.ts'
 import { validerMotDePasse } from '../utils/motDePasse.ts'
@@ -40,56 +40,50 @@ function RegisterPage() {
   }
 
   return (
-    <div className="auth-page">
-      <form className="panel-form auth-form" onSubmit={(event) => void handleSubmit(event)}>
-        <h2>Inscription</h2>
+    <form className="panel-form auth-form card" onSubmit={(event) => void handleSubmit(event)}>
+      <h2>Inscription</h2>
 
-        <label htmlFor="register-email">Email</label>
-        <input
-          id="register-email"
-          type="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          required
-        />
+      <label htmlFor="register-email">Email</label>
+      <input
+        id="register-email"
+        type="email"
+        value={email}
+        onChange={(event) => setEmail(event.target.value)}
+        required
+      />
 
-        <label htmlFor="register-nom-affiche">Nom affiché</label>
-        <input
-          id="register-nom-affiche"
-          type="text"
-          value={nomAffiche}
-          onChange={(event) => setNomAffiche(event.target.value)}
-          required
-        />
+      <label htmlFor="register-nom-affiche">Nom affiché</label>
+      <input
+        id="register-nom-affiche"
+        type="text"
+        value={nomAffiche}
+        onChange={(event) => setNomAffiche(event.target.value)}
+        required
+      />
 
-        <label htmlFor="register-mot-de-passe">Mot de passe</label>
-        <input
-          id="register-mot-de-passe"
-          type="password"
-          value={motDePasse}
-          onChange={(event) => setMotDePasse(event.target.value)}
-          required
-        />
+      <label htmlFor="register-mot-de-passe">Mot de passe</label>
+      <input
+        id="register-mot-de-passe"
+        type="password"
+        value={motDePasse}
+        onChange={(event) => setMotDePasse(event.target.value)}
+        required
+      />
 
-        {motDePasse.length > 0 && violations.length > 0 && (
-          <ul className="password-rules">
-            {violations.map((violation) => (
-              <li key={violation}>{violation}</li>
-            ))}
-          </ul>
-        )}
+      {motDePasse.length > 0 && violations.length > 0 && (
+        <ul className="password-rules">
+          {violations.map((violation) => (
+            <li key={violation}>{violation}</li>
+          ))}
+        </ul>
+      )}
 
-        {error && <p className="form-error">{error}</p>}
+      {error && <p className="form-error">{error}</p>}
 
-        <button type="submit" disabled={submitting}>
-          {submitting ? 'Inscription…' : "S'inscrire"}
-        </button>
-
-        <p className="auth-switch">
-          Déjà un compte ? <Link to="/login">Se connecter</Link>
-        </p>
-      </form>
-    </div>
+      <button type="submit" disabled={submitting}>
+        {submitting ? 'Inscription…' : "S'inscrire"}
+      </button>
+    </form>
   )
 }
 
