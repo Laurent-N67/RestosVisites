@@ -82,6 +82,7 @@
   background: var(--accent-bg);
   color: var(--accent);
   font-weight: 600;
+  text-decoration: none;
 }
 
 .app-nav a.active,
