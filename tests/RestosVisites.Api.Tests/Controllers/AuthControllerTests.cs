@@ -281,4 +281,52 @@ public sealed class AuthControllerTests
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
     }
+
+    [Fact]
+    public async Task DeleteMe_UtilisateurAuthentifie_Retourne204EtSupprimeLeCompteEtLaSession()
+    {
+        using var factory = new RestosVisitesWebApplicationFactory();
+        using var adminClient = factory.CreateClient();
+        await AuthTestHelper.InscrireEtConnecterAsync(adminClient, ct: TestContext.Current.CancellationToken); // premier => Admin
+
+        using var client = factory.CreateClient();
+        var email = $"{Guid.NewGuid():N}@exemple.test";
+        await AuthTestHelper.InscrireEtConnecterAsync(client, email: email, ct: TestContext.Current.CancellationToken); // second => Simple
+
+        var response = await client.DeleteAsync("/api/auth/me", TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+
+        // La session ne doit plus authentifier après la suppression du compte.
+        var meResponse = await client.GetAsync("/api/auth/me", TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.Unauthorized, meResponse.StatusCode);
+
+        // Le compte n'existe plus : une tentative de reconnexion avec les mêmes identifiants échoue.
+        using var reconnexionClient = factory.CreateClient();
+        var loginResponse = await reconnexionClient.PostAsJsonAsync(
+            "/api/auth/login", new SeConnecterRequest(email, AuthTestHelper.MotDePasseValide), TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.Unauthorized, loginResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task DeleteMe_UtilisateurNonAuthentifie_Retourne401()
+    {
+        using var factory = new RestosVisitesWebApplicationFactory();
+        using var client = factory.CreateClient();
+
+        var response = await client.DeleteAsync("/api/auth/me", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task DeleteMe_DernierAdmin_Retourne422()
+    {
+        using var factory = new RestosVisitesWebApplicationFactory();
+        using var client = factory.CreateClient();
+        await AuthTestHelper.InscrireEtConnecterAsync(client, ct: TestContext.Current.CancellationToken);
+
+        var response = await client.DeleteAsync("/api/auth/me", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
 }

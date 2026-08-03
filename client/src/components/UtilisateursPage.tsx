@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   changerRole,
   getUtilisateursAvecFavoris,
@@ -9,6 +9,7 @@ import {
 import type { UtilisateurAvecFavoris, Visite } from '../api/types.ts'
 import { Role } from '../api/types.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
+import { useDeleteUtilisateur } from '../hooks/useDeleteUtilisateur.ts'
 import { errorMessage } from '../utils/errors.ts'
 import { formatDate, stars } from '../utils/format.ts'
 import { validerMotDePasse } from '../utils/motDePasse.ts'
@@ -24,7 +25,8 @@ interface UtilisateursPageProps {
 }
 
 function UtilisateursPage({ visites }: UtilisateursPageProps) {
-  const { user } = useAuth()
+  const { user, clearSession } = useAuth()
+  const navigate = useNavigate()
   const isAdmin = user?.role === Role.Admin
 
   const [utilisateurs, setUtilisateurs] = useState<UtilisateurAvecFavoris[]>([])
@@ -60,6 +62,30 @@ function UtilisateursPage({ visites }: UtilisateursPageProps) {
   useEffect(() => {
     void loadUtilisateurs()
   }, [loadUtilisateurs])
+
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const { error: deleteError, handleDelete: handleDeleteUtilisateur } =
+    useDeleteUtilisateur((utilisateurSupprime) => {
+      setDeletingId(null)
+
+      // Un admin peut se supprimer lui-même depuis cet annuaire : le
+      // backend invalide alors sa propre session. Il faut aligner le
+      // client (déconnexion locale) plutôt que de recharger la liste, ce
+      // qui échouerait avec un 401 générique.
+      if (utilisateurSupprime.id === user?.id) {
+        void clearSession()
+        navigate('/')
+        return
+      }
+
+      void loadUtilisateurs()
+    })
+
+  async function handleDeleteClick(utilisateur: UtilisateurAvecFavoris) {
+    setDeletingId(utilisateur.id)
+    await handleDeleteUtilisateur(utilisateur)
+    setDeletingId(null)
+  }
 
   async function handleRoleChange(id: string, nouveauRole: Role) {
     setPendingId(id)
@@ -125,6 +151,7 @@ function UtilisateursPage({ visites }: UtilisateursPageProps) {
       {loading && <p className="popup-status">Chargement…</p>}
       {loadError && <p className="popup-status popup-error">{loadError}</p>}
       {roleError && <p className="popup-status popup-error">{roleError}</p>}
+      {deleteError && <p className="popup-status popup-error">{deleteError}</p>}
 
       {!loading && utilisateurs.length === 0 && (
         <p className="list-empty">Aucun utilisateur.</p>
@@ -133,7 +160,10 @@ function UtilisateursPage({ visites }: UtilisateursPageProps) {
       {utilisateurs.length > 0 && (
         <ul className="utilisateurs-list">
           {utilisateurs.map((utilisateur) => (
-            <li key={utilisateur.id} className="utilisateur-card">
+            <li
+              key={utilisateur.id}
+              className="utilisateur-card card card--interactive"
+            >
               <div className="popup-header">
                 <div>
                   <h3>{utilisateur.nomAffiche}</h3>
@@ -148,7 +178,10 @@ function UtilisateursPage({ visites }: UtilisateursPageProps) {
                       Rôle
                       <select
                         value={utilisateur.role}
-                        disabled={pendingId === utilisateur.id}
+                        disabled={
+                          pendingId === utilisateur.id ||
+                          deletingId === utilisateur.id
+                        }
                         onChange={(event) =>
                           void handleRoleChange(
                             utilisateur.id,
@@ -164,10 +197,27 @@ function UtilisateursPage({ visites }: UtilisateursPageProps) {
                       type="button"
                       className="utilisateur-reset-password-toggle"
                       onClick={() => toggleResetPasswordForm(utilisateur.id)}
-                      disabled={resetPasswordPendingId === utilisateur.id}
+                      disabled={
+                        resetPasswordPendingId === utilisateur.id ||
+                        deletingId === utilisateur.id
+                      }
                       aria-expanded={resetPasswordForId === utilisateur.id}
                     >
                       Réinitialiser le mot de passe
+                    </button>
+                    <button
+                      type="button"
+                      className="utilisateur-delete-button"
+                      onClick={() => void handleDeleteClick(utilisateur)}
+                      disabled={
+                        deletingId === utilisateur.id ||
+                        pendingId === utilisateur.id ||
+                        resetPasswordPendingId === utilisateur.id
+                      }
+                    >
+                      {deletingId === utilisateur.id
+                        ? 'Suppression…'
+                        : 'Supprimer'}
                     </button>
                   </div>
                 ) : (

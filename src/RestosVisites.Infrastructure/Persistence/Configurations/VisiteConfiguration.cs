@@ -44,9 +44,12 @@ public sealed class VisiteConfiguration : IEntityTypeConfiguration<Visite>
             .HasForeignKey(v => v.RestaurantId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // FK explicite vers Utilisateur, en Restrict (pas Cascade) : il n'existe aucune
-        // fonctionnalité de suppression de compte, et si elle existait un jour, on ne voudrait
-        // surtout pas qu'elle efface silencieusement l'historique de visites de cet utilisateur.
+        // FK explicite vers Utilisateur, en Restrict (pas Cascade) : le cas d'usage
+        // SupprimerUtilisateur supprime déjà explicitement les visites de l'utilisateur avant de
+        // supprimer l'utilisateur lui-même (voir SupprimerUtilisateur.ExecuterAsync), donc ce
+        // Restrict n'est pas nécessaire à ce chemin-là. Il reste un filet de sécurité délibéré contre
+        // tout autre code, moins soigneux, qui supprimerait un utilisateur sans passer par ce cas
+        // d'usage et effacerait ainsi silencieusement son historique de visites par cascade.
         builder.HasOne<Utilisateur>()
             .WithMany()
             .HasForeignKey(v => v.UtilisateurId)

@@ -56,4 +56,11 @@ public sealed class VisiteRepository : IVisiteRepository
             await _dbContext.SaveChangesAsync(ct);
         }
     }
+
+    public async Task SupprimerParUtilisateurAsync(Guid utilisateurId, CancellationToken ct)
+    {
+        var visites = await _dbContext.Visites.Where(v => v.UtilisateurId == utilisateurId).ToListAsync(ct);
+        _dbContext.Visites.RemoveRange(visites);
+        await _dbContext.SaveChangesAsync(ct);
+    }
 }

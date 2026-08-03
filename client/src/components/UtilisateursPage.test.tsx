@@ -15,12 +15,17 @@ function renderPage(visites: Visite[] = []) {
   )
 }
 
-const { getUtilisateursAvecFavorisMock, changerRoleMock, reinitialiserMotDePasseMock } =
-  vi.hoisted(() => ({
-    getUtilisateursAvecFavorisMock: vi.fn(),
-    changerRoleMock: vi.fn(),
-    reinitialiserMotDePasseMock: vi.fn(),
-  }))
+const {
+  getUtilisateursAvecFavorisMock,
+  changerRoleMock,
+  reinitialiserMotDePasseMock,
+  supprimerUtilisateurMock,
+} = vi.hoisted(() => ({
+  getUtilisateursAvecFavorisMock: vi.fn(),
+  changerRoleMock: vi.fn(),
+  reinitialiserMotDePasseMock: vi.fn(),
+  supprimerUtilisateurMock: vi.fn(),
+}))
 
 vi.mock('../api/client.ts', async () => {
   const actual =
@@ -30,10 +35,22 @@ vi.mock('../api/client.ts', async () => {
     getUtilisateursAvecFavoris: getUtilisateursAvecFavorisMock,
     changerRole: changerRoleMock,
     reinitialiserMotDePasse: reinitialiserMotDePasseMock,
+    supprimerUtilisateur: supprimerUtilisateurMock,
   }
 })
 
+const navigateMock = vi.fn()
+
+vi.mock('react-router-dom', async () => {
+  const actual =
+    await vi.importActual<typeof import('react-router-dom')>(
+      'react-router-dom',
+    )
+  return { ...actual, useNavigate: () => navigateMock }
+})
+
 let currentUser: Utilisateur
+const clearSessionMock = vi.fn()
 
 vi.mock('../contexts/AuthContext.tsx', () => ({
   useAuth: () => ({
@@ -43,6 +60,7 @@ vi.mock('../contexts/AuthContext.tsx', () => ({
     register: vi.fn(),
     logout: vi.fn(),
     refresh: vi.fn(),
+    clearSession: clearSessionMock,
   }),
 }))
 
@@ -70,6 +88,9 @@ describe('UtilisateursPage', () => {
     getUtilisateursAvecFavorisMock.mockReset()
     changerRoleMock.mockReset()
     reinitialiserMotDePasseMock.mockReset()
+    supprimerUtilisateurMock.mockReset()
+    navigateMock.mockReset()
+    clearSessionMock.mockReset()
     currentUser = {
       id: 'user-2',
       email: 'admin@example.com',
@@ -278,6 +299,105 @@ describe('UtilisateursPage', () => {
 
     expect(
       await screen.findByText('Le mot de passe ne respecte pas la politique.'),
+    ).toBeInTheDocument()
+  })
+
+  it('affiche un bouton Supprimer pour un admin', async () => {
+    getUtilisateursAvecFavorisMock.mockResolvedValue(utilisateurs)
+    renderPage()
+
+    await screen.findByText('Une Personne')
+    expect(
+      screen.getAllByRole('button', { name: 'Supprimer' }),
+    ).toHaveLength(2)
+  })
+
+  it("masque le bouton Supprimer pour un utilisateur non-admin", async () => {
+    currentUser = {
+      id: 'user-1',
+      email: 'simple@example.com',
+      nomAffiche: 'Une Personne',
+      role: Role.Simple,
+    }
+    getUtilisateursAvecFavorisMock.mockResolvedValue(utilisateurs)
+    renderPage()
+
+    await screen.findByText('Une Personne')
+    expect(
+      screen.queryByRole('button', { name: 'Supprimer' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it("n'appelle pas l'Api si la confirmation de suppression est refusée", async () => {
+    getUtilisateursAvecFavorisMock.mockResolvedValue(utilisateurs)
+    vi.spyOn(window, 'confirm').mockReturnValue(false)
+    const user = userEvent.setup()
+    renderPage()
+
+    await screen.findByText('Une Personne')
+    const boutons = screen.getAllByRole('button', { name: 'Supprimer' })
+    await user.click(boutons[0])
+
+    expect(supprimerUtilisateurMock).not.toHaveBeenCalled()
+  })
+
+  it("supprime l'utilisateur après confirmation et rafraîchit la liste", async () => {
+    getUtilisateursAvecFavorisMock
+      .mockResolvedValueOnce(utilisateurs)
+      .mockResolvedValueOnce([utilisateurs[1]])
+    supprimerUtilisateurMock.mockResolvedValue(undefined)
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    const user = userEvent.setup()
+    renderPage()
+
+    await screen.findByText('Une Personne')
+    const boutons = screen.getAllByRole('button', { name: 'Supprimer' })
+    await user.click(boutons[0])
+
+    await waitFor(() =>
+      expect(supprimerUtilisateurMock).toHaveBeenCalledWith('user-1'),
+    )
+    await waitFor(() =>
+      expect(screen.queryByText('Une Personne')).not.toBeInTheDocument(),
+    )
+    expect(getUtilisateursAvecFavorisMock).toHaveBeenCalledTimes(2)
+  })
+
+  it("efface la session et redirige vers l'accueil quand un admin supprime son propre compte, sans recharger la liste", async () => {
+    getUtilisateursAvecFavorisMock.mockResolvedValue(utilisateurs)
+    supprimerUtilisateurMock.mockResolvedValue(undefined)
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    const user = userEvent.setup()
+    renderPage()
+
+    await screen.findByText('Une Personne')
+    const boutons = screen.getAllByRole('button', { name: 'Supprimer' })
+    // currentUser est "user-2" (Une Admin), correspondant à utilisateurs[1].
+    await user.click(boutons[1])
+
+    await waitFor(() =>
+      expect(supprimerUtilisateurMock).toHaveBeenCalledWith('user-2'),
+    )
+    await waitFor(() => expect(clearSessionMock).toHaveBeenCalled())
+    await waitFor(() => expect(navigateMock).toHaveBeenCalledWith('/'))
+    expect(getUtilisateursAvecFavorisMock).toHaveBeenCalledTimes(1)
+  })
+
+  it("affiche une erreur si la suppression d'un utilisateur échoue", async () => {
+    getUtilisateursAvecFavorisMock.mockResolvedValue(utilisateurs)
+    supprimerUtilisateurMock.mockRejectedValue(
+      new ApiError(422, 'Erreur', 'Impossible de supprimer le dernier compte Admin.'),
+    )
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    const user = userEvent.setup()
+    renderPage()
+
+    await screen.findByText('Une Personne')
+    const boutons = screen.getAllByRole('button', { name: 'Supprimer' })
+    await user.click(boutons[1])
+
+    expect(
+      await screen.findByText('Impossible de supprimer le dernier compte Admin.'),
     ).toBeInTheDocument()
   })
 })

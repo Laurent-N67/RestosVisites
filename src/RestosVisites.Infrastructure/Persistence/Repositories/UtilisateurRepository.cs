@@ -53,4 +53,17 @@ public sealed class UtilisateurRepository : IUtilisateurRepository
         _dbContext.Utilisateurs.Update(utilisateur);
         await _dbContext.SaveChangesAsync(ct);
     }
+
+    public Task<bool> EstUtilisateurHistoriqueAsync(Guid id, CancellationToken ct)
+        => Task.FromResult(id == LegacyUtilisateurSeed.Id);
+
+    public async Task SupprimerAsync(Guid id, CancellationToken ct)
+    {
+        var utilisateur = await _dbContext.Utilisateurs.FindAsync([id], ct);
+        if (utilisateur is not null)
+        {
+            _dbContext.Utilisateurs.Remove(utilisateur);
+            await _dbContext.SaveChangesAsync(ct);
+        }
+    }
 }

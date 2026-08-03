@@ -15,10 +15,12 @@ function renderPage() {
   )
 }
 
-const { changerNomAfficheMock, changerMotDePasseMock } = vi.hoisted(() => ({
-  changerNomAfficheMock: vi.fn(),
-  changerMotDePasseMock: vi.fn(),
-}))
+const { changerNomAfficheMock, changerMotDePasseMock, supprimerMonCompteMock } =
+  vi.hoisted(() => ({
+    changerNomAfficheMock: vi.fn(),
+    changerMotDePasseMock: vi.fn(),
+    supprimerMonCompteMock: vi.fn(),
+  }))
 
 vi.mock('../api/client.ts', async () => {
   const actual =
@@ -27,11 +29,23 @@ vi.mock('../api/client.ts', async () => {
     ...actual,
     changerNomAffiche: changerNomAfficheMock,
     changerMotDePasse: changerMotDePasseMock,
+    supprimerMonCompte: supprimerMonCompteMock,
   }
+})
+
+const navigateMock = vi.fn()
+
+vi.mock('react-router-dom', async () => {
+  const actual =
+    await vi.importActual<typeof import('react-router-dom')>(
+      'react-router-dom',
+    )
+  return { ...actual, useNavigate: () => navigateMock }
 })
 
 let currentUser: Utilisateur
 const refreshMock = vi.fn()
+const clearSessionMock = vi.fn()
 
 vi.mock('../contexts/AuthContext.tsx', () => ({
   useAuth: () => ({
@@ -41,6 +55,7 @@ vi.mock('../contexts/AuthContext.tsx', () => ({
     register: vi.fn(),
     logout: vi.fn(),
     refresh: refreshMock,
+    clearSession: clearSessionMock,
   }),
 }))
 
@@ -48,7 +63,10 @@ describe('AccountPage', () => {
   beforeEach(() => {
     changerNomAfficheMock.mockReset()
     changerMotDePasseMock.mockReset()
+    supprimerMonCompteMock.mockReset()
+    navigateMock.mockReset()
     refreshMock.mockReset()
+    clearSessionMock.mockReset()
     currentUser = {
       id: 'user-1',
       email: 'simple@example.com',
@@ -162,5 +180,53 @@ describe('AccountPage', () => {
     ).toBeInTheDocument()
     expect(champActuel).toHaveValue('MauvaisMotDePasse123!')
     expect(champNouveau).toHaveValue('NouveauMotDePasse123!')
+  })
+
+  it("n'appelle pas l'Api si la confirmation de suppression du compte est refusée", async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(false)
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.click(
+      screen.getByRole('button', { name: 'Supprimer mon compte' }),
+    )
+
+    expect(supprimerMonCompteMock).not.toHaveBeenCalled()
+    expect(clearSessionMock).not.toHaveBeenCalled()
+    expect(navigateMock).not.toHaveBeenCalled()
+  })
+
+  it('supprime le compte après confirmation, efface la session et redirige vers l\'accueil', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    supprimerMonCompteMock.mockResolvedValue(undefined)
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.click(
+      screen.getByRole('button', { name: 'Supprimer mon compte' }),
+    )
+
+    await waitFor(() => expect(supprimerMonCompteMock).toHaveBeenCalled())
+    await waitFor(() => expect(clearSessionMock).toHaveBeenCalled())
+    await waitFor(() => expect(navigateMock).toHaveBeenCalledWith('/'))
+  })
+
+  it("affiche une erreur si la suppression du compte échoue sans naviguer", async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    supprimerMonCompteMock.mockRejectedValue(
+      new ApiError(422, 'Erreur', 'Impossible de supprimer le dernier compte Admin.'),
+    )
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.click(
+      screen.getByRole('button', { name: 'Supprimer mon compte' }),
+    )
+
+    expect(
+      await screen.findByText('Impossible de supprimer le dernier compte Admin.'),
+    ).toBeInTheDocument()
+    expect(clearSessionMock).not.toHaveBeenCalled()
+    expect(navigateMock).not.toHaveBeenCalled()
   })
 })

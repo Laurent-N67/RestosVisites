@@ -34,4 +34,13 @@ public interface IUtilisateurRepository
     Task<int> CompterAdminsAsync(CancellationToken ct);
 
     Task MettreAJourAsync(Utilisateur utilisateur, CancellationToken ct);
+
+    /// <summary>
+    /// Indique si l'identifiant donné est celui de l'utilisateur historique (LegacyUtilisateurSeed)
+    /// servant uniquement à rattacher les visites créées avant l'introduction des comptes, pour
+    /// empêcher sa suppression.
+    /// </summary>
+    Task<bool> EstUtilisateurHistoriqueAsync(Guid id, CancellationToken ct);
+
+    Task SupprimerAsync(Guid id, CancellationToken ct);
 }

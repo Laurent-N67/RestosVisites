@@ -8,6 +8,7 @@ using RestosVisites.Application.UseCases.ChangerNomAffiche;
 using RestosVisites.Application.UseCases.Inscrire;
 using RestosVisites.Application.UseCases.ObtenirUtilisateurCourant;
 using RestosVisites.Application.UseCases.SeConnecter;
+using RestosVisites.Application.UseCases.SupprimerUtilisateur;
 using RestosVisites.Domain.Enums;
 
 namespace RestosVisites.Api.Controllers;
@@ -27,19 +28,22 @@ public sealed class AuthController : ControllerBase
     private readonly ObtenirUtilisateurCourant _obtenirUtilisateurCourant;
     private readonly ChangerNomAffiche _changerNomAffiche;
     private readonly ChangerMotDePasse _changerMotDePasse;
+    private readonly SupprimerUtilisateur _supprimerUtilisateur;
 
     public AuthController(
         Inscrire inscrire,
         SeConnecter seConnecter,
         ObtenirUtilisateurCourant obtenirUtilisateurCourant,
         ChangerNomAffiche changerNomAffiche,
-        ChangerMotDePasse changerMotDePasse)
+        ChangerMotDePasse changerMotDePasse,
+        SupprimerUtilisateur supprimerUtilisateur)
     {
         _inscrire = inscrire;
         _seConnecter = seConnecter;
         _obtenirUtilisateurCourant = obtenirUtilisateurCourant;
         _changerNomAffiche = changerNomAffiche;
         _changerMotDePasse = changerMotDePasse;
+        _supprimerUtilisateur = supprimerUtilisateur;
     }
 
     /// <summary>Inscrit un nouvel utilisateur et le connecte immédiatement (pose le cookie de session).</summary>
@@ -124,6 +128,25 @@ public sealed class AuthController : ControllerBase
     }
 
     /// <summary>
+    /// Supprime le compte de l'utilisateur courant (libre-service, tout rôle confondu) et termine sa
+    /// session.
+    /// </summary>
+    [HttpDelete("me")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> SupprimerCompte(CancellationToken ct)
+    {
+        await _supprimerUtilisateur.ExecuterAsync(
+            new SupprimerUtilisateurRequest(User.ObtenirUtilisateurId()), ct);
+
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+        return NoContent();
+    }
+
+    /// <summary>
     /// Pose le cookie de session avec les claims nécessaires aux contrôleurs (identifiant + rôle),
     /// jamais renseignés depuis une valeur fournie par le client.
     /// </summary>
@@ -139,7 +162,10 @@ public sealed class AuthController : ControllerBase
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         var principal = new ClaimsPrincipal(identity);
 
-        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+        // IsPersistent = true : le cookie survit à la fermeture du navigateur (au lieu d'un cookie
+        // de session), pour la durée de session longue configurée dans Program.cs (30 jours glissants).
+        var proprietes = new AuthenticationProperties { IsPersistent = true };
+        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, proprietes);
     }
 }
 

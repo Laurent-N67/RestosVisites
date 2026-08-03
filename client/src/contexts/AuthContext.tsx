@@ -21,6 +21,7 @@ interface AuthContextValue {
   register: (payload: RegisterRequest) => Promise<void>
   logout: () => Promise<void>
   refresh: () => Promise<void>
+  clearSession: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -98,8 +99,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
     await clearApiCache()
   }
 
+  // À utiliser après une suppression de compte réussie : le compte et la
+  // session (cookie) ont déjà été supprimés côté serveur, inutile (et
+  // impossible, l'utilisateur n'existe plus) de rappeler /api/auth/logout.
+  async function clearSession() {
+    setUser(null)
+    await clearApiCache()
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, refresh }}>
+    <AuthContext.Provider
+      value={{ user, loading, login, register, logout, refresh, clearSession }}
+    >
       {children}
     </AuthContext.Provider>
   )

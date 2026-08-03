@@ -45,4 +45,10 @@ public sealed class FakeVisiteRepository : IVisiteRepository
         _visites.RemoveAll(v => v.Id == id);
         return Task.CompletedTask;
     }
+
+    public Task SupprimerParUtilisateurAsync(Guid utilisateurId, CancellationToken ct)
+    {
+        _visites.RemoveAll(v => v.UtilisateurId == utilisateurId);
+        return Task.CompletedTask;
+    }
 }

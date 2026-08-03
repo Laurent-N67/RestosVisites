@@ -23,6 +23,7 @@ using RestosVisites.Application.UseCases.ReinitialiserMotDePasse;
 using RestosVisites.Application.UseCases.RetirerFavori;
 using RestosVisites.Application.UseCases.SeConnecter;
 using RestosVisites.Application.UseCases.SupprimerRestaurant;
+using RestosVisites.Application.UseCases.SupprimerUtilisateur;
 using RestosVisites.Application.UseCases.SupprimerVisite;
 using RestosVisites.Domain.Enums;
 using RestosVisites.Infrastructure;
@@ -73,6 +74,7 @@ builder.Services.AddScoped<ListerUtilisateursAvecFavoris>();
 builder.Services.AddScoped<ListerMesFavoris>();
 builder.Services.AddScoped<AjouterFavori>();
 builder.Services.AddScoped<RetirerFavori>();
+builder.Services.AddScoped<SupprimerUtilisateur>();
 
 builder.Services.AddExceptionHandler<ErreurApplicationExceptionHandler>();
 builder.Services.AddProblemDetails();
@@ -89,6 +91,14 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.SecurePolicy = builder.Environment.IsDevelopment() || builder.Environment.IsEnvironment("Testing")
             ? CookieSecurePolicy.SameAsRequest
             : CookieSecurePolicy.Always;
+
+        // Session longue (30 jours, glissante) : le cookie est marqué persistant à la connexion
+        // (IsPersistent = true dans AuthController.ConnecterAsync) pour survivre à la fermeture du
+        // navigateur. N'empêche pas la déconnexion silencieuse au redéploiement (clés Data
+        // Protection non persistées, cf. journal technique) : ce n'est pas ce que cette valeur
+        // corrige, seulement la durée de vie normale d'une session.
+        options.ExpireTimeSpan = TimeSpan.FromDays(30);
+        options.SlidingExpiration = true;
 
         options.Events.OnRedirectToLogin = context =>
         {

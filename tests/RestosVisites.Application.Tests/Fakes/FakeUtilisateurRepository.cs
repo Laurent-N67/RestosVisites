@@ -63,4 +63,15 @@ public sealed class FakeUtilisateurRepository : IUtilisateurRepository
     {
         return Task.CompletedTask;
     }
+
+    public Task<bool> EstUtilisateurHistoriqueAsync(Guid id, CancellationToken ct)
+    {
+        return Task.FromResult(IdsUtilisateursHistoriques.Contains(id));
+    }
+
+    public Task SupprimerAsync(Guid id, CancellationToken ct)
+    {
+        _utilisateurs.RemoveAll(u => u.Id == id);
+        return Task.CompletedTask;
+    }
 }

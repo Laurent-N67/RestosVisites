@@ -1,12 +1,21 @@
 import { useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
-import { changerMotDePasse, changerNomAffiche } from '../api/client.ts'
+import { useNavigate } from 'react-router-dom'
+import {
+  changerMotDePasse,
+  changerNomAffiche,
+  supprimerMonCompte,
+} from '../api/client.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { errorMessage } from '../utils/errors.ts'
 import { validerMotDePasse } from '../utils/motDePasse.ts'
 
 function AccountPage() {
-  const { user, refresh } = useAuth()
+  const { user, refresh, clearSession } = useAuth()
+  const navigate = useNavigate()
+
+  const [deletePending, setDeletePending] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const [nomAffiche, setNomAffiche] = useState(user?.nomAffiche ?? '')
   const [nomAffichePending, setNomAffichePending] = useState(false)
@@ -59,6 +68,33 @@ function AccountPage() {
       setMotDePasseError(errorMessage(err, 'Le changement de mot de passe a échoué.'))
     } finally {
       setMotDePassePending(false)
+    }
+  }
+
+  async function handleDeleteAccount() {
+    if (
+      !window.confirm(
+        'Supprimer définitivement votre compte et toutes vos visites ?',
+      )
+    ) {
+      return
+    }
+
+    setDeletePending(true)
+    setDeleteError(null)
+    try {
+      await supprimerMonCompte()
+      // On navigue avant que la partie asynchrone de clearSession() (vidage
+      // du cache Api) ne rende la main : clearSession() vide déjà l'état
+      // utilisateur de façon synchrone avant son premier await, donc
+      // l'appeler puis naviguer dans la foulée, sans l'attendre, évite que
+      // <ProtectedRoute> ne redirige vers /login avant que l'accueil ne
+      // soit affiché (flash visuel).
+      navigate('/')
+      void clearSession()
+    } catch (err) {
+      setDeleteError(errorMessage(err, 'La suppression du compte a échoué.'))
+      setDeletePending(false)
     }
   }
 
@@ -133,6 +169,25 @@ function AccountPage() {
             {motDePassePending ? 'Mise à jour…' : 'Mettre à jour'}
           </button>
         </form>
+      </section>
+
+      <section className="utilisateur-card account-form account-danger">
+        <h3>Supprimer mon compte</h3>
+        <p>
+          La suppression de votre compte est définitive et supprimera aussi
+          toutes vos visites.
+        </p>
+
+        {deleteError && <p className="form-error">{deleteError}</p>}
+
+        <button
+          type="button"
+          className="account-danger-button"
+          onClick={() => void handleDeleteAccount()}
+          disabled={deletePending}
+        >
+          {deletePending ? 'Suppression…' : 'Supprimer mon compte'}
+        </button>
       </section>
     </div>
   )

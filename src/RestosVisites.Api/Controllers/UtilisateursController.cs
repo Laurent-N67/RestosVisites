@@ -1,15 +1,18 @@
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RestosVisites.Application.UseCases.ChangerRole;
 using RestosVisites.Application.UseCases.ListerUtilisateursAvecFavoris;
 using RestosVisites.Application.UseCases.ReinitialiserMotDePasse;
+using RestosVisites.Application.UseCases.SupprimerUtilisateur;
 using RestosVisites.Domain.Enums;
 
 namespace RestosVisites.Api.Controllers;
 
 /// <summary>
-/// Annuaire des utilisateurs et de leurs favoris, changement de rôle et réinitialisation de mot de
-/// passe (réservés aux Admins).
+/// Annuaire des utilisateurs et de leurs favoris, changement de rôle, réinitialisation de mot de
+/// passe et suppression de compte (réservés aux Admins).
 /// </summary>
 [ApiController]
 [Route("api/utilisateurs")]
@@ -19,15 +22,18 @@ public sealed class UtilisateursController : ControllerBase
     private readonly ListerUtilisateursAvecFavoris _listerUtilisateursAvecFavoris;
     private readonly ChangerRole _changerRole;
     private readonly ReinitialiserMotDePasse _reinitialiserMotDePasse;
+    private readonly SupprimerUtilisateur _supprimerUtilisateur;
 
     public UtilisateursController(
         ListerUtilisateursAvecFavoris listerUtilisateursAvecFavoris,
         ChangerRole changerRole,
-        ReinitialiserMotDePasse reinitialiserMotDePasse)
+        ReinitialiserMotDePasse reinitialiserMotDePasse,
+        SupprimerUtilisateur supprimerUtilisateur)
     {
         _listerUtilisateursAvecFavoris = listerUtilisateursAvecFavoris;
         _changerRole = changerRole;
         _reinitialiserMotDePasse = reinitialiserMotDePasse;
+        _supprimerUtilisateur = supprimerUtilisateur;
     }
 
     /// <summary>Liste tous les utilisateurs avec leurs restaurants favoris.</summary>
@@ -64,6 +70,27 @@ public sealed class UtilisateursController : ControllerBase
     {
         await _reinitialiserMotDePasse.ExecuterAsync(
             new ReinitialiserMotDePasseRequest(id, body.NouveauMotDePasse), ct);
+
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Supprime le compte d'un utilisateur (et ses visites/favoris), réservé aux Admins. Si l'Admin
+    /// supprime son propre compte via cet endpoint, sa session est également terminée.
+    /// </summary>
+    [HttpDelete("{id:guid}")]
+    [Authorize(Policy = "Admin")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> Supprimer(Guid id, CancellationToken ct)
+    {
+        await _supprimerUtilisateur.ExecuterAsync(new SupprimerUtilisateurRequest(id), ct);
+
+        if (id == User.ObtenirUtilisateurId())
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        }
 
         return NoContent();
     }

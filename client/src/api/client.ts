@@ -235,6 +235,14 @@ export function changerNomAffiche(nouveauNomAffiche: string): Promise<void> {
   })
 }
 
+export function supprimerUtilisateur(id: string): Promise<void> {
+  return request<void>(`/api/utilisateurs/${id}`, { method: 'DELETE' })
+}
+
+export function supprimerMonCompte(): Promise<void> {
+  return request<void>('/api/auth/me', { method: 'DELETE' })
+}
+
 export function changerMotDePasse(
   motDePasseActuel: string,
   nouveauMotDePasse: string,
