@@ -34,6 +34,7 @@ function LoginPage() {
       <input
         id="login-email"
         type="email"
+        autoComplete="username"
         value={email}
         onChange={(event) => setEmail(event.target.value)}
         required
@@ -43,6 +44,7 @@ function LoginPage() {
       <input
         id="login-mot-de-passe"
         type="password"
+        autoComplete="current-password"
         value={motDePasse}
         onChange={(event) => setMotDePasse(event.target.value)}
         required

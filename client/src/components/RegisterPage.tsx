@@ -47,6 +47,7 @@ function RegisterPage() {
       <input
         id="register-email"
         type="email"
+        autoComplete="email"
         value={email}
         onChange={(event) => setEmail(event.target.value)}
         required
@@ -56,6 +57,7 @@ function RegisterPage() {
       <input
         id="register-nom-affiche"
         type="text"
+        autoComplete="name"
         value={nomAffiche}
         onChange={(event) => setNomAffiche(event.target.value)}
         required
@@ -65,6 +67,7 @@ function RegisterPage() {
       <input
         id="register-mot-de-passe"
         type="password"
+        autoComplete="new-password"
         value={motDePasse}
         onChange={(event) => setMotDePasse(event.target.value)}
         required
