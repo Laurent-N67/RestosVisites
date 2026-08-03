@@ -6,6 +6,7 @@ import type {
   Favori,
   LoginRequest,
   ProblemDetails,
+  RecompresserPhotosResponse,
   RegisterRequest,
   Restaurant,
   Role,
@@ -250,5 +251,11 @@ export function changerMotDePasse(
   return request<void>('/api/auth/me/mot-de-passe', {
     method: 'PUT',
     body: JSON.stringify({ motDePasseActuel, nouveauMotDePasse }),
+  })
+}
+
+export function recompresserPhotosExistantes(): Promise<RecompresserPhotosResponse> {
+  return request<RecompresserPhotosResponse>('/api/maintenance/recompresser-photos', {
+    method: 'POST',
   })
 }

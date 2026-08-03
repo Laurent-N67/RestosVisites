@@ -117,6 +117,76 @@ public sealed class FichierPhotoStorageTests : IDisposable
         Assert.Equal(300, image.Height);
     }
 
+    [Fact]
+    public async Task RecompresserSiNecessaireAsync_FichierAuFormatAncien_EstRemplaceParUnWebpEtLAncienDisparait()
+    {
+        // Simule une photo uploadée avant le pipeline de compression : un vrai JPEG déjà présent sur
+        // disque, écrit directement (sans passer par EnregistrerAsync) pour reproduire fidèlement
+        // l'état d'une photo historique jamais recompressée.
+        Directory.CreateDirectory(_dossierTest);
+        var ancienNomFichier = $"{Guid.NewGuid()}.jpg";
+        var ancienCheminComplet = Path.Combine(_dossierTest, ancienNomFichier);
+        byte[] octetsJpegOrigine;
+        await using (var jpeg = CreerImageJpeg(1000, 800))
+        {
+            octetsJpegOrigine = jpeg.ToArray();
+        }
+
+        await File.WriteAllBytesAsync(ancienCheminComplet, octetsJpegOrigine, TestContext.Current.CancellationToken);
+        var ancienneUrl = $"/uploads/{ancienNomFichier}";
+
+        var resultat = await _storage.RecompresserSiNecessaireAsync(ancienneUrl, TestContext.Current.CancellationToken);
+
+        Assert.NotNull(resultat);
+        Assert.StartsWith("/uploads/", resultat.NouvelleUrl);
+        Assert.EndsWith(".webp", resultat.NouvelleUrl);
+        Assert.Equal(octetsJpegOrigine.Length, resultat.TailleAvantOctets);
+
+        // L'ancien fichier a bien disparu.
+        Assert.False(File.Exists(ancienCheminComplet));
+
+        // Le nouveau fichier existe, est un WebP valide et rechargeable, et son poids correspond à ce
+        // qui a été retourné.
+        var nouveauCheminComplet = CheminDepuisUrl(resultat.NouvelleUrl);
+        Assert.True(File.Exists(nouveauCheminComplet));
+        var octetsNouveauFichier = await File.ReadAllBytesAsync(nouveauCheminComplet, TestContext.Current.CancellationToken);
+        AssertSignatureWebp(octetsNouveauFichier);
+        Assert.Equal(octetsNouveauFichier.LongLength, resultat.TailleApresOctets);
+
+        using var image = await Image.LoadAsync(nouveauCheminComplet, TestContext.Current.CancellationToken);
+        Assert.Equal("image/webp", image.Metadata.DecodedImageFormat?.DefaultMimeType);
+    }
+
+    [Fact]
+    public async Task RecompresserSiNecessaireAsync_FichierDejaWebp_NeFaitRienEtRetourneNull()
+    {
+        await using var jpeg = CreerImageJpeg(400, 300);
+        var urlDejaCompressee = await _storage.EnregistrerAsync(jpeg, TestContext.Current.CancellationToken);
+
+        var resultat = await _storage.RecompresserSiNecessaireAsync(urlDejaCompressee, TestContext.Current.CancellationToken);
+
+        Assert.Null(resultat);
+        Assert.True(File.Exists(CheminDepuisUrl(urlDejaCompressee)));
+    }
+
+    [Fact]
+    public async Task RecompresserSiNecessaireAsync_UrlExterne_RetourneNull()
+    {
+        var resultat = await _storage.RecompresserSiNecessaireAsync(
+            "https://exemple.test/photo.jpg", TestContext.Current.CancellationToken);
+
+        Assert.Null(resultat);
+    }
+
+    [Fact]
+    public async Task RecompresserSiNecessaireAsync_FichierIntrouvable_RetourneNull()
+    {
+        var resultat = await _storage.RecompresserSiNecessaireAsync(
+            $"/uploads/{Guid.NewGuid()}.jpg", TestContext.Current.CancellationToken);
+
+        Assert.Null(resultat);
+    }
+
     private string CheminDepuisUrl(string url)
     {
         var nomFichier = url["/uploads/".Length..];

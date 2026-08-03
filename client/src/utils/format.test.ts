@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatDate, stars } from './format.ts'
+import { formatDate, formatOctets, stars } from './format.ts'
 
 describe('formatDate', () => {
   it('formate une date ISO au format fr-FR', () => {
@@ -31,5 +31,20 @@ describe('stars', () => {
   it('gère la note maximale et minimale exactes', () => {
     expect(stars(5)).toBe('★★★★★')
     expect(stars(0)).toBe('☆☆☆☆☆')
+  })
+})
+
+describe('formatOctets', () => {
+  it('affiche les octets tels quels sous 1000', () => {
+    expect(formatOctets(512)).toBe('512 o')
+  })
+
+  it('formate en Mo au-delà du seuil', () => {
+    expect(formatOctets(45_300_000)).toBe('45,3 Mo')
+  })
+
+  it('formate en Ko pour les tailles intermédiaires', () => {
+    expect(formatOctets(3_100_000)).toBe('3,1 Mo')
+    expect(formatOctets(1_500)).toBe('1,5 Ko')
   })
 })

@@ -9,8 +9,12 @@ namespace RestosVisites.Application.Tests.Fakes;
 public sealed class FakeVisiteRepository : IVisiteRepository
 {
     private readonly List<Visite> _visites = [];
+    private readonly List<Guid> _idsMisAJour = [];
 
     public IReadOnlyList<Visite> Visites => _visites;
+
+    /// <summary>Identifiants des visites passées à <see cref="MettreAJourAsync"/>, dans l'ordre d'appel (peut contenir des doublons).</summary>
+    public IReadOnlyList<Guid> IdsMisAJour => _idsMisAJour;
 
     public Task AjouterAsync(Visite visite, CancellationToken ct)
     {
@@ -37,6 +41,7 @@ public sealed class FakeVisiteRepository : IVisiteRepository
 
     public Task MettreAJourAsync(Visite visite, CancellationToken ct)
     {
+        _idsMisAJour.Add(visite.Id);
         return Task.CompletedTask;
     }
 

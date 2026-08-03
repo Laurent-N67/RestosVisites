@@ -15,4 +15,13 @@ public interface IPhotoStorage
     /// </summary>
     /// <param name="contenu">Flux du contenu binaire de l'image (JPEG, PNG ou WebP, déjà validé par l'appelant).</param>
     Task<string> EnregistrerAsync(Stream contenu, CancellationToken ct);
+
+    /// <summary>
+    /// Retourne l'URL déjà locale, non recompressée par le pipeline (issue d'un upload antérieur au
+    /// 2026-08-03) : recompresse le fichier existant vers WebP via le même pipeline que <see cref="EnregistrerAsync"/>,
+    /// remplace le fichier physique, et retourne la nouvelle URL. Retourne null si l'URL ne pointe pas vers un
+    /// fichier géré par ce stockage (URL externe collée par l'utilisateur), si le fichier référencé est introuvable,
+    /// ou si l'URL pointe déjà vers un fichier ".webp" (déjà recompressé, rien à faire).
+    /// </summary>
+    Task<PhotoRecompresseeResult?> RecompresserSiNecessaireAsync(string urlActuelle, CancellationToken ct);
 }
