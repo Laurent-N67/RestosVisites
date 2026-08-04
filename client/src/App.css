@@ -586,6 +586,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .restaurant-popup h3 {
@@ -1583,6 +1584,7 @@
   align-items: flex-end;
   gap: 8px;
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 .utilisateur-reset-password-toggle {
