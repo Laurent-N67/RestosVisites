@@ -3,18 +3,14 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Cell,
-  Legend,
+  LabelList,
   Line,
   LineChart,
-  Pie,
-  PieChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from 'recharts'
-import type { PieLabelRenderProps } from 'recharts'
 import type {
   Categorie,
   Restaurant,
@@ -41,7 +37,6 @@ const CHART_COLORS_LIGHT = {
   textH: '#111827',
   border: 'rgba(0, 0, 0, 0.08)',
   grid: 'rgba(0, 0, 0, 0.08)',
-  palette: ['#ff7a45', '#22c55e', '#f5a623', '#3b82f6', '#a855f7', '#14b8a6', '#ec4899', '#6366f1'],
 } as const
 
 const CHART_COLORS_DARK = {
@@ -52,7 +47,6 @@ const CHART_COLORS_DARK = {
   textH: '#ffffff',
   border: 'rgba(255, 255, 255, 0.09)',
   grid: 'rgba(255, 255, 255, 0.12)',
-  palette: ['#ff9266', '#4ade80', '#f5a623', '#60a5fa', '#c084fc', '#2dd4bf', '#f472b6', '#818cf8'],
 } as const
 
 interface CategoryTally {
@@ -171,33 +165,46 @@ function StatsPage({
           {topCategories.length === 0 ? (
             <p className="popup-status">Aucune catégorie enregistrée.</p>
           ) : (
-            <ResponsiveContainer width="100%" height={280}>
-              <PieChart>
-                <Pie
-                  data={topCategories}
-                  dataKey="count"
-                  nameKey="nom"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={90}
-                  label={(props: PieLabelRenderProps) => props.name}
-                >
-                  {topCategories.map((entry, index) => (
-                    <Cell
-                      key={entry.nom}
-                      fill={colors.palette[index % colors.palette.length]}
-                    />
-                  ))}
-                </Pie>
+            <ResponsiveContainer width="100%" height={Math.max(220, topCategories.length * 34)}>
+              <BarChart
+                data={topCategories}
+                layout="vertical"
+                margin={{ top: 4, right: 28, bottom: 4, left: 4 }}
+                barCategoryGap={10}
+              >
+                <CartesianGrid stroke={colors.grid} strokeDasharray="3 3" horizontal={false} />
+                <XAxis
+                  type="number"
+                  allowDecimals={false}
+                  stroke={colors.text}
+                  tick={{ fill: colors.text, fontSize: 12 }}
+                />
+                <YAxis
+                  type="category"
+                  dataKey="nom"
+                  width={140}
+                  stroke={colors.text}
+                  tick={{ fill: colors.textH, fontSize: 12 }}
+                  tickLine={false}
+                  axisLine={false}
+                />
                 <Tooltip
+                  cursor={{ fill: colors.grid }}
                   contentStyle={{
                     background: theme === 'dark' ? '#171923' : '#fff',
                     border: `1px solid ${colors.border}`,
                     color: colors.textH,
                   }}
                 />
-                <Legend />
-              </PieChart>
+                <Bar dataKey="count" fill={colors.accent} radius={[0, 4, 4, 0]} maxBarSize={20}>
+                  <LabelList
+                    dataKey="count"
+                    position="right"
+                    fill={colors.textH}
+                    fontSize={12}
+                  />
+                </Bar>
+              </BarChart>
             </ResponsiveContainer>
           )}
         </div>
