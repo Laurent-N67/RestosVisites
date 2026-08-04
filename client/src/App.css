@@ -1028,7 +1028,12 @@
 }
 
 .cover-photo {
-  width: 100%;
+  /* Pas de width explicite : avec une width fixe (100%), les marges négatives
+     gauche/droite ci-dessous se contentent de décaler la boîte sans l'élargir
+     (le bord gauche colle, mais le bord droit reste 2×17px trop court côté
+     carte). En laissant width sur sa valeur par défaut (auto), le navigateur
+     résout l'équation du modèle de boîte avec ces marges négatives et élargit
+     réellement l'élément jusqu'aux deux bords de la carte. */
   aspect-ratio: 16 / 9;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   overflow: hidden;
