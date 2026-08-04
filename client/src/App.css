@@ -1032,7 +1032,9 @@
   aspect-ratio: 16 / 9;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   overflow: hidden;
-  margin: calc(var(--space-4) * -1) calc(var(--space-4) * -1) var(--space-3);
+  /* -1px en plus du padding négatif : compense la bordure de 1px de .card, sans
+     quoi ce liséré reste visible sur les bords gauche/droit/haut de la photo. */
+  margin: calc((var(--space-4) + 1px) * -1) calc((var(--space-4) + 1px) * -1) var(--space-3);
 }
 
 .cover-photo img {
