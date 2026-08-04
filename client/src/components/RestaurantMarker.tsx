@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Marker, Popup, Tooltip } from 'react-leaflet'
-import type L from 'leaflet'
+import L from 'leaflet'
 import { resolvePhotoUrl } from '../api/client.ts'
 import type { Restaurant, UtilisateurAvecFavoris, Visite } from '../api/types.ts'
 import { Role } from '../api/types.ts'
@@ -14,6 +14,30 @@ import { estFavoriDeUtilisateur } from '../utils/visites.ts'
 import PhotoLightbox from './PhotoLightbox.tsx'
 import CategoryBadges from './CategoryBadges.tsx'
 import type { NoteSummary } from './RestaurantsMap.tsx'
+
+// Icône agrandie (~1.5×) et de couleur distincte (jeton --accent) pour les
+// restaurants recommandés, construite en CSS pur (pas de nouvel asset image)
+// — l'icône par défaut (leaflet-icon-fix.ts) reste utilisée pour tous les
+// autres marqueurs. Partagée entre toutes les instances de marqueurs mis en
+// avant : pas besoin de la recréer à chaque rendu.
+const RECOMMENDED_ICON = L.divIcon({
+  className: 'recommended-marker',
+  html: '<span class="recommended-marker-pin"></span>',
+  iconSize: [38, 58],
+  iconAnchor: [19, 58],
+  popupAnchor: [0, -54],
+  tooltipAnchor: [22, -46],
+})
+
+// Icône par défaut explicite (plutôt que de laisser `icon` à `undefined` sur
+// les marqueurs non mis en avant) : react-leaflet fusionne les props dans les
+// options du Marker, et une prop `icon` explicitement à `undefined` écrase le
+// fallback interne de Leaflet (`Marker.prototype.options.icon`) au lieu de le
+// laisser s'appliquer — ce qui fait planter `_initIcon` (`Cannot read
+// properties of undefined (reading 'createIcon')`) pour tout marqueur non
+// recommandé. Utilise le même `L.Icon.Default` déjà corrigé (URLs d'images)
+// par leaflet-icon-fix.ts.
+const DEFAULT_ICON = new L.Icon.Default()
 
 interface LightboxState {
   photos: string[]
@@ -38,6 +62,8 @@ interface RestaurantMarkerProps {
   onVisitesRefresh: (restaurantId: string) => void
   onVisiteDeleted: () => void
   onMarkerRef?: (restaurantId: string, instance: L.Marker | null) => void
+  /** Restaurant recommandé (style similaire, pas encore visité) : icône agrandie/distincte. */
+  highlighted?: boolean
 }
 
 interface VisitesSectionProps {
@@ -178,6 +204,7 @@ function RestaurantMarker({
   onVisitesRefresh,
   onVisiteDeleted,
   onMarkerRef,
+  highlighted = false,
 }: RestaurantMarkerProps) {
   const { user } = useAuth()
   const isAdmin = user?.role === Role.Admin
@@ -208,6 +235,7 @@ function RestaurantMarker({
     <Marker
       ref={(instance) => onMarkerRef?.(restaurant.id, instance)}
       position={[restaurant.latitude, restaurant.longitude]}
+      icon={highlighted ? RECOMMENDED_ICON : DEFAULT_ICON}
       eventHandlers={{ click: () => onOpen(restaurant.id) }}
     >
       <Tooltip permanent direction="top" offset={[-16, -17]} className="restaurant-label">

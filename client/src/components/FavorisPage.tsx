@@ -2,8 +2,10 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getMesFavoris, removeFavori } from '../api/client.ts'
 import type { Restaurant, Visite } from '../api/types.ts'
+import { useRecommandations } from '../hooks/useRecommandations.ts'
 import { errorMessage } from '../utils/errors.ts'
-import { formatDate, stars } from '../utils/format.ts'
+import { formatDate, formatDistanceKm, stars } from '../utils/format.ts'
+import CategoryBadges from './CategoryBadges.tsx'
 import CoverPhoto from './CoverPhoto.tsx'
 
 interface FavorisPageProps {
@@ -58,6 +60,8 @@ function FavorisPage({ restaurants, visites }: FavorisPageProps) {
     favoriIds.has(restaurant.id),
   )
 
+  const recommandations = useRecommandations(restaurants, visites)
+
   return (
     <div className="detail-page favoris-page">
       <h2>Mes favoris</h2>
@@ -68,6 +72,45 @@ function FavorisPage({ restaurants, visites }: FavorisPageProps) {
       {loading && <p className="popup-status">Chargement…</p>}
       {loadError && <p className="popup-status popup-error">{loadError}</p>}
       {actionError && <p className="popup-status popup-error">{actionError}</p>}
+
+      {recommandations.length > 0 && (
+        <section className="recommandations-section">
+          <h3>Recommandé pour vous</h3>
+          <div className="restaurant-cards">
+            {recommandations.map(({ restaurant, categoriesCommunes, distanceKm }) => {
+              const restaurantVisites = visites
+                .filter((visite) => visite.restaurantId === restaurant.id)
+                .sort((a, b) => b.date.localeCompare(a.date))
+
+              return (
+                <article
+                  key={restaurant.id}
+                  className="restaurant-card card card--interactive"
+                >
+                  <CoverPhoto
+                    url={restaurantVisites[0]?.urlsPhotos[0]}
+                    alt={restaurant.nom}
+                  />
+                  <h3>{restaurant.nom}</h3>
+                  <p className="popup-adresse">{restaurant.adresse}</p>
+                  <CategoryBadges categories={categoriesCommunes} />
+                  {distanceKm !== null && (
+                    <p className="recommandation-distance">
+                      {formatDistanceKm(distanceKm)}
+                    </p>
+                  )}
+                  <Link
+                    className="popup-directions"
+                    to={`/restaurants/${restaurant.id}`}
+                  >
+                    Voir la fiche complète
+                  </Link>
+                </article>
+              )
+            })}
+          </div>
+        </section>
+      )}
 
       {!loading && favoriRestaurants.length === 0 && (
         <p className="list-empty">Aucun restaurant favori pour le moment.</p>

@@ -3,7 +3,9 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError } from '../api/client.ts'
-import type { Restaurant, Visite } from '../api/types.ts'
+import type { Restaurant, Utilisateur, Visite } from '../api/types.ts'
+import { Role } from '../api/types.ts'
+import { FavorisProvider } from '../contexts/FavorisContext.tsx'
 import FavorisPage from './FavorisPage.tsx'
 
 const { getMesFavorisMock, removeFavoriMock } = vi.hoisted(() => ({
@@ -20,6 +22,24 @@ vi.mock('../api/client.ts', async () => {
     removeFavori: removeFavoriMock,
   }
 })
+
+const loggedInUser: Utilisateur = {
+  id: 'user-1',
+  email: 'user@example.com',
+  nomAffiche: 'Une Personne',
+  role: Role.Simple,
+}
+
+vi.mock('../contexts/AuthContext.tsx', () => ({
+  useAuth: () => ({
+    user: loggedInUser,
+    loading: false,
+    login: vi.fn(),
+    register: vi.fn(),
+    logout: vi.fn(),
+    refresh: vi.fn(),
+  }),
+}))
 
 const restaurants: Restaurant[] = [
   {
@@ -56,7 +76,9 @@ const visites: Visite[] = [
 function renderPage() {
   return render(
     <MemoryRouter>
-      <FavorisPage restaurants={restaurants} visites={visites} />
+      <FavorisProvider>
+        <FavorisPage restaurants={restaurants} visites={visites} />
+      </FavorisProvider>
     </MemoryRouter>,
   )
 }
@@ -118,5 +140,27 @@ describe('FavorisPage', () => {
     await waitFor(() =>
       expect(screen.queryByText('Le Bon Coin')).not.toBeInTheDocument(),
     )
+  })
+
+  it('affiche une section "Recommandé pour vous" pour un restaurant de style similaire pas encore visité', async () => {
+    const italien = { id: 'cat-italien', nom: 'Italien', groupe: 'Type de cuisine' }
+    const restaurantsAvecCategories: Restaurant[] = [
+      { ...restaurants[0], categories: [italien] },
+      { ...restaurants[1], categories: [italien] },
+    ]
+    getMesFavorisMock.mockResolvedValue([
+      { restaurantId: 'restaurant-1', dateAjout: '2026-06-01' },
+    ])
+
+    render(
+      <MemoryRouter>
+        <FavorisProvider>
+          <FavorisPage restaurants={restaurantsAvecCategories} visites={visites} />
+        </FavorisProvider>
+      </MemoryRouter>,
+    )
+
+    expect(await screen.findByText('Recommandé pour vous')).toBeInTheDocument()
+    expect(screen.getByText('Chez Mario')).toBeInTheDocument()
   })
 })

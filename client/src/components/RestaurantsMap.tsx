@@ -7,6 +7,7 @@ import type { Restaurant, UtilisateurAvecFavoris, Visite } from '../api/types.ts
 import RestaurantMarker from './RestaurantMarker.tsx'
 import type { VisitesState } from './RestaurantMarker.tsx'
 import type { Theme } from '../hooks/useTheme.ts'
+import { useRecommandations } from '../hooks/useRecommandations.ts'
 import { averageNote } from '../utils/visites.ts'
 import { formatNoteMoyenne, stars } from '../utils/format.ts'
 import CategoryBadges from './CategoryBadges.tsx'
@@ -144,6 +145,12 @@ function RestaurantsMap({
   const markersRef = useRef<Map<string, L.Marker>>(new Map())
 
   const noteSummaries = useMemo(() => computeNoteSummaries(visites), [visites])
+
+  const recommandations = useRecommandations(restaurants, visites)
+  const recommendedIds = useMemo(
+    () => new Set(recommandations.map((r) => r.restaurant.id)),
+    [recommandations],
+  )
 
   const sortedRestaurants = useMemo(
     () => [...restaurants].sort((a, b) => a.nom.localeCompare(b.nom, 'fr')),
@@ -301,6 +308,7 @@ function RestaurantsMap({
             onVisitesRefresh={loadVisites}
             onVisiteDeleted={onVisiteDeleted}
             onMarkerRef={handleMarkerRef}
+            highlighted={recommendedIds.has(restaurant.id)}
           />
         ))}
       </MapContainer>

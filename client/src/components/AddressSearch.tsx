@@ -1,44 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import type { AddressSearchBias, AddressSuggestion } from '../api/photon.ts'
+import type { AddressSuggestion } from '../api/photon.ts'
 import { searchAddress } from '../api/photon.ts'
+import { getSessionPosition } from '../utils/geolocation.ts'
 
 interface AddressSearchProps {
   onSelect: (suggestion: AddressSuggestion) => void
-}
-
-const GEOLOCATION_TIMEOUT_MS = 5000
-
-// Mise en cache au niveau du module : on ne demande la géolocalisation
-// qu'une seule fois par session, quel que soit le nombre d'instances
-// du composant.
-let cachedBiasPromise: Promise<AddressSearchBias | undefined> | null = null
-
-function getSessionBias(): Promise<AddressSearchBias | undefined> {
-  if (!cachedBiasPromise) {
-    cachedBiasPromise = new Promise((resolve) => {
-      if (!('geolocation' in navigator)) {
-        resolve(undefined)
-        return
-      }
-
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          resolve({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          })
-        },
-        () => {
-          // Permission refusée, indisponible, timeout… on se contente
-          // de continuer sans biais, sans afficher d'erreur.
-          resolve(undefined)
-        },
-        { timeout: GEOLOCATION_TIMEOUT_MS },
-      )
-    })
-  }
-
-  return cachedBiasPromise
 }
 
 function AddressSearch({ onSelect }: AddressSearchProps) {
@@ -61,7 +27,7 @@ function AddressSearch({ onSelect }: AddressSearchProps) {
     const controller = new AbortController()
     const timeoutId = window.setTimeout(() => {
       setLoading(true)
-      getSessionBias()
+      getSessionPosition()
         .then((bias) => {
           if (controller.signal.aborted) {
             throw new DOMException('Aborted', 'AbortError')

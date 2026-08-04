@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatDate, stars } from './format.ts'
+import { formatDate, formatDistanceKm, stars } from './format.ts'
 
 describe('formatDate', () => {
   it('formate une date ISO au format fr-FR', () => {
@@ -31,5 +31,15 @@ describe('stars', () => {
   it('gère la note maximale et minimale exactes', () => {
     expect(stars(5)).toBe('★★★★★')
     expect(stars(0)).toBe('☆☆☆☆☆')
+  })
+})
+
+describe('formatDistanceKm', () => {
+  it('formate une distance avec une décimale et le suffixe km', () => {
+    expect(formatDistanceKm(2.34)).toBe('2,3 km')
+  })
+
+  it('affiche toujours une décimale, même pour un nombre entier', () => {
+    expect(formatDistanceKm(5)).toBe('5,0 km')
   })
 })

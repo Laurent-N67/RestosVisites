@@ -14,3 +14,7 @@ export function stars(note: number): string {
 export function formatNoteMoyenne(note: number): string {
   return note.toFixed(1)
 }
+
+export function formatDistanceKm(distanceKm: number): string {
+  return `${distanceKm.toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} km`
+}
