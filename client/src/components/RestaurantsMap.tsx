@@ -112,7 +112,10 @@ function SelectedRestaurantEffect({
     if (!restaurant) {
       return
     }
-    map.flyTo([restaurant.latitude, restaurant.longitude], Math.max(map.getZoom(), 15))
+    // setView (instantané) plutôt que flyTo : l'animation de vol de flyTo charge des tuiles à
+    // chaque niveau de zoom intermédiaire pendant le survol, ce qui donnait un déplacement lent et
+    // saccadé (surtout mobile/connexion lente) — setView évite complètement cette boucle d'animation.
+    map.setView([restaurant.latitude, restaurant.longitude], Math.max(map.getZoom(), 15))
     const marker = markersRef.current.get(selectedRestaurantId)
     marker?.openPopup()
   }, [selectedRestaurantId, restaurants, map, markersRef])
