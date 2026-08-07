@@ -29,7 +29,7 @@ import './App.css'
 type Panel = 'none' | 'restaurant' | 'visite'
 
 function App() {
-  const { theme, toggleTheme } = useTheme()
+  const { theme, setTheme } = useTheme()
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -226,19 +226,26 @@ function App() {
         )}
         <div className="app-actions">
           {user && <RestaurantSearch restaurants={restaurants} />}
-          <button
-            type="button"
-            className="theme-toggle"
-            onClick={toggleTheme}
-            aria-label={
-              theme === 'dark' ? 'Passer en mode clair' : 'Passer en mode sombre'
-            }
-            title={
-              theme === 'dark' ? 'Passer en mode clair' : 'Passer en mode sombre'
-            }
-          >
-            {theme === 'dark' ? '☀️' : '🌙'}
-          </button>
+          <div className="theme-toggle" role="group" aria-label="Thème">
+            <button
+              type="button"
+              className={theme === 'light' ? 'active' : ''}
+              onClick={() => setTheme('light')}
+              aria-label="Mode clair"
+              title="Mode clair"
+            >
+              ☀️
+            </button>
+            <button
+              type="button"
+              className={theme === 'dark' ? 'active' : ''}
+              onClick={() => setTheme('dark')}
+              aria-label="Mode sombre"
+              title="Mode sombre"
+            >
+              🌙
+            </button>
+          </div>
           {user && (
             <div className="header-add">
               <button
@@ -273,14 +280,7 @@ function App() {
               )}
             </div>
           )}
-          {user ? (
-            <UserMenu user={user} onLogout={() => void handleLogout()} />
-          ) : (
-            <div className="app-auth">
-              <Link to="/login">Connexion</Link>
-              <Link to="/login">Inscription</Link>
-            </div>
-          )}
+          {user && <UserMenu user={user} onLogout={() => void handleLogout()} />}
         </div>
       </header>
 

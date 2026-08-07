@@ -54,18 +54,6 @@
   gap: 10px;
 }
 
-.app-auth {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 13px;
-}
-
-.app-auth a {
-  font-weight: 600;
-  color: var(--accent);
-}
-
 .app-nav a {
   padding: 8px 14px;
   border-radius: 6px;
@@ -193,21 +181,38 @@
 }
 
 .theme-toggle {
-  width: 34px;
-  height: 34px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 2px;
+  padding: 3px;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius-full);
   background: var(--bg-card);
-  font-size: 16px;
-  line-height: 1;
   flex-shrink: 0;
 }
 
-.theme-toggle:hover {
-  background: var(--accent-bg);
+.theme-toggle button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: none;
+  font-size: 14px;
+  line-height: 1;
+  opacity: 0.45;
+  transition: background var(--transition-base), opacity var(--transition-base);
+}
+
+.theme-toggle button:hover {
+  opacity: 0.8;
+}
+
+.theme-toggle button.active {
+  background: var(--bg-card-hover);
+  opacity: 1;
 }
 
 .map-error-banner {
