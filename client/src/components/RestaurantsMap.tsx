@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { MapContainer, TileLayer, useMap } from 'react-leaflet'
 import MarkerClusterGroup from 'react-leaflet-cluster'
 import 'react-leaflet-cluster/dist/assets/MarkerCluster.css'
@@ -10,11 +11,18 @@ import RestaurantMarker from './RestaurantMarker.tsx'
 import type { VisitesState } from './RestaurantMarker.tsx'
 import RestaurantDetailPanel from './RestaurantDetailPanel.tsx'
 import type { Theme } from '../hooks/useTheme.ts'
+import { useAuth } from '../contexts/AuthContext.tsx'
 import { useRecommandations } from '../hooks/useRecommandations.ts'
-import { averageNote } from '../utils/visites.ts'
+import { averageNote, buildJournal } from '../utils/visites.ts'
 import { formatNoteMoyenne, stars } from '../utils/format.ts'
 import CategoryBadges from './CategoryBadges.tsx'
 import CoverPhoto from './CoverPhoto.tsx'
+import { JournalCard } from './VisitesJournalPage.tsx'
+import FavorisSlots from './FavorisSlots.tsx'
+import RecommendationCard from './RecommendationCard.tsx'
+
+const RECENT_VISITS_LIMIT = 6
+const RECOMMANDATIONS_SECTION_LIMIT = 4
 
 const DEFAULT_CENTER: [number, number] = [46.6034, 1.8883] // Centre de la France
 const DEFAULT_ZOOM = 6
@@ -167,6 +175,8 @@ function RestaurantsMap({
     typeof MarkerClusterGroup
   > | null>(null)
 
+  const { user } = useAuth()
+
   const noteSummaries = useMemo(() => computeNoteSummaries(visites), [visites])
 
   const recommandations = useRecommandations(restaurants, visites)
@@ -174,6 +184,20 @@ function RestaurantsMap({
     () => new Set(recommandations.map((r) => r.restaurant.id)),
     [recommandations],
   )
+  // Section "Recommandés pour vous" : mêmes recommandations, mais avec une
+  // limite plus généreuse que le highlighting des marqueurs ci-dessus (2),
+  // pour remplir une grille plutôt que quelques pastilles sur la carte.
+  const recommandationsSection = useRecommandations(
+    restaurants,
+    visites,
+    RECOMMANDATIONS_SECTION_LIMIT,
+  )
+
+  const journalEntries = useMemo(
+    () => (user ? buildJournal(restaurants, visites, user.id) : []),
+    [restaurants, visites, user],
+  )
+  const recentJournalEntries = journalEntries.slice(0, RECENT_VISITS_LIMIT)
 
   const sortedRestaurants = useMemo(
     () => [...restaurants].sort((a, b) => a.nom.localeCompare(b.nom, 'fr')),
@@ -241,123 +265,170 @@ function RestaurantsMap({
   }
 
   return (
-    <div className="map-view">
-      <button
-        type="button"
-        className="map-sidebar-toggle"
-        aria-expanded={sidebarOpen}
-        onClick={() => setSidebarOpen((open) => !open)}
-      >
-        {sidebarOpen ? 'Masquer la liste' : `Voir la liste (${restaurants.length})`}
-      </button>
+    <div className="map-page">
+      <div className="map-view">
+        <button
+          type="button"
+          className="map-sidebar-toggle"
+          aria-expanded={sidebarOpen}
+          onClick={() => setSidebarOpen((open) => !open)}
+        >
+          {sidebarOpen ? 'Masquer la liste' : `Voir la liste (${restaurants.length})`}
+        </button>
 
-      <aside
-        className={
-          sidebarOpen ? 'map-sidebar map-sidebar--open' : 'map-sidebar'
-        }
-      >
-        {sortedRestaurants.length === 0 && (
-          <p className="list-empty">Aucun restaurant enregistré.</p>
+        <aside
+          className={
+            sidebarOpen ? 'map-sidebar map-sidebar--open' : 'map-sidebar'
+          }
+        >
+          {sortedRestaurants.length === 0 && (
+            <p className="list-empty">Aucun restaurant enregistré.</p>
+          )}
+          <ul className="map-sidebar-list">
+            {sortedRestaurants.map((restaurant) => {
+              const summary = noteSummaries.get(restaurant.id) ?? null
+              const selected = restaurant.id === selectedRestaurantId
+              const photoPrincipale =
+                restaurant.photos.find((photo) => photo.estPrincipale) ??
+                restaurant.photos[0]
+              return (
+                <li key={restaurant.id}>
+                  <button
+                    type="button"
+                    className={
+                      selected
+                        ? 'map-sidebar-item card card--interactive map-sidebar-item--selected'
+                        : 'map-sidebar-item card card--interactive'
+                    }
+                    onClick={() => handleSelectRestaurant(restaurant.id)}
+                  >
+                    <div className="map-sidebar-item-thumb">
+                      <CoverPhoto url={photoPrincipale?.url} alt={restaurant.nom} />
+                    </div>
+                    <div className="map-sidebar-item-body">
+                      <h3>{restaurant.nom}</h3>
+                      <p className="popup-adresse">{restaurant.adresse}</p>
+                      {summary && (
+                        <p className="list-card-rating">
+                          <span className="list-card-rating-value">
+                            {formatNoteMoyenne(summary.average)}
+                          </span>
+                          <span
+                            className="popup-stars"
+                            aria-label={`Note moyenne ${formatNoteMoyenne(summary.average)} sur 5`}
+                          >
+                            {stars(Math.round(summary.average))}
+                          </span>
+                          <span className="list-card-rating-count">
+                            ({summary.count} {summary.count > 1 ? 'visites' : 'visite'})
+                          </span>
+                        </p>
+                      )}
+                      {restaurant.categories.length > 0 && (
+                        <CategoryBadges categories={restaurant.categories} />
+                      )}
+                    </div>
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+        </aside>
+
+        <MapContainer
+          center={DEFAULT_CENTER}
+          zoom={DEFAULT_ZOOM}
+          className="restaurants-map"
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+            url={TILE_URLS[theme]}
+            subdomains="abcd"
+            maxZoom={20}
+            detectRetina
+          />
+          <FitBounds restaurants={restaurants} />
+          <SelectedRestaurantEffect
+            restaurants={restaurants}
+            selectedRestaurantId={selectedRestaurantId}
+            markersRef={markersRef}
+            clusterGroupRef={clusterGroupRef}
+          />
+          <MarkerClusterGroup ref={clusterGroupRef} spiderfyOnMaxZoom showCoverageOnHover={false}>
+            {restaurants.map((restaurant) => (
+              <RestaurantMarker
+                key={restaurant.id}
+                restaurant={restaurant}
+                noteSummary={noteSummaries.get(restaurant.id) ?? null}
+                onSelect={handleSelectRestaurant}
+                onMarkerRef={handleMarkerRef}
+                highlighted={recommendedIds.has(restaurant.id)}
+              />
+            ))}
+          </MarkerClusterGroup>
+        </MapContainer>
+
+        {selectedRestaurant && (
+          <RestaurantDetailPanel
+            key={selectedRestaurant.id}
+            restaurant={selectedRestaurant}
+            visitesState={visitesByRestaurant[selectedRestaurant.id] ?? { status: 'idle' }}
+            utilisateursAvecFavoris={utilisateursAvecFavoris}
+            onClose={() => setSelectedRestaurantId(null)}
+            onEditRestaurant={onEditRestaurant}
+            onRestaurantDeleted={onRestaurantDeleted}
+            onEditVisite={onEditVisite}
+            onVisitesRefresh={loadVisites}
+            onVisiteDeleted={onVisiteDeleted}
+            onAddVisite={onAddVisite}
+          />
         )}
-        <ul className="map-sidebar-list">
-          {sortedRestaurants.map((restaurant) => {
-            const summary = noteSummaries.get(restaurant.id) ?? null
-            const selected = restaurant.id === selectedRestaurantId
-            const photoPrincipale =
-              restaurant.photos.find((photo) => photo.estPrincipale) ??
-              restaurant.photos[0]
-            return (
-              <li key={restaurant.id}>
-                <button
-                  type="button"
-                  className={
-                    selected
-                      ? 'map-sidebar-item card card--interactive map-sidebar-item--selected'
-                      : 'map-sidebar-item card card--interactive'
-                  }
-                  onClick={() => handleSelectRestaurant(restaurant.id)}
-                >
-                  <div className="map-sidebar-item-thumb">
-                    <CoverPhoto url={photoPrincipale?.url} alt={restaurant.nom} />
-                  </div>
-                  <div className="map-sidebar-item-body">
-                    <h3>{restaurant.nom}</h3>
-                    <p className="popup-adresse">{restaurant.adresse}</p>
-                    {summary && (
-                      <p className="list-card-rating">
-                        <span className="list-card-rating-value">
-                          {formatNoteMoyenne(summary.average)}
-                        </span>
-                        <span
-                          className="popup-stars"
-                          aria-label={`Note moyenne ${formatNoteMoyenne(summary.average)} sur 5`}
-                        >
-                          {stars(Math.round(summary.average))}
-                        </span>
-                        <span className="list-card-rating-count">
-                          ({summary.count} {summary.count > 1 ? 'visites' : 'visite'})
-                        </span>
-                      </p>
-                    )}
-                    {restaurant.categories.length > 0 && (
-                      <CategoryBadges categories={restaurant.categories} />
-                    )}
-                  </div>
-                </button>
-              </li>
-            )
-          })}
-        </ul>
-      </aside>
+      </div>
 
-      <MapContainer
-        center={DEFAULT_CENTER}
-        zoom={DEFAULT_ZOOM}
-        className="restaurants-map"
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          url={TILE_URLS[theme]}
-          subdomains="abcd"
-          maxZoom={20}
-          detectRetina
-        />
-        <FitBounds restaurants={restaurants} />
-        <SelectedRestaurantEffect
-          restaurants={restaurants}
-          selectedRestaurantId={selectedRestaurantId}
-          markersRef={markersRef}
-          clusterGroupRef={clusterGroupRef}
-        />
-        <MarkerClusterGroup ref={clusterGroupRef} spiderfyOnMaxZoom showCoverageOnHover={false}>
-          {restaurants.map((restaurant) => (
-            <RestaurantMarker
-              key={restaurant.id}
-              restaurant={restaurant}
-              noteSummary={noteSummaries.get(restaurant.id) ?? null}
-              onSelect={handleSelectRestaurant}
-              onMarkerRef={handleMarkerRef}
-              highlighted={recommendedIds.has(restaurant.id)}
-            />
-          ))}
-        </MarkerClusterGroup>
-      </MapContainer>
+      <div className="map-page-sections">
+        {recentJournalEntries.length > 0 && (
+          <section className="map-section">
+            <div className="map-section-header">
+              <h3>Visites récentes</h3>
+              {journalEntries.length > RECENT_VISITS_LIMIT && (
+                <Link to="/visites" className="map-section-link">
+                  Voir tout
+                </Link>
+              )}
+            </div>
+            <div className="journal-cards">
+              {recentJournalEntries.map((entry) => (
+                <JournalCard
+                  key={entry.visite.id}
+                  entry={entry}
+                  onEditVisite={onEditVisite}
+                  onVisiteDeleted={onVisiteDeleted}
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
-      {selectedRestaurant && (
-        <RestaurantDetailPanel
-          key={selectedRestaurant.id}
-          restaurant={selectedRestaurant}
-          visitesState={visitesByRestaurant[selectedRestaurant.id] ?? { status: 'idle' }}
-          utilisateursAvecFavoris={utilisateursAvecFavoris}
-          onClose={() => setSelectedRestaurantId(null)}
-          onEditRestaurant={onEditRestaurant}
-          onRestaurantDeleted={onRestaurantDeleted}
-          onEditVisite={onEditVisite}
-          onVisitesRefresh={loadVisites}
-          onVisiteDeleted={onVisiteDeleted}
-          onAddVisite={onAddVisite}
-        />
-      )}
+        <section className="map-section">
+          <h3>Favoris</h3>
+          <FavorisSlots restaurants={restaurants} />
+        </section>
+
+        {recommandationsSection.length > 0 && (
+          <section className="map-section">
+            <h3>Recommandés pour vous</h3>
+            <div className="restaurant-cards">
+              {recommandationsSection.map((recommandation) => (
+                <RecommendationCard
+                  key={recommandation.restaurant.id}
+                  recommandation={recommandation}
+                  visites={visites}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
     </div>
   )
 }

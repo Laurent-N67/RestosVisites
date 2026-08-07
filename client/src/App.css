@@ -106,9 +106,22 @@
 
 /* Vue Carte : sidebar façon Google Maps */
 
+/* Enveloppe de toute la page Carte (Phase 7c) : contrairement à `.map-view`
+   seul (qui occupait 100% de `.app-main` sans scroll de page), cette
+   enveloppe permet de faire défiler vers les sections basses (visites
+   récentes / favoris / recommandés) sous la carte. */
+.map-page {
+  height: 100%;
+  overflow-y: auto;
+}
+
 .map-view {
   display: flex;
-  height: 100%;
+  /* Hauteur bornée (pas 100%) : laisse de la place visible aux sections
+     sous la carte tout en gardant Leaflet fonctionnel (MapContainer a
+     besoin d'une hauteur explicite non nulle pour calculer sa taille). */
+  height: 70vh;
+  min-height: 420px;
 }
 
 .map-sidebar {
@@ -192,6 +205,10 @@
 @media (max-width: 900px) {
   .map-view {
     position: relative;
+    /* Un peu moins qu'en desktop : les sections basses doivent rester
+       atteignables sans excès de scroll sur les petits écrans, où elles
+       s'empilent en pleine largeur. */
+    height: 60vh;
   }
 
   .map-sidebar-toggle {
@@ -199,7 +216,13 @@
   }
 
   .map-sidebar {
-    position: absolute;
+    /* fixed plutôt qu'absolute : `.map-view` (son ancêtre positionné) a
+       désormais une hauteur bornée (60vh, Phase 7c) pour laisser place aux
+       sections sous la carte — un positionnement absolu se limiterait donc
+       à cette zone au lieu de couvrir tout l'écran comme avant. fixed
+       ancre le tiroir au viewport, indépendamment de la hauteur de
+       `.map-view`. */
+    position: fixed;
     inset: 0 15% 0 0;
     z-index: 900;
     width: auto;
@@ -251,12 +274,151 @@
    silencieusement. */
 @media (max-width: 900px) {
   .restaurant-detail-panel {
-    position: absolute;
+    /* fixed (comme .map-sidebar ci-dessus, Phase 7c) : couvre tout l'écran
+       en feuille plein écran indépendamment de la hauteur bornée de
+       `.map-view`. */
+    position: fixed;
     inset: 0;
     z-index: 1050;
     width: auto;
     box-shadow: var(--shadow-lg);
   }
+}
+
+/* Sections basses de la page Carte (Phase 7c) : visites récentes / favoris /
+   recommandés, sous la carte + panneau détail. */
+
+.map-page-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding: 24px 20px 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.map-section h3 {
+  margin: 0 0 14px;
+  font-size: 16px;
+}
+
+.map-section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.map-section-header h3 {
+  margin: 0;
+}
+
+.map-section-link {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+/* Grille Favoris à emplacements fixes */
+
+.favoris-slots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.favoris-slot {
+  position: relative;
+  min-height: 150px;
+}
+
+.favoris-slot--filled {
+  padding: var(--space-3);
+}
+
+.favoris-slot-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.favoris-slot--filled .cover-photo {
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-sm);
+  margin: calc(var(--space-3) * -1) calc(var(--space-3) * -1) var(--space-2);
+}
+
+.favoris-slot--filled h4 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-h);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.favoris-slot-remove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 1;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 15px;
+  line-height: 1;
+}
+
+.favoris-slot-remove:disabled {
+  opacity: 0.6;
+}
+
+.favoris-slot--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-lg);
+  background: none;
+  color: var(--text);
+  font-size: 26px;
+  font-weight: 300;
+  transition: border-color var(--transition-base), color var(--transition-base);
+}
+
+.favoris-slot--empty:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.favoris-slot--search {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+}
+
+.favoris-slot--search .restaurant-search {
+  width: 100%;
+}
+
+.favoris-slot-search-cancel {
+  align-self: center;
+  border: none;
+  background: none;
+  color: var(--text);
+  font-size: 12px;
+  text-decoration: underline;
 }
 
 .theme-toggle {

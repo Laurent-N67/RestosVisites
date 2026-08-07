@@ -6,11 +6,17 @@ import { SearchIcon } from './icons/Icons.tsx'
 
 interface RestaurantSearchProps {
   restaurants: Restaurant[]
+  /**
+   * Quand fourni, remplace le comportement par défaut (navigation vers la
+   * fiche détail) : utilisé par la popover d'ajout aux favoris (Carte,
+   * Phase 7c) pour intercepter la sélection sans quitter la page.
+   */
+  onSelect?: (restaurant: Restaurant) => void
 }
 
 const MAX_RESULTS = 6
 
-function RestaurantSearch({ restaurants }: RestaurantSearchProps) {
+function RestaurantSearch({ restaurants, onSelect }: RestaurantSearchProps) {
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -41,10 +47,14 @@ function RestaurantSearch({ restaurants }: RestaurantSearchProps) {
     return () => window.removeEventListener('keydown', handleGlobalKeyDown)
   }, [])
 
-  function selectRestaurant(restaurantId: string) {
+  function selectRestaurant(restaurant: Restaurant) {
     setQuery('')
     setOpen(false)
-    navigate(`/restaurants/${restaurantId}`)
+    if (onSelect) {
+      onSelect(restaurant)
+    } else {
+      navigate(`/restaurants/${restaurant.id}`)
+    }
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
@@ -52,7 +62,7 @@ function RestaurantSearch({ restaurants }: RestaurantSearchProps) {
       setOpen(false)
       event.currentTarget.blur()
     } else if (event.key === 'Enter' && results.length > 0) {
-      selectRestaurant(results[0].id)
+      selectRestaurant(results[0])
     }
   }
 
@@ -92,7 +102,7 @@ function RestaurantSearch({ restaurants }: RestaurantSearchProps) {
                 <button
                   type="button"
                   onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => selectRestaurant(restaurant.id)}
+                  onClick={() => selectRestaurant(restaurant)}
                 >
                   <span className="restaurant-search-name">{restaurant.nom}</span>
                   <span className="restaurant-search-adresse">{restaurant.adresse}</span>

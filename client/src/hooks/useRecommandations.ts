@@ -19,6 +19,7 @@ import { calculerRecommandations } from '../utils/recommandations.ts'
 export function useRecommandations(
   restaurants: Restaurant[],
   visites: Visite[],
+  limite = 2,
 ): RestaurantRecommande[] {
   const { user } = useAuth()
   const { favoriIds } = useFavoris()
@@ -46,6 +47,7 @@ export function useRecommandations(
       favoriIds,
       user.id,
       position,
+      limite,
     )
-  }, [restaurants, visites, favoriIds, user, position])
+  }, [restaurants, visites, favoriIds, user, position, limite])
 }

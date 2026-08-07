@@ -3,6 +3,8 @@ import type { Compagnie, Restaurant, Visite } from '../api/types.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { useDeleteVisite } from '../hooks/useDeleteVisite.ts'
 import { formatDate, stars } from '../utils/format.ts'
+import { buildJournal } from '../utils/visites.ts'
+import type { JournalEntry } from '../utils/visites.ts'
 import CoverPhoto from './CoverPhoto.tsx'
 
 interface VisitesJournalPageProps {
@@ -26,40 +28,13 @@ const COMPAGNIE_LABELS: Record<Compagnie, string> = {
   3: 'Famille',
 }
 
-interface JournalEntry {
-  visite: Visite
-  restaurant: Restaurant
-}
-
-function buildJournal(
-  restaurants: Restaurant[],
-  visites: Visite[],
-  userId: string,
-): JournalEntry[] {
-  const restaurantsById = new Map(restaurants.map((r) => [r.id, r]))
-  const entries: JournalEntry[] = []
-  for (const visite of visites) {
-    if (visite.utilisateurId !== userId) {
-      continue
-    }
-    const restaurant = restaurantsById.get(visite.restaurantId)
-    if (!restaurant) {
-      // Donnée incohérente (restaurant supprimé mais visite orpheline) :
-      // on ignore l'entrée plutôt que de planter ou d'afficher un nom vide.
-      continue
-    }
-    entries.push({ visite, restaurant })
-  }
-  return entries.sort((a, b) => b.visite.date.localeCompare(a.visite.date))
-}
-
-interface JournalCardProps {
+export interface JournalCardProps {
   entry: JournalEntry
   onEditVisite: (visite: Visite) => void
   onVisiteDeleted: () => void
 }
 
-function JournalCard({ entry, onEditVisite, onVisiteDeleted }: JournalCardProps) {
+export function JournalCard({ entry, onEditVisite, onVisiteDeleted }: JournalCardProps) {
   const { visite, restaurant } = entry
   const { deletingId, error, handleDelete } = useDeleteVisite(onVisiteDeleted)
 

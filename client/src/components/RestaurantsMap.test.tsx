@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import L from 'leaflet'
+import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Restaurant, Utilisateur, Visite } from '../api/types.ts'
 import { Role } from '../api/types.ts'
@@ -113,6 +114,24 @@ const restaurantB: Restaurant = {
 const restaurants = [restaurantA, restaurantB]
 const visites: Visite[] = []
 
+function makeVisite(overrides: Partial<Visite>): Visite {
+  return {
+    id: 'visite-x',
+    restaurantId: restaurantA.id,
+    date: '2026-01-01',
+    note: 4,
+    commentaire: null,
+    urlsPhotos: [],
+    utilisateurId: adminUser.id,
+    utilisateurNomAffiche: adminUser.nomAffiche,
+    avecQui: null,
+    reservation: null,
+    budget: null,
+    tempsAttente: null,
+    ...overrides,
+  }
+}
+
 function renderMap(
   props: Partial<React.ComponentProps<typeof RestaurantsMap>> = {},
 ) {
@@ -129,9 +148,11 @@ function renderMap(
     onAddVisite: vi.fn(),
   }
   return render(
-    <FavorisProvider>
-      <RestaurantsMap {...defaultProps} {...props} />
-    </FavorisProvider>,
+    <MemoryRouter>
+      <FavorisProvider>
+        <RestaurantsMap {...defaultProps} {...props} />
+      </FavorisProvider>
+    </MemoryRouter>,
   )
 }
 
@@ -318,5 +339,83 @@ describe('RestaurantsMap', () => {
     expect(
       screen.queryByRole('heading', { name: 'Chez Aline', level: 2 }),
     ).not.toBeInTheDocument()
+  })
+
+  describe('sections basses (Phase 7c)', () => {
+    it("n'affiche pas la section \"Visites récentes\" quand l'utilisateur connecté n'a aucune visite", () => {
+      renderMap()
+
+      expect(screen.queryByText('Visites récentes')).not.toBeInTheDocument()
+    })
+
+    it('affiche la section "Visites récentes" tronquée aux 6 dernières visites, avec un lien "Voir tout" au-delà', async () => {
+      const sevenVisites = Array.from({ length: 7 }, (_, index) =>
+        makeVisite({
+          id: `visite-${index}`,
+          restaurantId: index % 2 === 0 ? restaurantA.id : restaurantB.id,
+          date: `2026-01-${String(index + 1).padStart(2, '0')}`,
+        }),
+      )
+      renderMap({ visites: sevenVisites })
+
+      expect(await screen.findByText('Visites récentes')).toBeInTheDocument()
+      expect(document.querySelectorAll('.journal-card').length).toBe(6)
+      expect(screen.getByRole('link', { name: 'Voir tout' })).toHaveAttribute(
+        'href',
+        '/visites',
+      )
+    })
+
+    it('affiche la grille Favoris à 6 emplacements sous la carte', async () => {
+      renderMap()
+
+      expect(await screen.findByRole('heading', { name: 'Favoris', level: 3 })).toBeInTheDocument()
+      await waitFor(() =>
+        expect(document.querySelectorAll('.favoris-slot').length).toBe(6),
+      )
+    })
+
+    it('affiche la section "Recommandés pour vous" quand des recommandations existent', async () => {
+      const italien = { id: 'cat-italien', nom: 'Italien', groupe: 'Type de cuisine' }
+      const restaurantAAvecCategorie: Restaurant = {
+        ...restaurantA,
+        categories: [italien],
+      }
+      const restaurantCRecommande: Restaurant = {
+        id: 'restaurant-c',
+        nom: 'La Trattoria',
+        adresse: '3 rue de Turin',
+        latitude: 48.86,
+        longitude: 2.36,
+        categories: [italien],
+        description: null,
+        telephone: null,
+        siteWeb: null,
+        horaires: null,
+        photos: [],
+      }
+      const visiteAdmin = makeVisite({
+        id: 'visite-admin',
+        restaurantId: restaurantA.id,
+      })
+
+      renderMap({
+        restaurants: [restaurantAAvecCategorie, restaurantB, restaurantCRecommande],
+        visites: [visiteAdmin],
+      })
+
+      const heading = await screen.findByRole('heading', {
+        name: 'Recommandés pour vous',
+        level: 3,
+      })
+      expect(heading).toBeInTheDocument()
+      const section = heading.closest('section')
+      expect(section).not.toBeNull()
+      expect(
+        section && Array.from(section.querySelectorAll('h3')).some(
+          (el) => el.textContent === 'La Trattoria',
+        ),
+      ).toBe(true)
+    })
   })
 })

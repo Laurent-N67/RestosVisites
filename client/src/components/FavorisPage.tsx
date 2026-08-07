@@ -4,9 +4,9 @@ import { getMesFavoris, removeFavori } from '../api/client.ts'
 import type { Restaurant, Visite } from '../api/types.ts'
 import { useRecommandations } from '../hooks/useRecommandations.ts'
 import { errorMessage } from '../utils/errors.ts'
-import { formatDate, formatDistanceKm, stars } from '../utils/format.ts'
-import CategoryBadges from './CategoryBadges.tsx'
+import { formatDate, stars } from '../utils/format.ts'
 import CoverPhoto from './CoverPhoto.tsx'
+import RecommendationCard from './RecommendationCard.tsx'
 
 interface FavorisPageProps {
   restaurants: Restaurant[]
@@ -77,37 +77,13 @@ function FavorisPage({ restaurants, visites }: FavorisPageProps) {
         <section className="recommandations-section">
           <h3>Recommandé pour vous</h3>
           <div className="restaurant-cards">
-            {recommandations.map(({ restaurant, categoriesCommunes, distanceKm }) => {
-              const restaurantVisites = visites
-                .filter((visite) => visite.restaurantId === restaurant.id)
-                .sort((a, b) => b.date.localeCompare(a.date))
-
-              return (
-                <article
-                  key={restaurant.id}
-                  className="restaurant-card card card--interactive"
-                >
-                  <CoverPhoto
-                    url={restaurantVisites[0]?.urlsPhotos[0]}
-                    alt={restaurant.nom}
-                  />
-                  <h3>{restaurant.nom}</h3>
-                  <p className="popup-adresse">{restaurant.adresse}</p>
-                  <CategoryBadges categories={categoriesCommunes} />
-                  {distanceKm !== null && (
-                    <p className="recommandation-distance">
-                      {formatDistanceKm(distanceKm)}
-                    </p>
-                  )}
-                  <Link
-                    className="popup-directions"
-                    to={`/restaurants/${restaurant.id}`}
-                  >
-                    Voir la fiche complète
-                  </Link>
-                </article>
-              )
-            })}
+            {recommandations.map((recommandation) => (
+              <RecommendationCard
+                key={recommandation.restaurant.id}
+                recommandation={recommandation}
+                visites={visites}
+              />
+            ))}
           </div>
         </section>
       )}
