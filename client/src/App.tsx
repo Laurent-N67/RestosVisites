@@ -346,7 +346,7 @@ function App() {
           <Route
             path="/utilisateurs"
             element={
-              <ProtectedRoute requireAdmin>
+              <ProtectedRoute>
                 <UtilisateursPage visites={visites} />
               </ProtectedRoute>
             }

@@ -142,10 +142,10 @@ describe('App - protection des routes', () => {
       expect(screen.queryByRole('heading', { name: 'Bienvenue !' })).not.toBeInTheDocument()
     })
 
-    it("redirige un utilisateur simple vers /profil depuis '/utilisateurs'", async () => {
+    it("accède à '/utilisateurs' sans redirection (annuaire ouvert à tous)", async () => {
       renderAppAt('/utilisateurs')
 
-      expect(await screen.findByRole('heading', { name: loggedInUser.nomAffiche })).toBeInTheDocument()
+      expect(await screen.findByText('Annuaire des utilisateurs')).toBeInTheDocument()
     })
 
     it("redirige un utilisateur simple vers /profil depuis '/stats'", async () => {
