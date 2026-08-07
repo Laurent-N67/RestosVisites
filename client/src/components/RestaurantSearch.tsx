@@ -1,7 +1,8 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { KeyboardEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Restaurant } from '../api/types.ts'
+import { SearchIcon } from './icons/Icons.tsx'
 
 interface RestaurantSearchProps {
   restaurants: Restaurant[]
@@ -12,7 +13,7 @@ const MAX_RESULTS = 6
 function RestaurantSearch({ restaurants }: RestaurantSearchProps) {
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
-  const containerRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
 
   const trimmed = query.trim().toLowerCase()
@@ -26,6 +27,19 @@ function RestaurantSearch({ restaurants }: RestaurantSearchProps) {
               restaurant.adresse.toLowerCase().includes(trimmed),
           )
           .slice(0, MAX_RESULTS)
+
+  // Raccourci ⌘K / Ctrl+K pour focus la recherche depuis n'importe où dans
+  // l'app, en cohérence avec l'indice affiché dans le champ.
+  useEffect(() => {
+    function handleGlobalKeyDown(event: globalThis.KeyboardEvent) {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault()
+        inputRef.current?.focus()
+      }
+    }
+    window.addEventListener('keydown', handleGlobalKeyDown)
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown)
+  }, [])
 
   function selectRestaurant(restaurantId: string) {
     setQuery('')
@@ -50,11 +64,13 @@ function RestaurantSearch({ restaurants }: RestaurantSearchProps) {
   }
 
   return (
-    <div className="restaurant-search" ref={containerRef}>
+    <div className="restaurant-search">
+      <SearchIcon className="restaurant-search-icon" aria-hidden="true" />
       <input
+        ref={inputRef}
         type="search"
         className="restaurant-search-input"
-        placeholder="Rechercher un restaurant…"
+        placeholder="Rechercher un restaurant, ville, cuisine…"
         value={query}
         onChange={(event) => {
           setQuery(event.target.value)
@@ -65,6 +81,7 @@ function RestaurantSearch({ restaurants }: RestaurantSearchProps) {
         onKeyDown={handleKeyDown}
         aria-label="Rechercher un restaurant"
       />
+      {query.length === 0 && <kbd className="restaurant-search-kbd">⌘K</kbd>}
       {open && trimmed.length > 0 && (
         <ul className="restaurant-search-results">
           {results.length === 0 ? (

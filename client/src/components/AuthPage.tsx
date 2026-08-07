@@ -2,7 +2,7 @@ import { Navigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import LoginPage from './LoginPage.tsx'
 import RegisterPage from './RegisterPage.tsx'
-import { HeartIcon, MapIcon, ShieldIcon, StarIcon } from './icons/AuthIcons.tsx'
+import { HeartIcon, MapIcon, ShieldIcon, StarIcon } from './icons/Icons.tsx'
 import authHero from '../assets/auth-hero.jpg'
 
 const FEATURES = [

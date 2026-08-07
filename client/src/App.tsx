@@ -22,11 +22,19 @@ import ProfilPage from './components/ProfilPage.tsx'
 import ProtectedRoute from './components/ProtectedRoute.tsx'
 import RestaurantSearch from './components/RestaurantSearch.tsx'
 import UserMenu from './components/UserMenu.tsx'
+import { BellIcon, ChecklistIcon, HeartIcon, MapIcon, PinIcon, UsersIcon } from './components/icons/Icons.tsx'
 import { useAuth } from './contexts/AuthContext.tsx'
 import { useTheme } from './hooks/useTheme.ts'
 import './App.css'
 
 type Panel = 'none' | 'restaurant' | 'visite'
+
+const NAV_ITEMS = [
+  { to: '/', label: 'Carte', icon: MapIcon, match: (path: string) => path === '/' },
+  { to: '/liste', label: 'Visites', icon: ChecklistIcon, match: (path: string) => path === '/liste' },
+  { to: '/favoris', label: 'Favoris', icon: HeartIcon, match: (path: string) => path.startsWith('/favoris') },
+  { to: '/utilisateurs', label: 'Utilisateurs', icon: UsersIcon, match: (path: string) => path.startsWith('/utilisateurs') },
+] as const
 
 function App() {
   const { theme, setTheme } = useTheme()
@@ -201,35 +209,22 @@ function App() {
   return (
     <div className="app-shell">
       <header className="app-header">
-        <h1>RestosVisites</h1>
+        <h1>
+          <PinIcon className="app-logo-icon" aria-hidden="true" />
+          RestosVisites
+        </h1>
         {user && (
           <nav className="app-nav">
-            <Link
-              to="/"
-              className={location.pathname === '/' ? 'active' : ''}
-            >
-              Carte
-            </Link>
-            <Link
-              to="/liste"
-              className={location.pathname === '/liste' ? 'active' : ''}
-            >
-              Visites
-            </Link>
-            <Link
-              to="/favoris"
-              className={location.pathname.startsWith('/favoris') ? 'active' : ''}
-            >
-              Favoris
-            </Link>
-            <Link
-              to="/utilisateurs"
-              className={
-                location.pathname.startsWith('/utilisateurs') ? 'active' : ''
-              }
-            >
-              Utilisateurs
-            </Link>
+            {NAV_ITEMS.map(({ to, label, icon: Icon, match }) => (
+              <Link
+                key={to}
+                to={to}
+                className={match(location.pathname) ? 'active' : ''}
+              >
+                <Icon aria-hidden="true" />
+                {label}
+              </Link>
+            ))}
           </nav>
         )}
         <div className="app-actions">
@@ -287,6 +282,17 @@ function App() {
                 </div>
               )}
             </div>
+          )}
+          {user && (
+            <button
+              type="button"
+              className="header-bell"
+              disabled
+              aria-label="Notifications (à venir)"
+              title="Notifications (à venir)"
+            >
+              <BellIcon aria-hidden="true" />
+            </button>
           )}
           {user && <UserMenu user={user} onLogout={() => void handleLogout()} />}
         </div>

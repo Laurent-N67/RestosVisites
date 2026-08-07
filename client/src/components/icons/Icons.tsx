@@ -95,3 +95,57 @@ export function ShieldIcon(props: SVGProps<SVGSVGElement>) {
     </Svg>
   )
 }
+
+export function ChecklistIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg {...props}>
+      <path d="M9 6h11M9 12h11M9 18h11" />
+      <path d="m4 6 1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2" />
+    </Svg>
+  )
+}
+
+export function UsersIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg {...props}>
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M3 20c.9-3.2 3.2-5 6-5s5.1 1.8 6 5" />
+      <path d="M16 4.4c1.5.4 2.6 1.8 2.6 3.4 0 1.6-1.1 3-2.6 3.4" />
+      <path d="M21 20c-.6-2.2-1.8-3.7-3.4-4.4" />
+    </Svg>
+  )
+}
+
+export function SearchIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg {...props}>
+      <circle cx="11" cy="11" r="7" />
+      <path d="m21 21-4.3-4.3" />
+    </Svg>
+  )
+}
+
+export function BellIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg {...props}>
+      <path d="M6 10a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 14 6 10Z" />
+      <path d="M10 19a2 2 0 0 0 4 0" />
+    </Svg>
+  )
+}
+
+export function ChevronDownIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg {...props}>
+      <path d="m6 9 6 6 6-6" />
+    </Svg>
+  )
+}
+
+export function PinIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg {...props} fill="currentColor" stroke="none">
+      <path d="M12 2a7 7 0 0 0-7 7c0 5.2 6.1 12.1 6.4 12.4a.8.8 0 0 0 1.2 0C12.9 21.1 19 14.2 19 9a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5Z" />
+    </Svg>
+  )
+}

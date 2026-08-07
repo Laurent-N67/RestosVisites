@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { errorMessage } from '../utils/errors.ts'
 import { validerMotDePasse } from '../utils/motDePasse.ts'
-import { EyeIcon, EyeOffIcon, LockIcon, MailIcon, UserIcon } from './icons/AuthIcons.tsx'
+import { EyeIcon, EyeOffIcon, LockIcon, MailIcon, UserIcon } from './icons/Icons.tsx'
 
 function RegisterPage() {
   const { register } = useAuth()

@@ -44,42 +44,50 @@
 }
 
 .app-header h1 {
-  font-size: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 19px;
   margin: 0;
+  flex-shrink: 0;
 }
 
-.app-actions,
+.app-logo-icon {
+  color: var(--accent);
+}
+
+.app-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .app-nav {
   display: flex;
-  gap: 10px;
+  align-items: center;
+  gap: 22px;
 }
 
 .app-nav a {
-  padding: 8px 14px;
-  border-radius: 6px;
-  border: 1px solid var(--accent-border);
-  background: var(--accent-bg);
-  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 0;
+  border-bottom: 2px solid transparent;
+  color: var(--text);
   font-weight: 600;
+  font-size: 14px;
   text-decoration: none;
+  transition: color var(--transition-base), border-color var(--transition-base);
 }
 
-.app-nav a.active,
 .app-nav a:hover {
-  background: var(--accent);
-  color: #fff;
+  color: var(--text-h);
 }
 
-.app-nav {
-  padding: 3px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  gap: 4px;
-}
-
-.app-nav a {
-  border: none;
-  padding: 6px 12px;
+.app-nav a.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
 }
 
 .app-main {
@@ -1111,10 +1119,6 @@
     justify-content: flex-end;
   }
 
-  .restaurant-search-input {
-    width: 160px;
-  }
-
   .user-menu-name {
     display: none;
   }
@@ -1918,11 +1922,21 @@
 
 .restaurant-search {
   position: relative;
+  display: flex;
+  align-items: center;
+  width: 320px;
+}
+
+.restaurant-search-icon {
+  position: absolute;
+  left: 12px;
+  color: var(--text);
+  pointer-events: none;
 }
 
 .restaurant-search-input {
-  width: 220px;
-  padding: 7px 12px;
+  width: 100%;
+  padding: 8px 46px 8px 36px;
   border: 1px solid var(--border);
   border-radius: var(--radius-full);
   background: var(--field-bg);
@@ -1930,12 +1944,25 @@
   font-size: 13px;
 }
 
+.restaurant-search-kbd {
+  position: absolute;
+  right: 10px;
+  padding: 2px 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 11px;
+  pointer-events: none;
+}
+
 .restaurant-search-results {
   position: absolute;
   top: calc(100% + 6px);
   left: 0;
   z-index: 20;
-  width: 280px;
+  width: 100%;
   margin: 0;
   padding: 6px;
   list-style: none;
@@ -1975,6 +2002,20 @@
   padding: 8px 10px;
   font-size: 13px;
   color: var(--text);
+}
+
+@media (max-width: 640px) {
+  .restaurant-search {
+    width: 160px;
+  }
+
+  .restaurant-search-kbd {
+    display: none;
+  }
+
+  .restaurant-search-input {
+    padding-right: 12px;
+  }
 }
 
 /* Menu "+ Ajouter" (en-tête) */
@@ -2026,6 +2067,23 @@
   color: var(--accent);
 }
 
+.header-bell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--bg-card);
+  color: var(--text);
+  flex-shrink: 0;
+  /* Pas encore de système de notifications côté backend : bouton visible
+     mais inerte plutôt qu'un faux menu qui ne mènerait à rien. */
+  opacity: 0.55;
+  cursor: default;
+}
+
 /* Menu utilisateur (en-tête) */
 
 .user-menu {
@@ -2050,6 +2108,15 @@
   font-weight: 600;
   font-size: 13px;
   color: var(--text-h);
+}
+
+.user-menu-chevron {
+  color: var(--text);
+  transition: transform var(--transition-base);
+}
+
+.user-menu-chevron--open {
+  transform: rotate(180deg);
 }
 
 .user-menu-dropdown {

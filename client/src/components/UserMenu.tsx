@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { Utilisateur } from '../api/types.ts'
 import Avatar from './Avatar.tsx'
+import { ChevronDownIcon } from './icons/Icons.tsx'
 
 interface UserMenuProps {
   user: Utilisateur
@@ -36,6 +37,10 @@ function UserMenu({ user, onLogout }: UserMenuProps) {
       >
         <Avatar name={user.nomAffiche} size={32} />
         <span className="user-menu-name">{user.nomAffiche}</span>
+        <ChevronDownIcon
+          className={open ? 'user-menu-chevron user-menu-chevron--open' : 'user-menu-chevron'}
+          aria-hidden="true"
+        />
       </button>
       {open && (
         <div className="user-menu-dropdown" role="menu">

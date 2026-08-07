@@ -3,7 +3,7 @@ import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { errorMessage } from '../utils/errors.ts'
-import { EyeIcon, EyeOffIcon, LockIcon, MailIcon } from './icons/AuthIcons.tsx'
+import { EyeIcon, EyeOffIcon, LockIcon, MailIcon } from './icons/Icons.tsx'
 
 function LoginPage() {
   const { login } = useAuth()
