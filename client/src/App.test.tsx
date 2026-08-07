@@ -88,26 +88,26 @@ describe('App - protection des routes', () => {
     it("redirige vers /login depuis la carte ('/')", async () => {
       renderAppAt('/')
 
-      expect(await screen.findByRole('heading', { name: 'Connexion' })).toBeInTheDocument()
-      expect(screen.getByRole('heading', { name: 'Inscription' })).toBeInTheDocument()
+      expect(await screen.findByRole('heading', { name: 'Bienvenue !' })).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: 'Créer un compte' })).toBeInTheDocument()
     })
 
     it("redirige vers /login depuis la liste ('/liste')", async () => {
       renderAppAt('/liste')
 
-      expect(await screen.findByRole('heading', { name: 'Connexion' })).toBeInTheDocument()
+      expect(await screen.findByRole('heading', { name: 'Bienvenue !' })).toBeInTheDocument()
     })
 
     it("redirige vers /login depuis la fiche restaurant ('/restaurants/:id')", async () => {
       renderAppAt('/restaurants/restaurant-1')
 
-      expect(await screen.findByRole('heading', { name: 'Connexion' })).toBeInTheDocument()
+      expect(await screen.findByRole('heading', { name: 'Bienvenue !' })).toBeInTheDocument()
     })
 
     it('la route /register redirige vers /login', async () => {
       renderAppAt('/register')
 
-      expect(await screen.findByRole('heading', { name: 'Connexion' })).toBeInTheDocument()
+      expect(await screen.findByRole('heading', { name: 'Bienvenue !' })).toBeInTheDocument()
     })
   })
 
@@ -127,7 +127,7 @@ describe('App - protection des routes', () => {
       renderAppAt('/liste')
 
       expect(await screen.findByText('Aucun restaurant enregistré.')).toBeInTheDocument()
-      expect(screen.queryByRole('heading', { name: 'Connexion' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('heading', { name: 'Bienvenue !' })).not.toBeInTheDocument()
     })
   })
 })

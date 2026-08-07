@@ -50,8 +50,8 @@ describe('AuthPage', () => {
   it('affiche les deux formulaires côte à côte', () => {
     renderPage()
 
-    expect(screen.getByRole('heading', { name: 'Connexion' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Inscription' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Bienvenue !' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Créer un compte' })).toBeInTheDocument()
     expect(screen.getAllByLabelText('Email')).toHaveLength(2)
     expect(screen.getByLabelText('Nom affiché')).toBeInTheDocument()
   })
@@ -84,7 +84,8 @@ describe('AuthPage', () => {
     await user.type(registerEmail, 'user@example.com')
     await user.type(screen.getByLabelText('Nom affiché'), 'Une Personne')
     await user.type(registerMotDePasse, 'MotDePasse123!')
-    await user.click(screen.getByRole('button', { name: "S'inscrire" }))
+    await user.type(screen.getByLabelText('Confirmer le mot de passe'), 'MotDePasse123!')
+    await user.click(screen.getByRole('button', { name: 'Créer mon compte' }))
 
     expect(registerMock).toHaveBeenCalledWith({
       email: 'user@example.com',
@@ -106,6 +107,6 @@ describe('AuthPage', () => {
     renderPage()
 
     expect(screen.getByText('Accueil')).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: 'Connexion' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Bienvenue !' })).not.toBeInTheDocument()
   })
 })

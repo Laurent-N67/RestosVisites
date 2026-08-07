@@ -43,7 +43,7 @@ describe('LoginPage', () => {
   it('affiche le formulaire de connexion', () => {
     renderPage()
 
-    expect(screen.getByRole('heading', { name: 'Connexion' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Bienvenue !' })).toBeInTheDocument()
     expect(screen.getByLabelText('Email')).toBeInTheDocument()
     expect(screen.getByLabelText('Mot de passe')).toBeInTheDocument()
   })

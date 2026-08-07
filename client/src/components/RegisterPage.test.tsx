@@ -31,6 +31,13 @@ function renderPage() {
   )
 }
 
+async function fillValidForm(user: ReturnType<typeof userEvent.setup>) {
+  await user.type(screen.getByLabelText('Email'), 'user@example.com')
+  await user.type(screen.getByLabelText('Nom affiché'), 'Une Personne')
+  await user.type(screen.getByLabelText('Mot de passe'), 'MotDePasse123!')
+  await user.type(screen.getByLabelText('Confirmer le mot de passe'), 'MotDePasse123!')
+}
+
 describe('RegisterPage', () => {
   beforeEach(() => {
     registerMock.mockReset()
@@ -43,10 +50,11 @@ describe('RegisterPage', () => {
   it('affiche le formulaire d\'inscription', () => {
     renderPage()
 
-    expect(screen.getByRole('heading', { name: 'Inscription' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Créer un compte' })).toBeInTheDocument()
     expect(screen.getByLabelText('Email')).toBeInTheDocument()
     expect(screen.getByLabelText('Nom affiché')).toBeInTheDocument()
     expect(screen.getByLabelText('Mot de passe')).toBeInTheDocument()
+    expect(screen.getByLabelText('Confirmer le mot de passe')).toBeInTheDocument()
   })
 
   it('affiche les règles de mot de passe non respectées en direct', async () => {
@@ -68,7 +76,8 @@ describe('RegisterPage', () => {
     await user.type(screen.getByLabelText('Email'), 'user@example.com')
     await user.type(screen.getByLabelText('Nom affiché'), 'Une Personne')
     await user.type(screen.getByLabelText('Mot de passe'), 'faible')
-    await user.click(screen.getByRole('button', { name: "S'inscrire" }))
+    await user.type(screen.getByLabelText('Confirmer le mot de passe'), 'faible')
+    await user.click(screen.getByRole('button', { name: 'Créer mon compte' }))
 
     expect(registerMock).not.toHaveBeenCalled()
     expect(
@@ -76,15 +85,27 @@ describe('RegisterPage', () => {
     ).toBeInTheDocument()
   })
 
-  it("s'inscrit puis redirige vers l'accueil quand le mot de passe est valide", async () => {
-    registerMock.mockResolvedValue(undefined)
+  it('bloque la soumission si la confirmation ne correspond pas', async () => {
     const user = userEvent.setup()
     renderPage()
 
     await user.type(screen.getByLabelText('Email'), 'user@example.com')
     await user.type(screen.getByLabelText('Nom affiché'), 'Une Personne')
     await user.type(screen.getByLabelText('Mot de passe'), 'MotDePasse123!')
-    await user.click(screen.getByRole('button', { name: "S'inscrire" }))
+    await user.type(screen.getByLabelText('Confirmer le mot de passe'), 'AutreChose123!')
+    await user.click(screen.getByRole('button', { name: 'Créer mon compte' }))
+
+    expect(registerMock).not.toHaveBeenCalled()
+    expect(screen.getByText('Les mots de passe ne correspondent pas.')).toBeInTheDocument()
+  })
+
+  it("s'inscrit puis redirige vers l'accueil quand le mot de passe est valide", async () => {
+    registerMock.mockResolvedValue(undefined)
+    const user = userEvent.setup()
+    renderPage()
+
+    await fillValidForm(user)
+    await user.click(screen.getByRole('button', { name: 'Créer mon compte' }))
 
     expect(registerMock).toHaveBeenCalledWith({
       email: 'user@example.com',
@@ -101,10 +122,8 @@ describe('RegisterPage', () => {
     const user = userEvent.setup()
     renderPage()
 
-    await user.type(screen.getByLabelText('Email'), 'user@example.com')
-    await user.type(screen.getByLabelText('Nom affiché'), 'Une Personne')
-    await user.type(screen.getByLabelText('Mot de passe'), 'MotDePasse123!')
-    await user.click(screen.getByRole('button', { name: "S'inscrire" }))
+    await fillValidForm(user)
+    await user.click(screen.getByRole('button', { name: 'Créer mon compte' }))
 
     expect(await screen.findByText('Cet email est déjà utilisé.')).toBeInTheDocument()
   })
