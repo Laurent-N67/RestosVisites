@@ -147,15 +147,6 @@ function ProfilPage({ visites }: ProfilPageProps) {
         </div>
       </div>
 
-      <section className="utilisateur-card profil-admin-section">
-        <h3>Communauté</h3>
-        <div className="profil-admin-links">
-          <Link to="/utilisateurs" className="profil-admin-link">
-            Annuaire des utilisateurs
-          </Link>
-        </div>
-      </section>
-
       {isAdmin && (
         <section className="utilisateur-card profil-admin-section">
           <h3>Administration</h3>

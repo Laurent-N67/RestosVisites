@@ -222,6 +222,14 @@ function App() {
             >
               Favoris
             </Link>
+            <Link
+              to="/utilisateurs"
+              className={
+                location.pathname.startsWith('/utilisateurs') ? 'active' : ''
+              }
+            >
+              Utilisateurs
+            </Link>
           </nav>
         )}
         <div className="app-actions">

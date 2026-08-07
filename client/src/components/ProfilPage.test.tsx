@@ -130,10 +130,9 @@ describe('ProfilPage', () => {
     await waitFor(() => expect(screen.getByText('Favoris')).toBeInTheDocument())
   })
 
-  it("affiche le lien vers l'annuaire des utilisateurs pour tout le monde, mais pas la section administration pour un utilisateur simple", () => {
+  it("n'affiche pas la section administration pour un utilisateur simple", () => {
     renderPage()
 
-    expect(screen.getByRole('link', { name: 'Annuaire des utilisateurs' })).toBeInTheDocument()
     expect(screen.queryByText('Administration')).not.toBeInTheDocument()
   })
 
@@ -141,7 +140,6 @@ describe('ProfilPage', () => {
     currentUser = { ...currentUser, role: Role.Admin }
     renderPage()
 
-    expect(screen.getByRole('link', { name: 'Annuaire des utilisateurs' })).toBeInTheDocument()
     expect(screen.getByText('Administration')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Statistiques globales' })).toBeInTheDocument()
   })
