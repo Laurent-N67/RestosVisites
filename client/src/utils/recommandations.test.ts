@@ -18,6 +18,11 @@ function restaurant(
     latitude: options.latitude ?? 48.85,
     longitude: options.longitude ?? 2.35,
     categories,
+    description: null,
+    telephone: null,
+    siteWeb: null,
+    horaires: null,
+    photos: [],
   }
 }
 

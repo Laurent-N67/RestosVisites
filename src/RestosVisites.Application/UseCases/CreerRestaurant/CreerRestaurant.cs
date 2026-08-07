@@ -30,7 +30,16 @@ public sealed class CreerRestaurant
 
         var categories = await ResoudreCategoriesAsync(request.CategorieIds, ct);
 
-        var restaurant = new Restaurant(request.Nom, request.Adresse, request.Latitude, request.Longitude, categories);
+        var restaurant = new Restaurant(
+            request.Nom,
+            request.Adresse,
+            request.Latitude,
+            request.Longitude,
+            categories,
+            request.Description,
+            request.Telephone,
+            request.SiteWeb,
+            request.Horaires);
         await _restaurantRepository.AjouterAsync(restaurant, ct);
 
         return new CreerRestaurantResponse(restaurant.Id);

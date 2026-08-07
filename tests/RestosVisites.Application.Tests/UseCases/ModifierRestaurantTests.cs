@@ -109,4 +109,24 @@ public class ModifierRestaurantTests
         Assert.Equal(TypeErreurApplication.RessourceNonTrouvee, exception.Type);
         Assert.Empty(restaurant.Categories);
     }
+
+    [Fact]
+    public async Task ExecuterAsync_AvecChampsOptionnelsRenseignes_LesMetAJour()
+    {
+        var restaurantRepository = new FakeRestaurantRepository();
+        var categorieRepository = new FakeCategorieRepository();
+        var restaurant = new Restaurant("Le Bon Restaurant", "1 rue de la Paix", 48.8566, 2.3522);
+        await restaurantRepository.AjouterAsync(restaurant, TestContext.Current.CancellationToken);
+        var useCase = new ModifierRestaurant(restaurantRepository, categorieRepository);
+        var request = new ModifierRestaurantRequest(
+            restaurant.Id, "Nouveau Nom", "2 rue Neuve", 45.0, 5.0, [],
+            Description: "Description", Telephone: "0102030405", SiteWeb: "https://exemple.test", Horaires: "9h-18h");
+
+        await useCase.ExecuterAsync(request, TestContext.Current.CancellationToken);
+
+        Assert.Equal("Description", restaurant.Description);
+        Assert.Equal("0102030405", restaurant.Telephone);
+        Assert.Equal("https://exemple.test", restaurant.SiteWeb);
+        Assert.Equal("9h-18h", restaurant.Horaires);
+    }
 }

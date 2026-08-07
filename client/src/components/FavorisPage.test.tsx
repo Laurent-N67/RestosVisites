@@ -49,6 +49,11 @@ const restaurants: Restaurant[] = [
     latitude: 48.85,
     longitude: 2.35,
     categories: [],
+    description: null,
+    telephone: null,
+    siteWeb: null,
+    horaires: null,
+    photos: [],
   },
   {
     id: 'restaurant-2',
@@ -57,6 +62,11 @@ const restaurants: Restaurant[] = [
     latitude: 45.75,
     longitude: 4.85,
     categories: [],
+    description: null,
+    telephone: null,
+    siteWeb: null,
+    horaires: null,
+    photos: [],
   },
 ]
 

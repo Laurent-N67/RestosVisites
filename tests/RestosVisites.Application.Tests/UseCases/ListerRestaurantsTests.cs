@@ -53,4 +53,31 @@ public class ListerRestaurantsTests
         Assert.Equal("Italienne", categorieDto.Nom);
         Assert.Equal("Type de cuisine", categorieDto.Groupe);
     }
+
+    [Fact]
+    public async Task ExecuterAsync_RestaurantAvecChampsOptionnelsEtPhotos_LesInclutDansLeDto()
+    {
+        var restaurantRepository = new FakeRestaurantRepository();
+        var restaurant = new Restaurant(
+            "Le Bon Restaurant", "1 rue de la Paix", 48.8566, 2.3522,
+            description: "Une belle table", telephone: "0102030405", siteWeb: "https://exemple.test", horaires: "9h-18h");
+        var photo = restaurant.AjouterPhoto("https://exemple.test/photo.jpg");
+        restaurant.DefinirPhotoPrincipale(photo.Id);
+        await restaurantRepository.AjouterAsync(restaurant, TestContext.Current.CancellationToken);
+
+        var useCase = new ListerRestaurants(restaurantRepository);
+
+        var resultat = await useCase.ExecuterAsync(TestContext.Current.CancellationToken);
+
+        var dto = Assert.Single(resultat);
+        Assert.Equal("Une belle table", dto.Description);
+        Assert.Equal("0102030405", dto.Telephone);
+        Assert.Equal("https://exemple.test", dto.SiteWeb);
+        Assert.Equal("9h-18h", dto.Horaires);
+        var photoDto = Assert.Single(dto.Photos);
+        Assert.Equal(photo.Id, photoDto.Id);
+        Assert.Equal("https://exemple.test/photo.jpg", photoDto.Url);
+        Assert.True(photoDto.EstPrincipale);
+        Assert.Equal(0, photoDto.Ordre);
+    }
 }

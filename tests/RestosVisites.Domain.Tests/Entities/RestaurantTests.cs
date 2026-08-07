@@ -193,4 +193,127 @@ public class RestaurantTests
 
         Assert.Empty(restaurant.Categories);
     }
+
+    [Fact]
+    public void Constructeur_AvecChampsOptionnelsRenseignes_LesStockeTrim()
+    {
+        var restaurant = new Restaurant(
+            "Le Bon Restaurant", "1 rue de la Paix", 48.8566, 2.3522,
+            description: "  Une belle table  ",
+            telephone: "  01 23 45 67 89  ",
+            siteWeb: "  https://exemple.test  ",
+            horaires: "  Tous les jours  ");
+
+        Assert.Equal("Une belle table", restaurant.Description);
+        Assert.Equal("01 23 45 67 89", restaurant.Telephone);
+        Assert.Equal("https://exemple.test", restaurant.SiteWeb);
+        Assert.Equal("Tous les jours", restaurant.Horaires);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(" ")]
+    [InlineData(null)]
+    public void Constructeur_ChampsOptionnelsVidesOuBlancs_SontStockesCommeNull(string? valeur)
+    {
+        var restaurant = new Restaurant(
+            "Le Bon Restaurant", "1 rue de la Paix", 48.8566, 2.3522,
+            description: valeur, telephone: valeur, siteWeb: valeur, horaires: valeur);
+
+        Assert.Null(restaurant.Description);
+        Assert.Null(restaurant.Telephone);
+        Assert.Null(restaurant.SiteWeb);
+        Assert.Null(restaurant.Horaires);
+    }
+
+    [Fact]
+    public void Modifier_AvecChampsOptionnelsRenseignes_LesStockeTrim()
+    {
+        var restaurant = new Restaurant("Le Bon Restaurant", "1 rue de la Paix", 48.8566, 2.3522);
+
+        restaurant.Modifier(
+            "Nouveau Nom", "2 rue Neuve", 45.0, 5.0,
+            description: "  Description  ", telephone: "  0102030405  ", siteWeb: "  https://site.test  ", horaires: "  9h-18h  ");
+
+        Assert.Equal("Description", restaurant.Description);
+        Assert.Equal("0102030405", restaurant.Telephone);
+        Assert.Equal("https://site.test", restaurant.SiteWeb);
+        Assert.Equal("9h-18h", restaurant.Horaires);
+    }
+
+    [Fact]
+    public void Modifier_SansChampsOptionnels_LesReinitialiseANull()
+    {
+        var restaurant = new Restaurant(
+            "Le Bon Restaurant", "1 rue de la Paix", 48.8566, 2.3522,
+            description: "Description", telephone: "0102030405", siteWeb: "https://site.test", horaires: "9h-18h");
+
+        restaurant.Modifier("Nouveau Nom", "2 rue Neuve", 45.0, 5.0);
+
+        Assert.Null(restaurant.Description);
+        Assert.Null(restaurant.Telephone);
+        Assert.Null(restaurant.SiteWeb);
+        Assert.Null(restaurant.Horaires);
+    }
+
+    [Fact]
+    public void AjouterPhoto_PlusieursPhotos_LeurAffecteUnOrdreSequentiel()
+    {
+        var restaurant = new Restaurant("Le Bon Restaurant", "1 rue de la Paix", 48.8566, 2.3522);
+
+        var premierePhoto = restaurant.AjouterPhoto("https://exemple.test/1.jpg");
+        var deuxiemePhoto = restaurant.AjouterPhoto("https://exemple.test/2.jpg");
+
+        Assert.Equal(2, restaurant.Photos.Count);
+        Assert.Equal(0, premierePhoto.Ordre);
+        Assert.Equal(1, deuxiemePhoto.Ordre);
+        Assert.False(premierePhoto.EstPrincipale);
+        Assert.False(deuxiemePhoto.EstPrincipale);
+    }
+
+    [Fact]
+    public void SupprimerPhoto_IdInexistant_NeFaitRien()
+    {
+        var restaurant = new Restaurant("Le Bon Restaurant", "1 rue de la Paix", 48.8566, 2.3522);
+        restaurant.AjouterPhoto("https://exemple.test/1.jpg");
+
+        restaurant.SupprimerPhoto(Guid.NewGuid());
+
+        Assert.Single(restaurant.Photos);
+    }
+
+    [Fact]
+    public void SupprimerPhoto_IdExistant_LaRetire()
+    {
+        var restaurant = new Restaurant("Le Bon Restaurant", "1 rue de la Paix", 48.8566, 2.3522);
+        var photo = restaurant.AjouterPhoto("https://exemple.test/1.jpg");
+
+        restaurant.SupprimerPhoto(photo.Id);
+
+        Assert.Empty(restaurant.Photos);
+    }
+
+    [Fact]
+    public void DefinirPhotoPrincipale_PhotoExistante_LaMarqueEtDemarqueLesAutres()
+    {
+        var restaurant = new Restaurant("Le Bon Restaurant", "1 rue de la Paix", 48.8566, 2.3522);
+        var premierePhoto = restaurant.AjouterPhoto("https://exemple.test/1.jpg");
+        var deuxiemePhoto = restaurant.AjouterPhoto("https://exemple.test/2.jpg");
+
+        restaurant.DefinirPhotoPrincipale(premierePhoto.Id);
+        restaurant.DefinirPhotoPrincipale(deuxiemePhoto.Id);
+
+        Assert.False(premierePhoto.EstPrincipale);
+        Assert.True(deuxiemePhoto.EstPrincipale);
+        Assert.Single(restaurant.Photos, p => p.EstPrincipale);
+    }
+
+    [Fact]
+    public void DefinirPhotoPrincipale_IdInexistant_LeveArgumentException()
+    {
+        var restaurant = new Restaurant("Le Bon Restaurant", "1 rue de la Paix", 48.8566, 2.3522);
+        restaurant.AjouterPhoto("https://exemple.test/1.jpg");
+
+        Assert.Throws<ArgumentException>(() => restaurant.DefinirPhotoPrincipale(Guid.NewGuid()));
+    }
 }

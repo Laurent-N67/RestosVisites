@@ -33,5 +33,13 @@ public sealed class ListerRestaurants
             .OrderBy(c => c.Groupe, StringComparer.Ordinal)
             .ThenBy(c => c.Nom, StringComparer.Ordinal)
             .Select(c => new CategorieDto(c.Id, c.Nom, c.Groupe))
+            .ToList(),
+        restaurant.Description,
+        restaurant.Telephone,
+        restaurant.SiteWeb,
+        restaurant.Horaires,
+        restaurant.Photos
+            .OrderBy(p => p.Ordre)
+            .Select(p => new RestaurantPhotoDto(p.Id, p.Url, p.EstPrincipale, p.Ordre))
             .ToList());
 }

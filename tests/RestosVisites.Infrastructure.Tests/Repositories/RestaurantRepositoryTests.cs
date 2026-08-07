@@ -104,6 +104,37 @@ public sealed class RestaurantRepositoryTests : SqliteTestBase
     }
 
     [Fact]
+    public async Task AjouterAsync_AvecChampsOptionnelsEtPhotos_RepeupleDepuisNouveauDbContext()
+    {
+        var restaurant = new Restaurant(
+            "Le Petit Bouchon", "12 rue de la Paix, Lyon", 45.75, 4.85,
+            description: "Une belle table", telephone: "0102030405", siteWeb: "https://exemple.test", horaires: "9h-18h");
+        var photo = restaurant.AjouterPhoto("https://exemple.test/photo.jpg");
+        restaurant.DefinirPhotoPrincipale(photo.Id);
+
+        await using (var dbContext = CreerDbContext())
+        {
+            var repository = new RestaurantRepository(dbContext);
+            await repository.AjouterAsync(restaurant, TestContext.Current.CancellationToken);
+        }
+
+        await using var autreDbContext = CreerDbContext();
+        var autreRepository = new RestaurantRepository(autreDbContext);
+        var restaurantRelu = await autreRepository.ObtenirParIdAsync(restaurant.Id, TestContext.Current.CancellationToken);
+
+        Assert.NotNull(restaurantRelu);
+        Assert.Equal("Une belle table", restaurantRelu.Description);
+        Assert.Equal("0102030405", restaurantRelu.Telephone);
+        Assert.Equal("https://exemple.test", restaurantRelu.SiteWeb);
+        Assert.Equal("9h-18h", restaurantRelu.Horaires);
+        var photoRelue = Assert.Single(restaurantRelu.Photos);
+        Assert.Equal(photo.Id, photoRelue.Id);
+        Assert.Equal("https://exemple.test/photo.jpg", photoRelue.Url);
+        Assert.True(photoRelue.EstPrincipale);
+        Assert.Equal(0, photoRelue.Ordre);
+    }
+
+    [Fact]
     public async Task MettreAJourAsync_AvecNouvellesCategories_RemplaceLesCategoriesEnBase()
     {
         var categorieInitiale = new Categorie("Italienne", "Type de cuisine");
@@ -136,5 +167,37 @@ public sealed class RestaurantRepositoryTests : SqliteTestBase
 
         Assert.NotNull(restaurantRelu);
         Assert.Equal(nouvelleCategorie.Id, Assert.Single(restaurantRelu.Categories).Id);
+    }
+
+    [Fact]
+    public async Task MettreAJourAsync_AjoutPuisSuppressionDePhoto_RepercuteEnBase()
+    {
+        var restaurant = new Restaurant("Le Petit Bouchon", "12 rue de la Paix, Lyon", 45.75, 4.85);
+        var photoASupprimer = restaurant.AjouterPhoto("https://exemple.test/a-supprimer.jpg");
+
+        await using (var dbContext = CreerDbContext())
+        {
+            var repository = new RestaurantRepository(dbContext);
+            await repository.AjouterAsync(restaurant, TestContext.Current.CancellationToken);
+        }
+
+        await using (var dbContext = CreerDbContext())
+        {
+            var repository = new RestaurantRepository(dbContext);
+            var restaurantATracker = await repository.ObtenirParIdAsync(restaurant.Id, TestContext.Current.CancellationToken);
+            Assert.NotNull(restaurantATracker);
+
+            restaurantATracker.SupprimerPhoto(photoASupprimer.Id);
+            restaurantATracker.AjouterPhoto("https://exemple.test/nouvelle.jpg");
+            await repository.MettreAJourAsync(restaurantATracker, TestContext.Current.CancellationToken);
+        }
+
+        await using var autreDbContext = CreerDbContext();
+        var autreRepository = new RestaurantRepository(autreDbContext);
+        var restaurantRelu = await autreRepository.ObtenirParIdAsync(restaurant.Id, TestContext.Current.CancellationToken);
+
+        Assert.NotNull(restaurantRelu);
+        var photoRelue = Assert.Single(restaurantRelu.Photos);
+        Assert.Equal("https://exemple.test/nouvelle.jpg", photoRelue.Url);
     }
 }

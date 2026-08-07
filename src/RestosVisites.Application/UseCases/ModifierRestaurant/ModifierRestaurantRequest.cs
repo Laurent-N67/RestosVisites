@@ -6,4 +6,8 @@ public sealed record ModifierRestaurantRequest(
     string Adresse,
     double Latitude,
     double Longitude,
-    IReadOnlyCollection<Guid> CategorieIds);
+    IReadOnlyCollection<Guid> CategorieIds,
+    string? Description = null,
+    string? Telephone = null,
+    string? SiteWeb = null,
+    string? Horaires = null);

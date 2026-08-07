@@ -1,0 +1,33 @@
+using RestosVisites.Application.Abstractions;
+using RestosVisites.Application.Exceptions;
+
+namespace RestosVisites.Application.UseCases.AjouterPhotoRestaurant;
+
+/// <summary>
+/// Cas d'usage : ajouter une photo à un restaurant existant.
+/// </summary>
+public sealed class AjouterPhotoRestaurant
+{
+    private readonly IRestaurantRepository _restaurantRepository;
+
+    public AjouterPhotoRestaurant(IRestaurantRepository restaurantRepository)
+    {
+        _restaurantRepository = restaurantRepository;
+    }
+
+    public async Task<AjouterPhotoRestaurantResponse> ExecuterAsync(AjouterPhotoRestaurantRequest request, CancellationToken ct = default)
+    {
+        var restaurant = await _restaurantRepository.ObtenirParIdAsync(request.RestaurantId, ct);
+        if (restaurant is null)
+        {
+            throw new ErreurApplicationException(
+                TypeErreurApplication.RessourceNonTrouvee,
+                $"Aucun restaurant trouvé avec l'identifiant '{request.RestaurantId}'.");
+        }
+
+        var photo = restaurant.AjouterPhoto(request.Url);
+        await _restaurantRepository.MettreAJourAsync(restaurant, ct);
+
+        return new AjouterPhotoRestaurantResponse(photo.Id);
+    }
+}

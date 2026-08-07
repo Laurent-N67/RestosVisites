@@ -22,6 +22,7 @@ public sealed class RestaurantRepository : IRestaurantRepository
     public async Task<Restaurant?> ObtenirParIdAsync(Guid id, CancellationToken ct)
         => await _dbContext.Restaurants
             .Include(r => r.Categories)
+            .Include(r => r.Photos)
             .FirstOrDefaultAsync(r => r.Id == id, ct);
 
     public async Task<Restaurant?> ObtenirParNomEtAdresseAsync(string nom, string adresse, CancellationToken ct)
@@ -31,6 +32,7 @@ public sealed class RestaurantRepository : IRestaurantRepository
         => await _dbContext.Restaurants
             .AsNoTracking()
             .Include(r => r.Categories)
+            .Include(r => r.Photos)
             .ToListAsync(ct);
 
     public async Task MettreAJourAsync(Restaurant restaurant, CancellationToken ct)

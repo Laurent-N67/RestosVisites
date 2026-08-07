@@ -4,6 +4,13 @@ export interface Categorie {
   groupe: string
 }
 
+export interface RestaurantPhoto {
+  id: string
+  url: string
+  estPrincipale: boolean
+  ordre: number
+}
+
 export interface Restaurant {
   id: string
   nom: string
@@ -11,6 +18,11 @@ export interface Restaurant {
   latitude: number
   longitude: number
   categories: Categorie[]
+  description: string | null
+  telephone: string | null
+  siteWeb: string | null
+  horaires: string | null
+  photos: RestaurantPhoto[]
 }
 
 export interface Visite {
@@ -76,6 +88,10 @@ export interface CreateRestaurantRequest {
   latitude: number
   longitude: number
   categorieIds: string[]
+  description?: string | null
+  telephone?: string | null
+  siteWeb?: string | null
+  horaires?: string | null
 }
 
 export interface CreateVisiteRequest {

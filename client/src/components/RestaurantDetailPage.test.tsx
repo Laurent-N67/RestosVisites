@@ -54,6 +54,11 @@ const restaurant: Restaurant = {
   latitude: 48.85,
   longitude: 2.35,
   categories: [{ id: 'cat-1', nom: 'Italien', groupe: 'Type de cuisine' }],
+  description: null,
+  telephone: null,
+  siteWeb: null,
+  horaires: null,
+  photos: [],
 }
 
 const visites: Visite[] = [

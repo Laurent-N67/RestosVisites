@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RestosVisites.Api.Controllers;
+using RestosVisites.Application.UseCases.AjouterPhotoRestaurant;
 using RestosVisites.Application.UseCases.CreerRestaurant;
 using RestosVisites.Application.UseCases.EnregistrerVisite;
 using RestosVisites.Application.UseCases.ListerRestaurants;
@@ -422,5 +423,273 @@ public sealed class RestaurantsControllerTests
         var visitesResponse = await admin.GetAsync(
             $"/api/restaurants/{restaurantCree.Id}/visites", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NotFound, visitesResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task PostPhoto_AdminAjouteUnePhoto_Retourne201EtLAssocieAuRestaurant()
+    {
+        using var factory = new RestosVisitesWebApplicationFactory();
+        using var admin = factory.CreateClient();
+        await AuthTestHelper.InscrireEtConnecterAsync(admin, ct: TestContext.Current.CancellationToken);
+
+        var creationRequest = new CreerRestaurantRequest("Restaurant à Photo", "15 rue de la Photo", 45.0, 4.0, []);
+        var creationResponse = await admin.PostAsJsonAsync(
+            "/api/restaurants", creationRequest, TestContext.Current.CancellationToken);
+        var cree = await creationResponse.Content.ReadFromJsonAsync<CreerRestaurantResponse>(
+            TestContext.Current.CancellationToken);
+        Assert.NotNull(cree);
+
+        var body = new AjouterPhotoRestaurantBody("https://exemple.test/photo.jpg");
+
+        var response = await admin.PostAsJsonAsync(
+            $"/api/restaurants/{cree.Id}/photos", body, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var photoAjoutee = await response.Content.ReadFromJsonAsync<AjouterPhotoRestaurantResponse>(
+            TestContext.Current.CancellationToken);
+        Assert.NotNull(photoAjoutee);
+        Assert.NotEqual(Guid.Empty, photoAjoutee.PhotoId);
+
+        var listeResponse = await admin.GetAsync("/api/restaurants", TestContext.Current.CancellationToken);
+        var restaurants = await listeResponse.Content.ReadFromJsonAsync<List<RestaurantDto>>(
+            TestContext.Current.CancellationToken);
+        Assert.NotNull(restaurants);
+        var restaurantAvecPhoto = Assert.Single(restaurants, r => r.Id == cree.Id);
+        var photoDto = Assert.Single(restaurantAvecPhoto.Photos);
+        Assert.Equal(photoAjoutee.PhotoId, photoDto.Id);
+        Assert.Equal("https://exemple.test/photo.jpg", photoDto.Url);
+    }
+
+    [Fact]
+    public async Task PostPhoto_RestaurantInexistant_Retourne404()
+    {
+        using var factory = new RestosVisitesWebApplicationFactory();
+        using var admin = factory.CreateClient();
+        await AuthTestHelper.InscrireEtConnecterAsync(admin, ct: TestContext.Current.CancellationToken);
+
+        var body = new AjouterPhotoRestaurantBody("https://exemple.test/photo.jpg");
+
+        var response = await admin.PostAsJsonAsync(
+            $"/api/restaurants/{Guid.NewGuid()}/photos", body, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task PostPhoto_UtilisateurSimple_Retourne403()
+    {
+        using var factory = new RestosVisitesWebApplicationFactory();
+        using var admin = factory.CreateClient();
+        await AuthTestHelper.InscrireEtConnecterAsync(admin, ct: TestContext.Current.CancellationToken);
+
+        var creationRequest = new CreerRestaurantRequest("Restaurant Photo Protégé", "16 rue Protégée", 45.0, 4.0, []);
+        var creationResponse = await admin.PostAsJsonAsync(
+            "/api/restaurants", creationRequest, TestContext.Current.CancellationToken);
+        var cree = await creationResponse.Content.ReadFromJsonAsync<CreerRestaurantResponse>(
+            TestContext.Current.CancellationToken);
+        Assert.NotNull(cree);
+
+        using var simple = factory.CreateClient();
+        await AuthTestHelper.InscrireEtConnecterAsync(simple, ct: TestContext.Current.CancellationToken);
+
+        var body = new AjouterPhotoRestaurantBody("https://exemple.test/photo.jpg");
+
+        var response = await simple.PostAsJsonAsync(
+            $"/api/restaurants/{cree.Id}/photos", body, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task PostPhoto_UtilisateurNonAuthentifie_Retourne401()
+    {
+        using var factory = new RestosVisitesWebApplicationFactory();
+        using var client = factory.CreateClient();
+
+        var body = new AjouterPhotoRestaurantBody("https://exemple.test/photo.jpg");
+
+        var response = await client.PostAsJsonAsync(
+            $"/api/restaurants/{Guid.NewGuid()}/photos", body, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task DeletePhoto_AdminSupprimeUnePhotoExistante_Retourne204EtLaRetireDuRestaurant()
+    {
+        using var factory = new RestosVisitesWebApplicationFactory();
+        using var admin = factory.CreateClient();
+        await AuthTestHelper.InscrireEtConnecterAsync(admin, ct: TestContext.Current.CancellationToken);
+
+        var creationRequest = new CreerRestaurantRequest("Restaurant à Photo à Supprimer", "17 rue à Supprimer", 45.0, 4.0, []);
+        var creationResponse = await admin.PostAsJsonAsync(
+            "/api/restaurants", creationRequest, TestContext.Current.CancellationToken);
+        var cree = await creationResponse.Content.ReadFromJsonAsync<CreerRestaurantResponse>(
+            TestContext.Current.CancellationToken);
+        Assert.NotNull(cree);
+
+        var photoResponse = await admin.PostAsJsonAsync(
+            $"/api/restaurants/{cree.Id}/photos",
+            new AjouterPhotoRestaurantBody("https://exemple.test/photo.jpg"),
+            TestContext.Current.CancellationToken);
+        var photoAjoutee = await photoResponse.Content.ReadFromJsonAsync<AjouterPhotoRestaurantResponse>(
+            TestContext.Current.CancellationToken);
+        Assert.NotNull(photoAjoutee);
+
+        var response = await admin.DeleteAsync(
+            $"/api/restaurants/{cree.Id}/photos/{photoAjoutee.PhotoId}", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+
+        var listeResponse = await admin.GetAsync("/api/restaurants", TestContext.Current.CancellationToken);
+        var restaurants = await listeResponse.Content.ReadFromJsonAsync<List<RestaurantDto>>(
+            TestContext.Current.CancellationToken);
+        Assert.NotNull(restaurants);
+        var restaurantSansPhoto = Assert.Single(restaurants, r => r.Id == cree.Id);
+        Assert.Empty(restaurantSansPhoto.Photos);
+    }
+
+    [Fact]
+    public async Task DeletePhoto_RestaurantInexistant_Retourne404()
+    {
+        using var factory = new RestosVisitesWebApplicationFactory();
+        using var admin = factory.CreateClient();
+        await AuthTestHelper.InscrireEtConnecterAsync(admin, ct: TestContext.Current.CancellationToken);
+
+        var response = await admin.DeleteAsync(
+            $"/api/restaurants/{Guid.NewGuid()}/photos/{Guid.NewGuid()}", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task DeletePhoto_UtilisateurSimple_Retourne403()
+    {
+        using var factory = new RestosVisitesWebApplicationFactory();
+        using var admin = factory.CreateClient();
+        await AuthTestHelper.InscrireEtConnecterAsync(admin, ct: TestContext.Current.CancellationToken);
+
+        var creationRequest = new CreerRestaurantRequest("Restaurant Photo Protégée Suppr", "18 rue Protégée", 45.0, 4.0, []);
+        var creationResponse = await admin.PostAsJsonAsync(
+            "/api/restaurants", creationRequest, TestContext.Current.CancellationToken);
+        var cree = await creationResponse.Content.ReadFromJsonAsync<CreerRestaurantResponse>(
+            TestContext.Current.CancellationToken);
+        Assert.NotNull(cree);
+
+        var photoResponse = await admin.PostAsJsonAsync(
+            $"/api/restaurants/{cree.Id}/photos",
+            new AjouterPhotoRestaurantBody("https://exemple.test/photo.jpg"),
+            TestContext.Current.CancellationToken);
+        var photoAjoutee = await photoResponse.Content.ReadFromJsonAsync<AjouterPhotoRestaurantResponse>(
+            TestContext.Current.CancellationToken);
+        Assert.NotNull(photoAjoutee);
+
+        using var simple = factory.CreateClient();
+        await AuthTestHelper.InscrireEtConnecterAsync(simple, ct: TestContext.Current.CancellationToken);
+
+        var response = await simple.DeleteAsync(
+            $"/api/restaurants/{cree.Id}/photos/{photoAjoutee.PhotoId}", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task PutPhotoPrincipale_AdminMarqueUnePhotoCommePrincipale_Retourne204EtLaMarqueDansLeDto()
+    {
+        using var factory = new RestosVisitesWebApplicationFactory();
+        using var admin = factory.CreateClient();
+        await AuthTestHelper.InscrireEtConnecterAsync(admin, ct: TestContext.Current.CancellationToken);
+
+        var creationRequest = new CreerRestaurantRequest("Restaurant Photo Principale", "19 rue Principale", 45.0, 4.0, []);
+        var creationResponse = await admin.PostAsJsonAsync(
+            "/api/restaurants", creationRequest, TestContext.Current.CancellationToken);
+        var cree = await creationResponse.Content.ReadFromJsonAsync<CreerRestaurantResponse>(
+            TestContext.Current.CancellationToken);
+        Assert.NotNull(cree);
+
+        var photoResponse = await admin.PostAsJsonAsync(
+            $"/api/restaurants/{cree.Id}/photos",
+            new AjouterPhotoRestaurantBody("https://exemple.test/photo.jpg"),
+            TestContext.Current.CancellationToken);
+        var photoAjoutee = await photoResponse.Content.ReadFromJsonAsync<AjouterPhotoRestaurantResponse>(
+            TestContext.Current.CancellationToken);
+        Assert.NotNull(photoAjoutee);
+
+        var response = await admin.PutAsync(
+            $"/api/restaurants/{cree.Id}/photos/{photoAjoutee.PhotoId}/principale", null, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+
+        var listeResponse = await admin.GetAsync("/api/restaurants", TestContext.Current.CancellationToken);
+        var restaurants = await listeResponse.Content.ReadFromJsonAsync<List<RestaurantDto>>(
+            TestContext.Current.CancellationToken);
+        Assert.NotNull(restaurants);
+        var restaurantModifie = Assert.Single(restaurants, r => r.Id == cree.Id);
+        var photoDto = Assert.Single(restaurantModifie.Photos);
+        Assert.True(photoDto.EstPrincipale);
+    }
+
+    [Fact]
+    public async Task PutPhotoPrincipale_RestaurantInexistant_Retourne404()
+    {
+        using var factory = new RestosVisitesWebApplicationFactory();
+        using var admin = factory.CreateClient();
+        await AuthTestHelper.InscrireEtConnecterAsync(admin, ct: TestContext.Current.CancellationToken);
+
+        var response = await admin.PutAsync(
+            $"/api/restaurants/{Guid.NewGuid()}/photos/{Guid.NewGuid()}/principale", null, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task PutPhotoPrincipale_PhotoInexistante_Retourne404()
+    {
+        using var factory = new RestosVisitesWebApplicationFactory();
+        using var admin = factory.CreateClient();
+        await AuthTestHelper.InscrireEtConnecterAsync(admin, ct: TestContext.Current.CancellationToken);
+
+        var creationRequest = new CreerRestaurantRequest("Restaurant Sans Cette Photo", "20 rue Sans Photo", 45.0, 4.0, []);
+        var creationResponse = await admin.PostAsJsonAsync(
+            "/api/restaurants", creationRequest, TestContext.Current.CancellationToken);
+        var cree = await creationResponse.Content.ReadFromJsonAsync<CreerRestaurantResponse>(
+            TestContext.Current.CancellationToken);
+        Assert.NotNull(cree);
+
+        var response = await admin.PutAsync(
+            $"/api/restaurants/{cree.Id}/photos/{Guid.NewGuid()}/principale", null, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task PutPhotoPrincipale_UtilisateurSimple_Retourne403()
+    {
+        using var factory = new RestosVisitesWebApplicationFactory();
+        using var admin = factory.CreateClient();
+        await AuthTestHelper.InscrireEtConnecterAsync(admin, ct: TestContext.Current.CancellationToken);
+
+        var creationRequest = new CreerRestaurantRequest("Restaurant Photo Principale Protégée", "21 rue Protégée", 45.0, 4.0, []);
+        var creationResponse = await admin.PostAsJsonAsync(
+            "/api/restaurants", creationRequest, TestContext.Current.CancellationToken);
+        var cree = await creationResponse.Content.ReadFromJsonAsync<CreerRestaurantResponse>(
+            TestContext.Current.CancellationToken);
+        Assert.NotNull(cree);
+
+        var photoResponse = await admin.PostAsJsonAsync(
+            $"/api/restaurants/{cree.Id}/photos",
+            new AjouterPhotoRestaurantBody("https://exemple.test/photo.jpg"),
+            TestContext.Current.CancellationToken);
+        var photoAjoutee = await photoResponse.Content.ReadFromJsonAsync<AjouterPhotoRestaurantResponse>(
+            TestContext.Current.CancellationToken);
+        Assert.NotNull(photoAjoutee);
+
+        using var simple = factory.CreateClient();
+        await AuthTestHelper.InscrireEtConnecterAsync(simple, ct: TestContext.Current.CancellationToken);
+
+        var response = await simple.PutAsync(
+            $"/api/restaurants/{cree.Id}/photos/{photoAjoutee.PhotoId}/principale", null, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 }

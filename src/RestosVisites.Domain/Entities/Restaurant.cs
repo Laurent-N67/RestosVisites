@@ -7,34 +7,76 @@ namespace RestosVisites.Domain.Entities;
 public sealed class Restaurant
 {
     private readonly List<Categorie> _categories = [];
+    private readonly List<RestaurantPhoto> _photos = [];
 
     public Guid Id { get; }
     public string Nom { get; private set; }
     public string Adresse { get; private set; }
     public double Latitude { get; private set; }
     public double Longitude { get; private set; }
+    public string? Description { get; private set; }
+    public string? Telephone { get; private set; }
+    public string? SiteWeb { get; private set; }
+    public string? Horaires { get; private set; }
 
     public IReadOnlyCollection<Categorie> Categories => _categories;
+    public IReadOnlyCollection<RestaurantPhoto> Photos => _photos;
 
-    public Restaurant(string nom, string adresse, double latitude, double longitude)
-        : this(Guid.NewGuid(), nom, adresse, latitude, longitude)
+    public Restaurant(
+        string nom,
+        string adresse,
+        double latitude,
+        double longitude,
+        string? description = null,
+        string? telephone = null,
+        string? siteWeb = null,
+        string? horaires = null)
+        : this(Guid.NewGuid(), nom, adresse, latitude, longitude, description, telephone, siteWeb, horaires)
     {
     }
 
-    public Restaurant(string nom, string adresse, double latitude, double longitude, IEnumerable<Categorie> categories)
-        : this(Guid.NewGuid(), nom, adresse, latitude, longitude, categories)
+    public Restaurant(
+        string nom,
+        string adresse,
+        double latitude,
+        double longitude,
+        IEnumerable<Categorie> categories,
+        string? description = null,
+        string? telephone = null,
+        string? siteWeb = null,
+        string? horaires = null)
+        : this(Guid.NewGuid(), nom, adresse, latitude, longitude, categories, description, telephone, siteWeb, horaires)
     {
     }
 
     // Constructeur utilisé par EF Core au chargement depuis la base (constructor binding) : ses
     // paramètres se limitent volontairement aux propriétés scalaires mappées, une collection
     // navigation comme "categories" ne pouvant pas être liée à un paramètre de constructeur.
-    public Restaurant(Guid id, string nom, string adresse, double latitude, double longitude)
-        : this(id, nom, adresse, latitude, longitude, [])
+    public Restaurant(
+        Guid id,
+        string nom,
+        string adresse,
+        double latitude,
+        double longitude,
+        string? description = null,
+        string? telephone = null,
+        string? siteWeb = null,
+        string? horaires = null)
+        : this(id, nom, adresse, latitude, longitude, [], description, telephone, siteWeb, horaires)
     {
     }
 
-    public Restaurant(Guid id, string nom, string adresse, double latitude, double longitude, IEnumerable<Categorie> categories)
+    public Restaurant(
+        Guid id,
+        string nom,
+        string adresse,
+        double latitude,
+        double longitude,
+        IEnumerable<Categorie> categories,
+        string? description = null,
+        string? telephone = null,
+        string? siteWeb = null,
+        string? horaires = null)
     {
         Valider(nom, adresse, latitude, longitude);
 
@@ -43,6 +85,10 @@ public sealed class Restaurant
         Adresse = adresse.Trim();
         Latitude = latitude;
         Longitude = longitude;
+        Description = NormaliserTexteOptionnel(description);
+        Telephone = NormaliserTexteOptionnel(telephone);
+        SiteWeb = NormaliserTexteOptionnel(siteWeb);
+        Horaires = NormaliserTexteOptionnel(horaires);
         DefinirCategories(categories);
     }
 
@@ -50,7 +96,15 @@ public sealed class Restaurant
     /// Modifie les informations du restaurant, en appliquant les mêmes règles de validation
     /// qu'à la création.
     /// </summary>
-    public void Modifier(string nom, string adresse, double latitude, double longitude)
+    public void Modifier(
+        string nom,
+        string adresse,
+        double latitude,
+        double longitude,
+        string? description = null,
+        string? telephone = null,
+        string? siteWeb = null,
+        string? horaires = null)
     {
         Valider(nom, adresse, latitude, longitude);
 
@@ -58,6 +112,10 @@ public sealed class Restaurant
         Adresse = adresse.Trim();
         Latitude = latitude;
         Longitude = longitude;
+        Description = NormaliserTexteOptionnel(description);
+        Telephone = NormaliserTexteOptionnel(telephone);
+        SiteWeb = NormaliserTexteOptionnel(siteWeb);
+        Horaires = NormaliserTexteOptionnel(horaires);
     }
 
     /// <summary>
@@ -81,6 +139,50 @@ public sealed class Restaurant
             _categories.Add(categorie);
         }
     }
+
+    /// <summary>
+    /// Ajoute une photo au restaurant, en lui affectant l'ordre d'affichage séquentiel suivant.
+    /// Retourne la photo créée, dont l'appelant a besoin de connaître l'identifiant généré.
+    /// </summary>
+    public RestaurantPhoto AjouterPhoto(string url)
+    {
+        var ordre = _photos.Count == 0 ? 0 : _photos.Max(p => p.Ordre) + 1;
+        var photo = new RestaurantPhoto(url, ordre);
+
+        _photos.Add(photo);
+
+        return photo;
+    }
+
+    /// <summary>
+    /// Retire une photo du restaurant. N'a aucun effet si aucune photo avec cet
+    /// identifiant n'est associée.
+    /// </summary>
+    public void SupprimerPhoto(Guid photoId)
+    {
+        _photos.RemoveAll(p => p.Id == photoId);
+    }
+
+    /// <summary>
+    /// Marque une photo comme principale, en s'assurant qu'au plus une photo du restaurant l'est à
+    /// la fois (toute autre photo précédemment principale est démarquée).
+    /// </summary>
+    public void DefinirPhotoPrincipale(Guid photoId)
+    {
+        var photo = _photos.FirstOrDefault(p => p.Id == photoId);
+        if (photo is null)
+        {
+            throw new ArgumentException($"Aucune photo trouvée avec l'identifiant '{photoId}'.", nameof(photoId));
+        }
+
+        foreach (var autrePhoto in _photos)
+        {
+            autrePhoto.EstPrincipale = autrePhoto.Id == photoId;
+        }
+    }
+
+    private static string? NormaliserTexteOptionnel(string? valeur)
+        => string.IsNullOrWhiteSpace(valeur) ? null : valeur.Trim();
 
     private static void Valider(string nom, string adresse, double latitude, double longitude)
     {

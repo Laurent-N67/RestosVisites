@@ -8,4 +8,11 @@ public sealed record RestaurantDto(
     string Adresse,
     double Latitude,
     double Longitude,
-    IReadOnlyList<CategorieDto> Categories);
+    IReadOnlyList<CategorieDto> Categories,
+    string? Description,
+    string? Telephone,
+    string? SiteWeb,
+    string? Horaires,
+    IReadOnlyList<RestaurantPhotoDto> Photos);
+
+public sealed record RestaurantPhotoDto(Guid Id, string Url, bool EstPrincipale, int Ordre);

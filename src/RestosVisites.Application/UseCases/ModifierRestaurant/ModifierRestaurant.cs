@@ -39,7 +39,15 @@ public sealed class ModifierRestaurant
 
         var categories = await ResoudreCategoriesAsync(request.CategorieIds, ct);
 
-        restaurant.Modifier(request.Nom, request.Adresse, request.Latitude, request.Longitude);
+        restaurant.Modifier(
+            request.Nom,
+            request.Adresse,
+            request.Latitude,
+            request.Longitude,
+            request.Description,
+            request.Telephone,
+            request.SiteWeb,
+            request.Horaires);
         restaurant.DefinirCategories(categories);
         await _restaurantRepository.MettreAJourAsync(restaurant, ct);
     }
