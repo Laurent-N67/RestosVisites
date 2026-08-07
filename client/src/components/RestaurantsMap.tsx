@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { MapContainer, TileLayer, useMap } from 'react-leaflet'
+import MarkerClusterGroup from 'react-leaflet-cluster'
+import 'react-leaflet-cluster/dist/assets/MarkerCluster.css'
+import 'react-leaflet-cluster/dist/assets/MarkerCluster.Default.css'
 import L from 'leaflet'
 import { ApiError, getVisites } from '../api/client.ts'
 import type { Restaurant, UtilisateurAvecFavoris, Visite } from '../api/types.ts'
@@ -98,9 +101,13 @@ function FitBounds({ restaurants }: { restaurants: Restaurant[] }) {
 function SelectedRestaurantEffect({
   restaurants,
   selectedRestaurantId,
+  markersRef,
+  clusterGroupRef,
 }: {
   restaurants: Restaurant[]
   selectedRestaurantId: string | null
+  markersRef: React.RefObject<Map<string, L.Marker>>
+  clusterGroupRef: React.RefObject<React.ComponentRef<typeof MarkerClusterGroup> | null>
 }) {
   const map = useMap()
 
@@ -112,11 +119,26 @@ function SelectedRestaurantEffect({
     if (!restaurant) {
       return
     }
+    const target: [number, number] = [restaurant.latitude, restaurant.longitude]
     // setView (instantané) plutôt que flyTo : l'animation de vol de flyTo charge des tuiles à
     // chaque niveau de zoom intermédiaire pendant le survol, ce qui donnait un déplacement lent et
     // saccadé (surtout mobile/connexion lente) — setView évite complètement cette boucle d'animation.
-    map.setView([restaurant.latitude, restaurant.longitude], Math.max(map.getZoom(), 15))
-  }, [selectedRestaurantId, restaurants, map])
+    const recenter = () => map.setView(target, Math.max(map.getZoom(), 15))
+
+    const marker = markersRef.current.get(restaurant.id)
+    const clusterGroup = clusterGroupRef.current
+    if (marker && clusterGroup) {
+      // Le marqueur peut être masqué dans une bulle de cluster à ce niveau de
+      // zoom : zoomToShowLayer (API de Leaflet.markercluster, exposée par le
+      // ref de MarkerClusterGroup) zoome/spiderfie jusqu'à ce qu'il devienne
+      // visible individuellement, puis recentre exactement dessus une fois
+      // révélé — un simple setView ne suffirait pas à faire éclater le
+      // cluster.
+      clusterGroup.zoomToShowLayer(marker, recenter)
+    } else {
+      recenter()
+    }
+  }, [selectedRestaurantId, restaurants, map, markersRef, clusterGroupRef])
 
   return null
 }
@@ -141,6 +163,9 @@ function RestaurantsMap({
   >(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const markersRef = useRef<Map<string, L.Marker>>(new Map())
+  const clusterGroupRef = useRef<React.ComponentRef<
+    typeof MarkerClusterGroup
+  > | null>(null)
 
   const noteSummaries = useMemo(() => computeNoteSummaries(visites), [visites])
 
@@ -301,17 +326,21 @@ function RestaurantsMap({
         <SelectedRestaurantEffect
           restaurants={restaurants}
           selectedRestaurantId={selectedRestaurantId}
+          markersRef={markersRef}
+          clusterGroupRef={clusterGroupRef}
         />
-        {restaurants.map((restaurant) => (
-          <RestaurantMarker
-            key={restaurant.id}
-            restaurant={restaurant}
-            noteSummary={noteSummaries.get(restaurant.id) ?? null}
-            onSelect={handleSelectRestaurant}
-            onMarkerRef={handleMarkerRef}
-            highlighted={recommendedIds.has(restaurant.id)}
-          />
-        ))}
+        <MarkerClusterGroup ref={clusterGroupRef} spiderfyOnMaxZoom showCoverageOnHover={false}>
+          {restaurants.map((restaurant) => (
+            <RestaurantMarker
+              key={restaurant.id}
+              restaurant={restaurant}
+              noteSummary={noteSummaries.get(restaurant.id) ?? null}
+              onSelect={handleSelectRestaurant}
+              onMarkerRef={handleMarkerRef}
+              highlighted={recommendedIds.has(restaurant.id)}
+            />
+          ))}
+        </MarkerClusterGroup>
       </MapContainer>
 
       {selectedRestaurant && (

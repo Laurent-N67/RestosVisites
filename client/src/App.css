@@ -842,6 +842,43 @@
   border-radius: 50%;
 }
 
+/* Bulles de cluster (react-leaflet-cluster / Leaflet.markercluster) : la
+   feuille de style par défaut du plugin (marker-cluster-small/-medium/-large)
+   utilise un dégradé vert/jaune/orange générique qui jure avec la palette
+   --accent/--star de l'appli — on retexture les 3 paliers avec ces jetons
+   plutôt que de garder les couleurs de Leaflet. Mêmes valeurs en clair/sombre
+   (--accent et --star ne varient pas entre les deux thèmes), donc pas besoin
+   d'un bloc [data-theme='dark'] séparé pour la couleur elle-même. */
+
+.marker-cluster-small {
+  background-color: var(--star-bg);
+}
+
+.marker-cluster-small div {
+  background-color: var(--star);
+}
+
+.marker-cluster-medium {
+  background-color: var(--accent-bg);
+}
+
+.marker-cluster-medium div {
+  background-color: var(--accent);
+}
+
+.marker-cluster-large {
+  background-color: var(--accent-border);
+}
+
+.marker-cluster-large div {
+  background-color: var(--accent-hover);
+}
+
+.marker-cluster div {
+  color: #fff;
+  font-weight: 600;
+}
+
 /* Popup Leaflet */
 
 .restaurant-popup {
@@ -1500,6 +1537,14 @@
 
 :root[data-theme='dark'] .leaflet-control-attribution a {
   color: var(--accent);
+}
+
+/* Les bulles de cluster gardent la même teinte --accent/--star en sombre
+   (voir plus haut), mais sur les tuiles sombres un simple aplat de couleur
+   se détache moins bien qu'en clair — un léger liseré blanc translucide
+   suffit à les faire ressortir sans dupliquer les couleurs. */
+:root[data-theme='dark'] .marker-cluster div {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25);
 }
 
 /* Page détail restaurant */

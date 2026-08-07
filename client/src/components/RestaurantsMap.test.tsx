@@ -1,11 +1,29 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import L from 'leaflet'
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Restaurant, Utilisateur, Visite } from '../api/types.ts'
 import { Role } from '../api/types.ts'
 import { FavorisProvider } from '../contexts/FavorisContext.tsx'
 import RestaurantsMap from './RestaurantsMap.tsx'
 import '../leaflet-icon-fix.ts'
+
+// jsdom ne fait aucune mise en page réelle : clientWidth/clientHeight valent
+// toujours 0, ce que Leaflet utilise pour calculer la taille de la carte
+// (`getSize()`). Sans une taille non nulle, les calculs de zoom-vers-limites
+// de Leaflet.markercluster (`zoomToBounds`, utilisé par `zoomToShowLayer`
+// pour faire éclater un cluster contenant le marqueur sélectionné) produisent
+// des bornes invalides et plus aucun marqueur ne reste affiché sur la carte.
+beforeAll(() => {
+  Object.defineProperty(HTMLElement.prototype, 'clientWidth', {
+    configurable: true,
+    value: 1024,
+  })
+  Object.defineProperty(HTMLElement.prototype, 'clientHeight', {
+    configurable: true,
+    value: 768,
+  })
+})
 
 const {
   getVisitesMock,
@@ -75,8 +93,15 @@ const restaurantB: Restaurant = {
   id: 'restaurant-b',
   nom: 'Le Petit Coin',
   adresse: '2 rue de Lyon',
-  latitude: 45.75,
-  longitude: 4.85,
+  // Volontairement proche de restaurantA (quelques centaines de mètres, pas
+  // à Lyon malgré l'adresse) : avec le clustering (Phase 7b), un restaurant
+  // sélectionné via la sidebar recentre/zoome fortement la carte dessus, et
+  // Leaflet.markercluster ne rend plus dans le DOM les marqueurs hors de la
+  // zone actuellement visible (virtualisation par viewport) — trop éloigné,
+  // le marqueur de restaurantB deviendrait injoignable par un clic direct
+  // dans le test ci-dessous.
+  latitude: 48.855,
+  longitude: 2.355,
   categories: [],
   description: null,
   telephone: null,
@@ -108,6 +133,33 @@ function renderMap(
       <RestaurantsMap {...defaultProps} {...props} />
     </FavorisProvider>,
   )
+}
+
+/**
+ * Retrouve le marqueur Leaflet (l'élément `.leaflet-marker-icon`) d'un
+ * restaurant par son nom, via l'`aria-describedby` du marqueur qui pointe
+ * vers l'id de son tooltip permanent (`leaflet-tooltip-N`, affichant le nom
+ * du restaurant). Avec le clustering (Phase 7b), Leaflet.markercluster
+ * n'ajoute plus forcément les marqueurs au DOM dans l'ordre du tableau
+ * `restaurants` passé en props (l'ordre dépend de sa structure interne en
+ * grille spatiale) — un index fixe (`markers[1]`) n'est donc plus fiable
+ * pour cibler un restaurant précis.
+ */
+function findMarkerByRestaurantName(name: string): HTMLElement {
+  const tooltip = [...document.querySelectorAll('.restaurant-label-nom')].find(
+    (el) => el.textContent === name,
+  )
+  const tooltipContainer = tooltip?.closest('[id^="leaflet-tooltip-"]')
+  if (!tooltipContainer) {
+    throw new Error(`Aucun tooltip trouvé pour le restaurant "${name}"`)
+  }
+  const marker = document.querySelector(
+    `.leaflet-marker-icon[aria-describedby="${tooltipContainer.id}"]`,
+  )
+  if (!marker) {
+    throw new Error(`Aucun marqueur trouvé pour le restaurant "${name}"`)
+  }
+  return marker as HTMLElement
 }
 
 describe('RestaurantsMap', () => {
@@ -149,14 +201,26 @@ describe('RestaurantsMap', () => {
   })
 
   it('sélectionne un restaurant et affiche le panneau de détail au clic sur son marqueur', async () => {
-    const user = userEvent.setup()
     renderMap()
 
-    const markers = document.querySelectorAll('.leaflet-marker-icon')
-    expect(markers.length).toBe(2)
-    // Les marqueurs sont rendus dans l'ordre du tableau `restaurants` passé
-    // en props (pas trié), à la différence de la sidebar (triée par nom).
-    await user.click(markers[1])
+    // react-leaflet-cluster ajoute les marqueurs au groupe de clustering de
+    // façon asynchrone (microtask), d'où le waitFor plutôt qu'une lecture
+    // synchrone du DOM juste après le rendu.
+    await waitFor(() =>
+      expect(document.querySelectorAll('.leaflet-marker-icon').length).toBe(2),
+    )
+    // fireEvent plutôt que userEvent : userEvent.click() simule une vraie
+    // séquence pointerdown/mousedown/pointerup/mouseup/click, et Leaflet
+    // supprime le "click" qui suit un mousedown/mouseup s'il détecte un drag
+    // (_draggableMoved). En jsdom, le conteneur a une taille simulée
+    // (clientWidth/clientHeight mockés ci-dessus) mais les marqueurs restent
+    // sans coordonnées de layout réelles (getBoundingClientRect toujours à
+    // 0,0,0,0) : ce décalage déclenche parfois à tort la détection de drag de
+    // Leaflet et avale le clic (flaky avec userEvent). fireEvent.click()
+    // dispatche un seul évènement "click" directement sur le nœud ciblé, sans
+    // passer par cette séquence bas niveau — fiable ici, sans rapport avec le
+    // clustering en lui-même.
+    fireEvent.click(findMarkerByRestaurantName('Le Petit Coin'))
 
     expect(
       await screen.findByRole('heading', { name: 'Le Petit Coin', level: 2 }),
@@ -204,6 +268,30 @@ describe('RestaurantsMap', () => {
     expect(items.length).toBe(2)
   })
 
+  it('révèle le marqueur sélectionné via zoomToShowLayer du groupe de clustering (au cas où il serait masqué dans un cluster)', async () => {
+    // Vérifie le câblage réel ajouté en Phase 7b : un simple map.setView ne
+    // suffirait pas à faire éclater un cluster contenant le marqueur
+    // sélectionné, d'où l'appel à zoomToShowLayer (API de
+    // Leaflet.markercluster, exposée par le ref de MarkerClusterGroup) plutôt
+    // que de recentrer directement. On espionne la méthode réelle sur le
+    // prototype plutôt que de reproduire la géométrie de clustering en jsdom
+    // (peu fiable, cf. commentaires plus haut sur clientWidth/clientHeight).
+    const zoomToShowLayerSpy = vi.spyOn(
+      L.MarkerClusterGroup.prototype,
+      'zoomToShowLayer',
+    )
+    const user = userEvent.setup()
+    renderMap()
+
+    await user.click(screen.getByRole('button', { name: /Chez Aline/ }))
+    await screen.findByRole('heading', { name: 'Chez Aline', level: 2 })
+
+    await waitFor(() => expect(zoomToShowLayerSpy).toHaveBeenCalledTimes(1))
+    const [layerArg, callbackArg] = zoomToShowLayerSpy.mock.calls[0]
+    expect(layerArg).toBeInstanceOf(L.Marker)
+    expect(typeof callbackArg).toBe('function')
+  })
+
   it('sélectionne le bon restaurant après un clic sidebar suivi d\'un clic sur un autre marqueur', async () => {
     const user = userEvent.setup()
     renderMap()
@@ -211,8 +299,16 @@ describe('RestaurantsMap', () => {
     await user.click(screen.getByRole('button', { name: /Chez Aline/ }))
     await screen.findByRole('heading', { name: 'Chez Aline', level: 2 })
 
-    const markers = document.querySelectorAll('.leaflet-marker-icon')
-    await user.click(markers[1])
+    // react-leaflet-cluster ajoute les marqueurs au groupe de clustering de
+    // façon asynchrone (microtask), d'où le waitFor plutôt qu'une lecture
+    // synchrone du DOM juste après le rendu.
+    await waitFor(() =>
+      expect(document.querySelectorAll('.leaflet-marker-icon').length).toBe(2),
+    )
+    // fireEvent plutôt que userEvent : voir commentaire équivalent plus haut
+    // (hit-testing par coordonnées ambigu en jsdom sur des marqueurs Leaflet
+    // sans layout réel).
+    fireEvent.click(findMarkerByRestaurantName('Le Petit Coin'))
 
     const heading = await screen.findByRole('heading', {
       name: 'Le Petit Coin',

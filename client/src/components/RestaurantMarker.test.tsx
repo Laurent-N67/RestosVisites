@@ -76,6 +76,19 @@ describe('RestaurantMarker', () => {
     expect(document.querySelector('.leaflet-popup')).not.toBeInTheDocument()
   })
 
+  it('utilise l\'icône orange distincte quand le restaurant est recommandé, l\'icône par défaut sinon', () => {
+    // L'icône propre au marqueur (RECOMMENDED_ICON vs DEFAULT_ICON) est
+    // gérée par RestaurantMarker lui-même, indépendamment du groupe de
+    // clustering (Phase 7b) qui l'englobe dans RestaurantsMap — inutile de
+    // passer par MarkerClusterGroup pour vérifier cette sélection d'icône.
+    const { unmount } = renderMarker({ highlighted: true })
+    expect(document.querySelector('.recommended-marker')).toBeInTheDocument()
+    unmount()
+
+    renderMarker({ highlighted: false })
+    expect(document.querySelector('.recommended-marker')).not.toBeInTheDocument()
+  })
+
   it('signale la ref du marqueur via onMarkerRef au montage puis au démontage', () => {
     const onMarkerRef = vi.fn()
     const { unmount } = renderMarker({ onMarkerRef })

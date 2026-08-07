@@ -4,7 +4,11 @@
     "target": "es2023",
     "lib": ["ES2023", "DOM"],
     "module": "esnext",
-    "types": ["vite/client"],
+    // "leaflet.markercluster" n'est jamais importé directement en TS (seul
+    // react-leaflet-cluster l'importe côté JS, pour son effet de bord qui
+    // étend L.MarkerClusterGroup) : sans l'ajouter ici, ses types
+    // d'augmentation du module "leaflet" ne seraient jamais inclus.
+    "types": ["vite/client", "leaflet.markercluster"],
     "allowArbitraryExtensions": true,
     "skipLibCheck": true,
 
