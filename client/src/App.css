@@ -290,6 +290,7 @@
 .panel-form input[type='password'],
 .panel-form input[type='date'],
 .panel-form input[type='url'],
+.panel-form input[type='number'],
 .panel-form select,
 .panel-form textarea {
   padding: 8px 10px;
@@ -298,6 +299,30 @@
   width: 100%;
   background: var(--field-bg);
   color: var(--text-h);
+}
+
+.segmented-control {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.visite-details {
+  margin-top: 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.visite-details summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.visite-details[open] summary {
+  margin-bottom: 4px;
 }
 
 .panel-form button[type='submit'] {
