@@ -5,6 +5,7 @@ using RestosVisites.Application.UseCases.ListerToutesLesVisites;
 using RestosVisites.Application.UseCases.ListerVisitesRestaurant;
 using RestosVisites.Application.UseCases.ModifierVisite;
 using RestosVisites.Application.UseCases.SupprimerVisite;
+using RestosVisites.Domain.Enums;
 
 namespace RestosVisites.Api.Controllers;
 
@@ -47,7 +48,16 @@ public sealed class VisitesController : ControllerBase
     public async Task<ActionResult<EnregistrerVisiteResponse>> Enregistrer(EnregistrerVisiteBody body, CancellationToken ct)
     {
         var request = new EnregistrerVisiteRequest(
-            body.RestaurantId, User.ObtenirUtilisateurId(), body.Date, body.Note, body.Commentaire, body.UrlsPhotos);
+            body.RestaurantId,
+            User.ObtenirUtilisateurId(),
+            body.Date,
+            body.Note,
+            body.Commentaire,
+            body.UrlsPhotos,
+            body.AvecQui,
+            body.Reservation,
+            body.Budget,
+            body.TempsAttente);
         var response = await _enregistrerVisite.ExecuterAsync(request, ct);
 
         return Created($"/api/visites/{response.Id}", response);
@@ -61,7 +71,17 @@ public sealed class VisitesController : ControllerBase
     public async Task<IActionResult> Modifier(Guid id, ModifierVisiteBody body, CancellationToken ct)
     {
         var request = new ModifierVisiteRequest(
-            id, User.ObtenirUtilisateurId(), User.ObtenirRole(), body.Date, body.Note, body.Commentaire, body.UrlsPhotos);
+            id,
+            User.ObtenirUtilisateurId(),
+            User.ObtenirRole(),
+            body.Date,
+            body.Note,
+            body.Commentaire,
+            body.UrlsPhotos,
+            body.AvecQui,
+            body.Reservation,
+            body.Budget,
+            body.TempsAttente);
         await _modifierVisite.ExecuterAsync(request, ct);
 
         return NoContent();
@@ -92,11 +112,19 @@ public sealed record EnregistrerVisiteBody(
     DateOnly Date,
     int Note,
     string? Commentaire,
-    IReadOnlyList<string> UrlsPhotos);
+    IReadOnlyList<string> UrlsPhotos,
+    Compagnie? AvecQui = null,
+    Reservation? Reservation = null,
+    decimal? Budget = null,
+    int? TempsAttente = null);
 
 /// <summary>Corps de requête pour la modification d'une visite (l'identifiant provient de l'URL).</summary>
 public sealed record ModifierVisiteBody(
     DateOnly Date,
     int Note,
     string? Commentaire,
-    IReadOnlyList<string> UrlsPhotos);
+    IReadOnlyList<string> UrlsPhotos,
+    Compagnie? AvecQui = null,
+    Reservation? Reservation = null,
+    decimal? Budget = null,
+    int? TempsAttente = null);

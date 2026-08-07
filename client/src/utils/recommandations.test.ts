@@ -36,6 +36,10 @@ function visite(restaurantId: string, utilisateurId: string): Visite {
     urlsPhotos: [],
     utilisateurId,
     utilisateurNomAffiche: 'Quelqu\'un',
+    avecQui: null,
+    reservation: null,
+    budget: null,
+    tempsAttente: null,
   }
 }
 

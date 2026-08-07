@@ -125,6 +125,10 @@ describe('UtilisateursPage', () => {
         urlsPhotos: [],
         utilisateurId: 'user-1',
         utilisateurNomAffiche: 'Une Personne',
+        avecQui: null,
+        reservation: null,
+        budget: null,
+        tempsAttente: null,
       },
       {
         id: 'v2',
@@ -135,6 +139,10 @@ describe('UtilisateursPage', () => {
         urlsPhotos: [],
         utilisateurId: 'user-1',
         utilisateurNomAffiche: 'Une Personne',
+        avecQui: null,
+        reservation: null,
+        budget: null,
+        tempsAttente: null,
       },
     ]
     renderPage(visites)

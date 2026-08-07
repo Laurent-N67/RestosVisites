@@ -25,6 +25,25 @@ export interface Restaurant {
   photos: RestaurantPhoto[]
 }
 
+// `Compagnie` côté serveur est un enum C# sans JsonStringEnumConverter, il sérialise donc en
+// nombre, jamais en chaîne (même convention que Role — voir ce commentaire).
+export const Compagnie = {
+  Seul: 0,
+  Couple: 1,
+  Amis: 2,
+  Famille: 3,
+} as const
+export type Compagnie = (typeof Compagnie)[keyof typeof Compagnie]
+
+// `Reservation` côté serveur est un enum C# sans JsonStringEnumConverter, il sérialise donc en
+// nombre, jamais en chaîne (même convention que Role — voir ce commentaire).
+export const Reservation = {
+  Indifferent: 0,
+  Oui: 1,
+  Non: 2,
+} as const
+export type Reservation = (typeof Reservation)[keyof typeof Reservation]
+
 export interface Visite {
   id: string
   restaurantId: string
@@ -34,6 +53,10 @@ export interface Visite {
   urlsPhotos: string[]
   utilisateurId: string
   utilisateurNomAffiche: string
+  avecQui: Compagnie | null
+  reservation: Reservation | null
+  budget: number | null
+  tempsAttente: number | null
 }
 
 // `RoleUtilisateur` côté serveur est un enum C# sans JsonStringEnumConverter,
@@ -100,6 +123,10 @@ export interface CreateVisiteRequest {
   note: number
   commentaire: string | null
   urlsPhotos: string[]
+  avecQui?: Compagnie | null
+  reservation?: Reservation | null
+  budget?: number | null
+  tempsAttente?: number | null
 }
 
 export type UpdateRestaurantRequest = CreateRestaurantRequest

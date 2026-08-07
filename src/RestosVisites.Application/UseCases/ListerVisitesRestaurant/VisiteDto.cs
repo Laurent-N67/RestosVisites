@@ -1,3 +1,5 @@
+using RestosVisites.Domain.Enums;
+
 namespace RestosVisites.Application.UseCases.ListerVisitesRestaurant;
 
 public sealed record VisiteDto(
@@ -8,4 +10,8 @@ public sealed record VisiteDto(
     DateOnly Date,
     int Note,
     string? Commentaire,
-    IReadOnlyList<string> UrlsPhotos);
+    IReadOnlyList<string> UrlsPhotos,
+    Compagnie? AvecQui,
+    Reservation? Reservation,
+    decimal? Budget,
+    int? TempsAttente);

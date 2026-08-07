@@ -37,6 +37,21 @@ public sealed class VisiteConfiguration : IEntityTypeConfiguration<Visite>
             .IsRequired()
             .HasColumnName("Note");
 
+        // Stockés en texte (plutôt qu'en entier brut) pour rester lisibles directement en base et
+        // ne pas dépendre de l'ordre de déclaration des valeurs de l'enum, comme Utilisateur.Role.
+        builder.Property(v => v.AvecQui)
+            .HasConversion<string>()
+            .HasMaxLength(20);
+
+        builder.Property(v => v.Reservation)
+            .HasConversion<string>()
+            .HasMaxLength(20);
+
+        // Précision explicite plutôt que de dépendre de l'affinité numérique par défaut de SQLite
+        // pour une valeur monétaire.
+        builder.Property(v => v.Budget)
+            .HasColumnType("decimal(10,2)");
+
         // FK explicite vers Restaurant, sans navigation exposée côté Visite (le Domain n'expose pas
         // de référence directe à l'entité Restaurant, seulement son identifiant).
         builder.HasOne<Restaurant>()

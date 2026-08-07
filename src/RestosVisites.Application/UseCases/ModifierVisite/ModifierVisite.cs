@@ -53,7 +53,14 @@ public sealed class ModifierVisite
             }
         }
 
-        visite.Modifier(request.Date, new Note(request.Note), request.Commentaire);
+        visite.Modifier(
+            request.Date,
+            new Note(request.Note),
+            request.Commentaire,
+            request.AvecQui,
+            request.Reservation,
+            request.Budget,
+            request.TempsAttente);
 
         await _visiteRepository.MettreAJourAsync(visite, ct);
     }

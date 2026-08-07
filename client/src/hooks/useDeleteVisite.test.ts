@@ -25,6 +25,10 @@ const visite: Visite = {
   urlsPhotos: [],
   utilisateurId: 'user-1',
   utilisateurNomAffiche: 'Une Personne',
+  avecQui: null,
+  reservation: null,
+  budget: null,
+  tempsAttente: null,
 }
 
 describe('useDeleteVisite', () => {

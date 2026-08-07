@@ -9,4 +9,8 @@ public sealed record ModifierVisiteRequest(
     DateOnly Date,
     int Note,
     string? Commentaire,
-    IReadOnlyList<string> UrlsPhotos);
+    IReadOnlyList<string> UrlsPhotos,
+    Compagnie? AvecQui = null,
+    Reservation? Reservation = null,
+    decimal? Budget = null,
+    int? TempsAttente = null);

@@ -2,6 +2,7 @@ using RestosVisites.Application.Exceptions;
 using RestosVisites.Application.Tests.Fakes;
 using RestosVisites.Application.UseCases.EnregistrerVisite;
 using RestosVisites.Domain.Entities;
+using RestosVisites.Domain.Enums;
 
 namespace RestosVisites.Application.Tests.UseCases;
 
@@ -79,5 +80,32 @@ public class EnregistrerVisiteTests
         Assert.Equal(2, visite.Photos.Count);
         Assert.Contains(visite.Photos, p => p.Url == "https://exemple.test/photo1.jpg");
         Assert.Contains(visite.Photos, p => p.Url == "https://exemple.test/photo2.jpg");
+    }
+
+    [Fact]
+    public async Task ExecuterAsync_AvecDetailsRenseignes_LesPersiste()
+    {
+        var (restaurantRepository, restaurantId) = await CreerRestaurantExistantAsync();
+        var visiteRepository = new FakeVisiteRepository();
+        var useCase = new EnregistrerVisite(restaurantRepository, visiteRepository);
+        var request = new EnregistrerVisiteRequest(
+            restaurantId,
+            UtilisateurIdValide,
+            new DateOnly(2026, 1, 15),
+            4,
+            "Très bon accueil",
+            [],
+            Compagnie.Couple,
+            Reservation.Oui,
+            35.50m,
+            10);
+
+        await useCase.ExecuterAsync(request, TestContext.Current.CancellationToken);
+
+        var visite = Assert.Single(visiteRepository.Visites);
+        Assert.Equal(Compagnie.Couple, visite.AvecQui);
+        Assert.Equal(Reservation.Oui, visite.Reservation);
+        Assert.Equal(35.50m, visite.Budget);
+        Assert.Equal(10, visite.TempsAttente);
     }
 }

@@ -22,6 +22,10 @@ function visite(
     urlsPhotos: [],
     utilisateurId,
     utilisateurNomAffiche: 'Quelqu\'un',
+    avecQui: null,
+    reservation: null,
+    budget: null,
+    tempsAttente: null,
   }
 }
 

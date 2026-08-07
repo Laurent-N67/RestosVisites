@@ -1,4 +1,5 @@
 using RestosVisites.Domain.Entities;
+using RestosVisites.Domain.Enums;
 using RestosVisites.Domain.ValueObjects;
 
 namespace RestosVisites.Domain.Tests.Entities;
@@ -143,5 +144,89 @@ public class VisiteTests
         var visite = new Visite(RestaurantIdValide, UtilisateurIdValide, DateValide, new Note(3));
 
         Assert.Throws<ArgumentNullException>(() => visite.Modifier(DateValide, null!, null));
+    }
+
+    [Fact]
+    public void Constructeur_AvecTousLesDetailsRenseignes_LesStocke()
+    {
+        var visite = new Visite(
+            RestaurantIdValide, UtilisateurIdValide, DateValide, new Note(4), "Sympa",
+            Compagnie.Amis, Reservation.Oui, 42.50m, 15);
+
+        Assert.Equal(Compagnie.Amis, visite.AvecQui);
+        Assert.Equal(Reservation.Oui, visite.Reservation);
+        Assert.Equal(42.50m, visite.Budget);
+        Assert.Equal(15, visite.TempsAttente);
+    }
+
+    [Fact]
+    public void Constructeur_SansDetails_LesLaisseANull()
+    {
+        var visite = new Visite(RestaurantIdValide, UtilisateurIdValide, DateValide, new Note(4));
+
+        Assert.Null(visite.AvecQui);
+        Assert.Null(visite.Reservation);
+        Assert.Null(visite.Budget);
+        Assert.Null(visite.TempsAttente);
+    }
+
+    [Fact]
+    public void Constructeur_BudgetNegatif_LeveArgumentOutOfRangeException()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => new Visite(RestaurantIdValide, UtilisateurIdValide, DateValide, new Note(3), budget: -1m));
+    }
+
+    [Fact]
+    public void Constructeur_TempsAttenteNegatif_LeveArgumentOutOfRangeException()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => new Visite(RestaurantIdValide, UtilisateurIdValide, DateValide, new Note(3), tempsAttente: -1));
+    }
+
+    [Fact]
+    public void Modifier_AvecTousLesDetailsRenseignes_LesMetAJour()
+    {
+        var visite = new Visite(RestaurantIdValide, UtilisateurIdValide, DateValide, new Note(3));
+
+        visite.Modifier(DateValide, new Note(4), "Correct", Compagnie.Famille, Reservation.Non, 30m, 5);
+
+        Assert.Equal(Compagnie.Famille, visite.AvecQui);
+        Assert.Equal(Reservation.Non, visite.Reservation);
+        Assert.Equal(30m, visite.Budget);
+        Assert.Equal(5, visite.TempsAttente);
+    }
+
+    [Fact]
+    public void Modifier_SansDetails_LesReinitialiseANull()
+    {
+        var visite = new Visite(
+            RestaurantIdValide, UtilisateurIdValide, DateValide, new Note(3), avecQui: Compagnie.Seul,
+            reservation: Reservation.Oui, budget: 20m, tempsAttente: 10);
+
+        visite.Modifier(DateValide, new Note(4), null);
+
+        Assert.Null(visite.AvecQui);
+        Assert.Null(visite.Reservation);
+        Assert.Null(visite.Budget);
+        Assert.Null(visite.TempsAttente);
+    }
+
+    [Fact]
+    public void Modifier_BudgetNegatif_LeveArgumentOutOfRangeException()
+    {
+        var visite = new Visite(RestaurantIdValide, UtilisateurIdValide, DateValide, new Note(3));
+
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => visite.Modifier(DateValide, new Note(4), null, budget: -1m));
+    }
+
+    [Fact]
+    public void Modifier_TempsAttenteNegatif_LeveArgumentOutOfRangeException()
+    {
+        var visite = new Visite(RestaurantIdValide, UtilisateurIdValide, DateValide, new Note(3));
+
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => visite.Modifier(DateValide, new Note(4), null, tempsAttente: -1));
     }
 }

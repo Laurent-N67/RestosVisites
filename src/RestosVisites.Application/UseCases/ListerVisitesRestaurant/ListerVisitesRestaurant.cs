@@ -48,5 +48,9 @@ public sealed class ListerVisitesRestaurant
         visite.Date,
         visite.Note.Valeur,
         visite.Commentaire,
-        visite.Photos.Select(p => p.Url).ToList());
+        visite.Photos.Select(p => p.Url).ToList(),
+        visite.AvecQui,
+        visite.Reservation,
+        visite.Budget,
+        visite.TempsAttente);
 }

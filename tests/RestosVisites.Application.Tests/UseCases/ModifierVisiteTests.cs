@@ -142,4 +142,31 @@ public class ModifierVisiteTests
 
         Assert.Equal("https://exemple.test/photo.jpg", Assert.Single(visite.Photos).Url);
     }
+
+    [Fact]
+    public async Task ExecuterAsync_AvecDetailsRenseignes_LesMetAJour()
+    {
+        var (visiteRepository, visite) = await CreerVisiteExistanteAsync();
+        var useCase = new ModifierVisite(visiteRepository);
+        var request = new ModifierVisiteRequest(
+            visite.Id,
+            AuteurId,
+            RoleUtilisateur.Simple,
+            DateValide,
+            4,
+            "Correct",
+            [],
+            Compagnie.Famille,
+            Reservation.Non,
+            18m,
+            20);
+
+        await useCase.ExecuterAsync(request, TestContext.Current.CancellationToken);
+
+        var visiteModifiee = Assert.Single(visiteRepository.Visites);
+        Assert.Equal(Compagnie.Famille, visiteModifiee.AvecQui);
+        Assert.Equal(Reservation.Non, visiteModifiee.Reservation);
+        Assert.Equal(18m, visiteModifiee.Budget);
+        Assert.Equal(20, visiteModifiee.TempsAttente);
+    }
 }

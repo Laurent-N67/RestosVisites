@@ -86,6 +86,56 @@ public sealed class VisiteRepositoryTests : SqliteTestBase
     }
 
     [Fact]
+    public async Task AjouterAsync_AvecDetailsRenseignes_RepeupleDepuisNouveauDbContext()
+    {
+        var restaurant = await CreerRestaurantAsync();
+        var utilisateur = await CreerUtilisateurAsync();
+
+        var visite = new Visite(
+            restaurant.Id, utilisateur.Id, new DateOnly(2026, 7, 25), new Note(5), "Excellent repas",
+            Compagnie.Amis, Reservation.Oui, 42.50m, 12);
+
+        await using (var dbContext = CreerDbContext())
+        {
+            var repository = new VisiteRepository(dbContext);
+            await repository.AjouterAsync(visite, TestContext.Current.CancellationToken);
+        }
+
+        await using var autreDbContext = CreerDbContext();
+        var autreRepository = new VisiteRepository(autreDbContext);
+        var visiteRelue = Assert.Single(await autreRepository.ListerToutesAsync(TestContext.Current.CancellationToken));
+
+        Assert.Equal(Compagnie.Amis, visiteRelue.AvecQui);
+        Assert.Equal(Reservation.Oui, visiteRelue.Reservation);
+        Assert.Equal(42.50m, visiteRelue.Budget);
+        Assert.Equal(12, visiteRelue.TempsAttente);
+    }
+
+    [Fact]
+    public async Task AjouterAsync_SansDetails_LesRepeupleANull()
+    {
+        var restaurant = await CreerRestaurantAsync();
+        var utilisateur = await CreerUtilisateurAsync();
+
+        var visite = new Visite(restaurant.Id, utilisateur.Id, new DateOnly(2026, 7, 25), new Note(5));
+
+        await using (var dbContext = CreerDbContext())
+        {
+            var repository = new VisiteRepository(dbContext);
+            await repository.AjouterAsync(visite, TestContext.Current.CancellationToken);
+        }
+
+        await using var autreDbContext = CreerDbContext();
+        var autreRepository = new VisiteRepository(autreDbContext);
+        var visiteRelue = Assert.Single(await autreRepository.ListerToutesAsync(TestContext.Current.CancellationToken));
+
+        Assert.Null(visiteRelue.AvecQui);
+        Assert.Null(visiteRelue.Reservation);
+        Assert.Null(visiteRelue.Budget);
+        Assert.Null(visiteRelue.TempsAttente);
+    }
+
+    [Fact]
     public async Task ListerToutesAsync_RetourneToutesLesVisitesTousRestaurantsConfondus()
     {
         var premierRestaurant = await CreerRestaurantAsync("Restaurant A", "1 rue A");

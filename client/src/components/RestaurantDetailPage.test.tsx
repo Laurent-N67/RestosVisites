@@ -71,6 +71,10 @@ const visites: Visite[] = [
     urlsPhotos: ['/uploads/photo-1.jpg'],
     utilisateurId: 'user-2',
     utilisateurNomAffiche: 'Une Autre Personne',
+    avecQui: null,
+    reservation: null,
+    budget: null,
+    tempsAttente: null,
   },
   {
     id: 'visite-2',
@@ -81,6 +85,10 @@ const visites: Visite[] = [
     urlsPhotos: [],
     utilisateurId: 'user-2',
     utilisateurNomAffiche: 'Une Autre Personne',
+    avecQui: null,
+    reservation: null,
+    budget: null,
+    tempsAttente: null,
   },
 ]
 
