@@ -130,12 +130,37 @@
 }
 
 .map-sidebar-item {
-  display: block;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
   width: 100%;
   text-align: left;
   padding: var(--space-3);
   font: inherit;
   color: inherit;
+}
+
+.map-sidebar-item-thumb {
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+}
+
+.map-sidebar-item-thumb .cover-photo {
+  width: 52px;
+  height: 52px;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-sm);
+  margin: 0;
+}
+
+.map-sidebar-item-thumb .cover-photo-placeholder {
+  font-size: 20px;
+}
+
+.map-sidebar-item-body {
+  flex: 1;
+  min-width: 0;
 }
 
 .map-sidebar-item h3 {
@@ -185,6 +210,52 @@
 
   .map-sidebar--open {
     transform: translateX(0);
+  }
+}
+
+/* Panneau de détail de la vue Carte (3e colonne desktop / plein écran
+   mobile) : n'est rendu que quand un restaurant est sélectionné, sinon la
+   vue Carte reste à 2 colonnes (sidebar + carte) sans grand encart vide. */
+
+.restaurant-detail-panel {
+  position: relative;
+  width: 380px;
+  flex-shrink: 0;
+  overflow-y: auto;
+  padding: 20px;
+  border-left: 1px solid var(--border);
+  background: var(--bg-card);
+}
+
+.detail-panel-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  border: none;
+  background: none;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--text);
+}
+
+.detail-panel-add-visite {
+  display: block;
+  width: 100%;
+  text-align: center;
+  margin-top: 12px;
+}
+
+/* Cette règle DOIT rester après la définition de base ci-dessus (source
+   order + spécificité égale) — voir le bug récurrent déjà rencontré avec
+   .map-sidebar, où un override mobile placé avant sa règle de base perdait
+   silencieusement. */
+@media (max-width: 900px) {
+  .restaurant-detail-panel {
+    position: absolute;
+    inset: 0;
+    z-index: 1050;
+    width: auto;
+    box-shadow: var(--shadow-lg);
   }
 }
 

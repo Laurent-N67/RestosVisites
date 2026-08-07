@@ -182,14 +182,18 @@ function App() {
     void loadAllVisites()
   }
 
+  function handleAddVisiteForRestaurant(restaurantId: string) {
+    setActivePanel('visite')
+    setPreselectedRestaurantId(restaurantId)
+  }
+
   function handleRestaurantSaved(restaurantId: string) {
     void loadRestaurants()
     if (editingRestaurant) {
       setActivePanel('none')
       setEditingRestaurant(null)
     } else {
-      setActivePanel('visite')
-      setPreselectedRestaurantId(restaurantId)
+      handleAddVisiteForRestaurant(restaurantId)
     }
   }
 
@@ -317,6 +321,7 @@ function App() {
                   onEditVisite={handleEditVisite}
                   onRestaurantDeleted={handleRestaurantDeleted}
                   onVisiteDeleted={() => void loadAllVisites()}
+                  onAddVisite={handleAddVisiteForRestaurant}
                 />
               </ProtectedRoute>
             }

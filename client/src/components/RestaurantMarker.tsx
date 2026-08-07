@@ -1,18 +1,11 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Marker, Popup, Tooltip } from 'react-leaflet'
+import { Marker, Tooltip } from 'react-leaflet'
 import L from 'leaflet'
 import { resolvePhotoUrl } from '../api/client.ts'
 import type { Restaurant, UtilisateurAvecFavoris, Visite } from '../api/types.ts'
-import { Role } from '../api/types.ts'
-import { useAuth } from '../contexts/AuthContext.tsx'
-import { useDeleteRestaurant } from '../hooks/useDeleteRestaurant.ts'
-import { useDeleteVisite } from '../hooks/useDeleteVisite.ts'
-import { useFavoriToggle } from '../hooks/useFavoriToggle.ts'
 import { formatDate, formatNoteMoyenne, stars } from '../utils/format.ts'
 import { estFavoriDeUtilisateur } from '../utils/visites.ts'
 import PhotoLightbox from './PhotoLightbox.tsx'
-import CategoryBadges from './CategoryBadges.tsx'
 import type { NoteSummary } from './RestaurantsMap.tsx'
 
 // Icône agrandie (~1.5×) et de couleur distincte (jeton --accent) pour les
@@ -52,15 +45,8 @@ export type VisitesState =
 
 interface RestaurantMarkerProps {
   restaurant: Restaurant
-  visitesState: VisitesState
   noteSummary: NoteSummary | null
-  utilisateursAvecFavoris: UtilisateurAvecFavoris[]
-  onOpen: (restaurantId: string) => void
-  onEditRestaurant: (restaurant: Restaurant) => void
-  onRestaurantDeleted: () => void
-  onEditVisite: (visite: Visite) => void
-  onVisitesRefresh: (restaurantId: string) => void
-  onVisiteDeleted: () => void
+  onSelect: (restaurantId: string) => void
   onMarkerRef?: (restaurantId: string, instance: L.Marker | null) => void
   /** Restaurant recommandé (style similaire, pas encore visité) : icône agrandie/distincte. */
   highlighted?: boolean
@@ -78,7 +64,11 @@ interface VisitesSectionProps {
   isAdmin: boolean
 }
 
-function VisitesSection({
+// Exporté : réutilisé tel quel par RestaurantDetailPanel (panneau de détail de
+// la vue Carte) pour l'historique des visites, plutôt que de dupliquer ce
+// rendu — c'était auparavant uniquement rendu à l'intérieur de la Popup
+// Leaflet de ce fichier, désormais supprimée.
+export function VisitesSection({
   restaurantId,
   visitesState,
   utilisateursAvecFavoris,
@@ -194,49 +184,17 @@ function VisitesSection({
 
 function RestaurantMarker({
   restaurant,
-  visitesState,
   noteSummary,
-  utilisateursAvecFavoris,
-  onOpen,
-  onEditRestaurant,
-  onRestaurantDeleted,
-  onEditVisite,
-  onVisitesRefresh,
-  onVisiteDeleted,
+  onSelect,
   onMarkerRef,
   highlighted = false,
 }: RestaurantMarkerProps) {
-  const { user } = useAuth()
-  const isAdmin = user?.role === Role.Admin
-  const {
-    deleting: deletingRestaurant,
-    error: restaurantError,
-    handleDelete: handleDeleteRestaurant,
-  } = useDeleteRestaurant(onRestaurantDeleted)
-  const {
-    deletingId: deletingVisiteId,
-    error: visiteError,
-    handleDelete: handleDeleteVisite,
-  } = useDeleteVisite((restaurantId) => {
-    onVisitesRefresh(restaurantId)
-    onVisiteDeleted()
-  })
-  const {
-    isFavori,
-    loading: favoriLoading,
-    pending: favoriPending,
-    error: favoriError,
-    toggle: toggleFavori,
-  } = useFavoriToggle(restaurant.id)
-
-  const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${restaurant.latitude},${restaurant.longitude}`
-
   return (
     <Marker
       ref={(instance) => onMarkerRef?.(restaurant.id, instance)}
       position={[restaurant.latitude, restaurant.longitude]}
       icon={highlighted ? RECOMMENDED_ICON : DEFAULT_ICON}
-      eventHandlers={{ click: () => onOpen(restaurant.id) }}
+      eventHandlers={{ click: () => onSelect(restaurant.id) }}
     >
       <Tooltip permanent direction="top" offset={[-16, -17]} className="restaurant-label">
         <span className="restaurant-label-nom">{restaurant.nom}</span>
@@ -249,102 +207,6 @@ function RestaurantMarker({
           </span>
         )}
       </Tooltip>
-      <Popup>
-        <div className="restaurant-popup">
-          <div className="popup-header">
-            <h3>{restaurant.nom}</h3>
-          </div>
-
-          <p className="popup-adresse">{restaurant.adresse}</p>
-
-          {noteSummary && (
-            <p className="list-card-rating">
-              <span className="list-card-rating-value">
-                {formatNoteMoyenne(noteSummary.average)}
-              </span>
-              <span
-                className="popup-stars"
-                aria-label={`Note moyenne ${formatNoteMoyenne(noteSummary.average)} sur 5`}
-              >
-                {stars(Math.round(noteSummary.average))}
-              </span>
-              <span className="list-card-rating-count">
-                ({noteSummary.count} {noteSummary.count > 1 ? 'visites' : 'visite'})
-              </span>
-            </p>
-          )}
-
-          {user && (
-            <div className="popup-actions">
-              <button
-                type="button"
-                className={isFavori ? 'popup-btn popup-btn-favori-active' : 'popup-btn'}
-                disabled={favoriLoading || favoriPending}
-                onClick={() => void toggleFavori()}
-              >
-                {isFavori ? '★ Retirer des favoris' : '☆ Ajouter aux favoris'}
-              </button>
-              {isAdmin && (
-                <>
-                  <button
-                    type="button"
-                    className="popup-btn"
-                    onClick={() => onEditRestaurant(restaurant)}
-                  >
-                    Modifier
-                  </button>
-                  <button
-                    type="button"
-                    className="popup-btn popup-btn-danger"
-                    disabled={deletingRestaurant}
-                    onClick={() => void handleDeleteRestaurant(restaurant)}
-                  >
-                    {deletingRestaurant ? 'Suppression…' : 'Supprimer'}
-                  </button>
-                </>
-              )}
-            </div>
-          )}
-          {restaurant.categories.length > 0 && (
-            <CategoryBadges categories={restaurant.categories} />
-          )}
-          {restaurantError && (
-            <p className="popup-status popup-error">{restaurantError}</p>
-          )}
-          {favoriError && (
-            <p className="popup-status popup-error">{favoriError}</p>
-          )}
-
-          <VisitesSection
-            restaurantId={restaurant.id}
-            visitesState={visitesState}
-            utilisateursAvecFavoris={utilisateursAvecFavoris}
-            onEditVisite={onEditVisite}
-            onDeleteVisite={(visite) => void handleDeleteVisite(visite)}
-            deletingVisiteId={deletingVisiteId}
-            visiteError={visiteError}
-            currentUserId={user?.id}
-            isAdmin={isAdmin}
-          />
-
-          <div className="popup-links">
-            <a
-              className="popup-directions"
-              href={directionsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Itinéraire
-            </a>
-            <Link
-              className="popup-directions"
-              to={`/restaurants/${restaurant.id}`}
-            >
-              Voir toutes les visites
-            </Link>
-          </div>
-        </div>
-      </Popup>
     </Marker>
   )
 }

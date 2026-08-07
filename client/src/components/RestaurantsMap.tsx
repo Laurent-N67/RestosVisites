@@ -1,16 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { MutableRefObject } from 'react'
 import { MapContainer, TileLayer, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import { ApiError, getVisites } from '../api/client.ts'
 import type { Restaurant, UtilisateurAvecFavoris, Visite } from '../api/types.ts'
 import RestaurantMarker from './RestaurantMarker.tsx'
 import type { VisitesState } from './RestaurantMarker.tsx'
+import RestaurantDetailPanel from './RestaurantDetailPanel.tsx'
 import type { Theme } from '../hooks/useTheme.ts'
 import { useRecommandations } from '../hooks/useRecommandations.ts'
 import { averageNote } from '../utils/visites.ts'
 import { formatNoteMoyenne, stars } from '../utils/format.ts'
 import CategoryBadges from './CategoryBadges.tsx'
+import CoverPhoto from './CoverPhoto.tsx'
 
 const DEFAULT_CENTER: [number, number] = [46.6034, 1.8883] // Centre de la France
 const DEFAULT_ZOOM = 6
@@ -35,6 +36,7 @@ interface RestaurantsMapProps {
   onEditVisite: (visite: Visite) => void
   onRestaurantDeleted: () => void
   onVisiteDeleted: () => void
+  onAddVisite: (restaurantId: string) => void
 }
 
 export interface NoteSummary {
@@ -90,18 +92,15 @@ function FitBounds({ restaurants }: { restaurants: Restaurant[] }) {
 }
 
 /**
- * Recentre la carte et ouvre la popup du marqueur correspondant quand un
- * restaurant est sélectionné depuis la sidebar (Google-Maps style) —
- * s'appuie sur les refs Leaflet des marqueurs collectées par le parent.
+ * Recentre la carte quand un restaurant est sélectionné depuis la sidebar,
+ * un marqueur, ou le panneau de détail (Google-Maps style).
  */
 function SelectedRestaurantEffect({
   restaurants,
   selectedRestaurantId,
-  markersRef,
 }: {
   restaurants: Restaurant[]
   selectedRestaurantId: string | null
-  markersRef: MutableRefObject<Map<string, L.Marker>>
 }) {
   const map = useMap()
 
@@ -117,9 +116,7 @@ function SelectedRestaurantEffect({
     // chaque niveau de zoom intermédiaire pendant le survol, ce qui donnait un déplacement lent et
     // saccadé (surtout mobile/connexion lente) — setView évite complètement cette boucle d'animation.
     map.setView([restaurant.latitude, restaurant.longitude], Math.max(map.getZoom(), 15))
-    const marker = markersRef.current.get(selectedRestaurantId)
-    marker?.openPopup()
-  }, [selectedRestaurantId, restaurants, map, markersRef])
+  }, [selectedRestaurantId, restaurants, map])
 
   return null
 }
@@ -134,6 +131,7 @@ function RestaurantsMap({
   onEditVisite,
   onRestaurantDeleted,
   onVisiteDeleted,
+  onAddVisite,
 }: RestaurantsMapProps) {
   const [visitesByRestaurant, setVisitesByRestaurant] = useState<
     Record<string, VisitesState>
@@ -156,6 +154,9 @@ function RestaurantsMap({
     () => [...restaurants].sort((a, b) => a.nom.localeCompare(b.nom, 'fr')),
     [restaurants],
   )
+
+  const selectedRestaurant =
+    restaurants.find((r) => r.id === selectedRestaurantId) ?? null
 
   const handleMarkerRef = useCallback(
     (restaurantId: string, instance: L.Marker | null) => {
@@ -237,6 +238,9 @@ function RestaurantsMap({
           {sortedRestaurants.map((restaurant) => {
             const summary = noteSummaries.get(restaurant.id) ?? null
             const selected = restaurant.id === selectedRestaurantId
+            const photoPrincipale =
+              restaurant.photos.find((photo) => photo.estPrincipale) ??
+              restaurant.photos[0]
             return (
               <li key={restaurant.id}>
                 <button
@@ -248,27 +252,32 @@ function RestaurantsMap({
                   }
                   onClick={() => handleSelectRestaurant(restaurant.id)}
                 >
-                  <h3>{restaurant.nom}</h3>
-                  <p className="popup-adresse">{restaurant.adresse}</p>
-                  {summary && (
-                    <p className="list-card-rating">
-                      <span className="list-card-rating-value">
-                        {formatNoteMoyenne(summary.average)}
-                      </span>
-                      <span
-                        className="popup-stars"
-                        aria-label={`Note moyenne ${formatNoteMoyenne(summary.average)} sur 5`}
-                      >
-                        {stars(Math.round(summary.average))}
-                      </span>
-                      <span className="list-card-rating-count">
-                        ({summary.count} {summary.count > 1 ? 'visites' : 'visite'})
-                      </span>
-                    </p>
-                  )}
-                  {restaurant.categories.length > 0 && (
-                    <CategoryBadges categories={restaurant.categories} />
-                  )}
+                  <div className="map-sidebar-item-thumb">
+                    <CoverPhoto url={photoPrincipale?.url} alt={restaurant.nom} />
+                  </div>
+                  <div className="map-sidebar-item-body">
+                    <h3>{restaurant.nom}</h3>
+                    <p className="popup-adresse">{restaurant.adresse}</p>
+                    {summary && (
+                      <p className="list-card-rating">
+                        <span className="list-card-rating-value">
+                          {formatNoteMoyenne(summary.average)}
+                        </span>
+                        <span
+                          className="popup-stars"
+                          aria-label={`Note moyenne ${formatNoteMoyenne(summary.average)} sur 5`}
+                        >
+                          {stars(Math.round(summary.average))}
+                        </span>
+                        <span className="list-card-rating-count">
+                          ({summary.count} {summary.count > 1 ? 'visites' : 'visite'})
+                        </span>
+                      </p>
+                    )}
+                    {restaurant.categories.length > 0 && (
+                      <CategoryBadges categories={restaurant.categories} />
+                    )}
+                  </div>
                 </button>
               </li>
             )
@@ -292,26 +301,34 @@ function RestaurantsMap({
         <SelectedRestaurantEffect
           restaurants={restaurants}
           selectedRestaurantId={selectedRestaurantId}
-          markersRef={markersRef}
         />
         {restaurants.map((restaurant) => (
           <RestaurantMarker
             key={restaurant.id}
             restaurant={restaurant}
-            visitesState={visitesByRestaurant[restaurant.id] ?? { status: 'idle' }}
             noteSummary={noteSummaries.get(restaurant.id) ?? null}
-            utilisateursAvecFavoris={utilisateursAvecFavoris}
-            onOpen={handleOpen}
-            onEditRestaurant={onEditRestaurant}
-            onEditVisite={onEditVisite}
-            onRestaurantDeleted={onRestaurantDeleted}
-            onVisitesRefresh={loadVisites}
-            onVisiteDeleted={onVisiteDeleted}
+            onSelect={handleSelectRestaurant}
             onMarkerRef={handleMarkerRef}
             highlighted={recommendedIds.has(restaurant.id)}
           />
         ))}
       </MapContainer>
+
+      {selectedRestaurant && (
+        <RestaurantDetailPanel
+          key={selectedRestaurant.id}
+          restaurant={selectedRestaurant}
+          visitesState={visitesByRestaurant[selectedRestaurant.id] ?? { status: 'idle' }}
+          utilisateursAvecFavoris={utilisateursAvecFavoris}
+          onClose={() => setSelectedRestaurantId(null)}
+          onEditRestaurant={onEditRestaurant}
+          onRestaurantDeleted={onRestaurantDeleted}
+          onEditVisite={onEditVisite}
+          onVisitesRefresh={loadVisites}
+          onVisiteDeleted={onVisiteDeleted}
+          onAddVisite={onAddVisite}
+        />
+      )}
     </div>
   )
 }
