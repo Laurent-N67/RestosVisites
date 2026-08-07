@@ -11,7 +11,14 @@
   box-shadow: var(--shadow-md);
   transition:
     transform var(--transition-base),
-    box-shadow var(--transition-base);
+    box-shadow var(--transition-base),
+    border-color var(--transition-base);
+}
+
+/* Cartes photo-forward (restaurants, favoris...) : pas de bordure visible,
+   la photo + l'ombre suffisent à détacher la carte du fond. */
+.card--interactive {
+  border-color: transparent;
 }
 
 .card--interactive:hover {
@@ -30,7 +37,10 @@
   backdrop-filter: blur(8px);
   background: color-mix(in srgb, var(--bg) 85%, transparent);
   box-shadow: var(--shadow-sm);
-  z-index: 10;
+  /* Doit dominer les panneaux Leaflet internes (contrôles de zoom à 1000,
+     etc.) sans quoi la carte peut passer visuellement au-dessus des menus
+     déroulants de l'en-tête (recherche, + Ajouter, utilisateur). */
+  z-index: 1150;
 }
 
 .app-header h1 {
@@ -53,25 +63,6 @@
 
 .app-auth a {
   font-weight: 600;
-  color: var(--accent);
-}
-
-.app-auth-name {
-  font-weight: 600;
-  color: var(--text-h);
-}
-
-.app-auth button {
-  padding: 6px 12px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--bg-card);
-  color: var(--text);
-  font-weight: 600;
-}
-
-.app-auth button:hover {
-  background: var(--accent-bg);
   color: var(--accent);
 }
 
@@ -1072,9 +1063,9 @@
   aspect-ratio: 16 / 9;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   overflow: hidden;
-  /* -1px en plus du padding négatif : compense la bordure de 1px de .card, sans
-     quoi ce liséré reste visible sur les bords gauche/droit/haut de la photo. */
-  margin: calc((var(--space-4) + 1px) * -1) calc((var(--space-4) + 1px) * -1) var(--space-3);
+  /* .card--interactive n'a plus de bordure (cf. plus haut) : la marge négative
+     n'a donc plus besoin de compenser 1px de bordure comme avant. */
+  margin: calc(var(--space-4) * -1) calc(var(--space-4) * -1) var(--space-3);
 }
 
 .cover-photo img {
@@ -1108,6 +1099,19 @@
     height: auto;
     min-height: 72px;
     padding: 10px 20px;
+  }
+
+  .app-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .restaurant-search-input {
+    width: 160px;
+  }
+
+  .user-menu-name {
+    display: none;
   }
 
   .auth-page {
@@ -1905,46 +1909,218 @@
   cursor: not-allowed;
 }
 
-/* Bouton d'action flottant (FAB) */
+/* Recherche restaurant (en-tête) */
 
-.fab-group {
-  position: fixed;
-  right: var(--space-5);
-  bottom: var(--space-5);
-  z-index: 1200;
-  display: flex;
-  flex-direction: column-reverse;
-  align-items: flex-end;
-  gap: var(--space-2);
+.restaurant-search {
+  position: relative;
 }
 
-.fab-main {
-  width: 56px;
-  height: 56px;
+.restaurant-search-input {
+  width: 220px;
+  padding: 7px 12px;
+  border: 1px solid var(--border);
   border-radius: var(--radius-full);
+  background: var(--field-bg);
+  color: var(--text-h);
+  font-size: 13px;
+}
+
+.restaurant-search-results {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 20;
+  width: 280px;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-lg);
+  animation: scale-in var(--transition-fast) ease-out;
+}
+
+.restaurant-search-results button {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 8px 10px;
   border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  text-align: left;
+}
+
+.restaurant-search-results button:hover {
+  background: var(--accent-bg);
+}
+
+.restaurant-search-name {
+  font-weight: 600;
+  color: var(--text-h);
+  font-size: 13px;
+}
+
+.restaurant-search-adresse {
+  font-size: 12px;
+  color: var(--text);
+}
+
+.restaurant-search-empty {
+  padding: 8px 10px;
+  font-size: 13px;
+  color: var(--text);
+}
+
+/* Menu "+ Ajouter" (en-tête) */
+
+.header-add {
+  position: relative;
+}
+
+.header-add-trigger {
+  padding: 7px 16px;
+  border: none;
+  border-radius: var(--radius-full);
   background: var(--accent);
   color: #fff;
-  font-size: 26px;
-  box-shadow: var(--shadow-lg);
-  transition:
-    transform var(--transition-fast),
-    background var(--transition-base);
+  font-weight: 600;
 }
 
-.fab-main:hover {
+.header-add-trigger:hover {
   background: var(--accent-hover);
-  transform: scale(1.05);
 }
 
-.fab-mini {
-  padding: 8px 16px;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--accent-border);
+.header-add-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+  padding: 6px;
+  border-radius: var(--radius-lg);
   background: var(--bg-card);
+  box-shadow: var(--shadow-lg);
+  animation: scale-in var(--transition-fast) ease-out;
+}
+
+.header-add-dropdown button {
+  padding: 8px 10px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-h);
+  font-weight: 600;
+  text-align: left;
+}
+
+.header-add-dropdown button:hover {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+/* Menu utilisateur (en-tête) */
+
+.user-menu {
+  position: relative;
+}
+
+.user-menu-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 10px 3px 3px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--bg-card);
+}
+
+.user-menu-trigger:hover {
+  background: var(--bg-card-hover);
+}
+
+.user-menu-name {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-h);
+}
+
+.user-menu-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+  padding: 6px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-lg);
+  animation: scale-in var(--transition-fast) ease-out;
+}
+
+.user-menu-dropdown a,
+.user-menu-dropdown button {
+  padding: 8px 10px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-h);
+  font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+}
+
+.user-menu-dropdown a:hover,
+.user-menu-dropdown button:hover {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+/* Page Profil */
+
+.profil-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: var(--space-5);
+}
+
+.profil-header h2 {
+  margin: 0;
+}
+
+.profil-email {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.profil-admin-section h3 {
+  margin: 0 0 10px;
+  font-size: 15px;
+}
+
+.profil-admin-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.profil-admin-link {
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--accent-border);
+  background: var(--accent-bg);
   color: var(--accent);
   font-weight: 600;
-  box-shadow: var(--shadow-md);
-  white-space: nowrap;
-  animation: fade-in var(--transition-base);
+  text-decoration: none;
+}
+
+.profil-admin-link:hover {
+  background: var(--accent);
+  color: #fff;
 }

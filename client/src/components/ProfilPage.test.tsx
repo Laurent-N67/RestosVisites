@@ -3,23 +3,60 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError } from '../api/client.ts'
-import type { Utilisateur } from '../api/types.ts'
+import type { Utilisateur, Visite } from '../api/types.ts'
 import { Role } from '../api/types.ts'
-import AccountPage from './AccountPage.tsx'
+import { FavorisProvider } from '../contexts/FavorisContext.tsx'
+import ProfilPage from './ProfilPage.tsx'
+
+const visites: Visite[] = [
+  {
+    id: 'v1',
+    restaurantId: 'resto-1',
+    date: '2026-01-01',
+    note: 5,
+    commentaire: null,
+    urlsPhotos: [],
+    utilisateurId: 'user-1',
+    utilisateurNomAffiche: 'Une Personne',
+  },
+  {
+    id: 'v2',
+    restaurantId: 'resto-1',
+    date: '2026-02-01',
+    note: 4,
+    commentaire: null,
+    urlsPhotos: [],
+    utilisateurId: 'user-1',
+    utilisateurNomAffiche: 'Une Personne',
+  },
+  {
+    id: 'v3',
+    restaurantId: 'resto-2',
+    date: '2026-02-02',
+    note: 3,
+    commentaire: null,
+    urlsPhotos: [],
+    utilisateurId: 'autre-utilisateur',
+    utilisateurNomAffiche: 'Quelqu\'un d\'autre',
+  },
+]
 
 function renderPage() {
   return render(
     <MemoryRouter>
-      <AccountPage />
+      <FavorisProvider>
+        <ProfilPage visites={visites} />
+      </FavorisProvider>
     </MemoryRouter>,
   )
 }
 
-const { changerNomAfficheMock, changerMotDePasseMock, supprimerMonCompteMock } =
+const { changerNomAfficheMock, changerMotDePasseMock, supprimerMonCompteMock, getMesFavorisMock } =
   vi.hoisted(() => ({
     changerNomAfficheMock: vi.fn(),
     changerMotDePasseMock: vi.fn(),
     supprimerMonCompteMock: vi.fn(),
+    getMesFavorisMock: vi.fn(),
   }))
 
 vi.mock('../api/client.ts', async () => {
@@ -30,6 +67,7 @@ vi.mock('../api/client.ts', async () => {
     changerNomAffiche: changerNomAfficheMock,
     changerMotDePasse: changerMotDePasseMock,
     supprimerMonCompte: supprimerMonCompteMock,
+    getMesFavoris: getMesFavorisMock,
   }
 })
 
@@ -59,11 +97,13 @@ vi.mock('../contexts/AuthContext.tsx', () => ({
   }),
 }))
 
-describe('AccountPage', () => {
+describe('ProfilPage', () => {
   beforeEach(() => {
     changerNomAfficheMock.mockReset()
     changerMotDePasseMock.mockReset()
     supprimerMonCompteMock.mockReset()
+    getMesFavorisMock.mockReset()
+    getMesFavorisMock.mockResolvedValue([{ restaurantId: 'resto-1', dateAjout: '2026-01-01' }])
     navigateMock.mockReset()
     refreshMock.mockReset()
     clearSessionMock.mockReset()
@@ -77,6 +117,32 @@ describe('AccountPage', () => {
 
   afterEach(() => {
     vi.restoreAllMocks()
+  })
+
+  it("affiche le nom, l'email et les statistiques personnelles de l'utilisateur", async () => {
+    renderPage()
+
+    expect(screen.getByRole('heading', { name: 'Une Personne' })).toBeInTheDocument()
+    expect(screen.getByText('simple@example.com')).toBeInTheDocument()
+    // 2 visites sur resto-1 par user-1, 0 sur resto-2 (visite de quelqu'un d'autre) : 1 restaurant, 2 visites.
+    expect(screen.getByText('1')).toBeInTheDocument()
+    expect(screen.getByText('2')).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByText('Favoris')).toBeInTheDocument())
+  })
+
+  it("n'affiche pas la section administration pour un utilisateur simple", () => {
+    renderPage()
+
+    expect(screen.queryByText('Administration')).not.toBeInTheDocument()
+  })
+
+  it('affiche la section administration pour un administrateur', () => {
+    currentUser = { ...currentUser, role: Role.Admin }
+    renderPage()
+
+    expect(screen.getByText('Administration')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Gestion utilisateurs & rôles' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Statistiques globales' })).toBeInTheDocument()
   })
 
   it('pré-remplit le champ nom affiché avec le nom courant', () => {

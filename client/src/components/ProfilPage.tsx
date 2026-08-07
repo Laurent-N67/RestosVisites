@@ -1,17 +1,26 @@
 import { useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   changerMotDePasse,
   changerNomAffiche,
   supprimerMonCompte,
 } from '../api/client.ts'
+import { Role } from '../api/types.ts'
+import type { Visite } from '../api/types.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
+import { useFavoris } from '../contexts/FavorisContext.tsx'
 import { errorMessage } from '../utils/errors.ts'
 import { validerMotDePasse } from '../utils/motDePasse.ts'
+import Avatar from './Avatar.tsx'
 
-function AccountPage() {
+interface ProfilPageProps {
+  visites: Visite[]
+}
+
+function ProfilPage({ visites }: ProfilPageProps) {
   const { user, refresh, clearSession } = useAuth()
+  const { favoriIds } = useFavoris()
   const navigate = useNavigate()
 
   const [deletePending, setDeletePending] = useState(false)
@@ -32,6 +41,17 @@ function AccountPage() {
     () => validerMotDePasse(nouveauMotDePasse),
     [nouveauMotDePasse],
   )
+
+  const mesVisites = useMemo(
+    () => visites.filter((visite) => visite.utilisateurId === user?.id),
+    [visites, user?.id],
+  )
+  const restaurantsVisites = useMemo(
+    () => new Set(mesVisites.map((visite) => visite.restaurantId)).size,
+    [mesVisites],
+  )
+
+  const isAdmin = user?.role === Role.Admin
 
   async function handleNomAfficheSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -98,9 +118,48 @@ function AccountPage() {
     }
   }
 
+  if (!user) {
+    return null
+  }
+
   return (
-    <div className="detail-page account-page">
-      <h2>Mon compte</h2>
+    <div className="detail-page profil-page">
+      <div className="profil-header">
+        <Avatar name={user.nomAffiche} size={64} />
+        <div>
+          <h2>{user.nomAffiche}</h2>
+          <p className="profil-email">{user.email}</p>
+        </div>
+      </div>
+
+      <div className="stats-tiles">
+        <div className="card stats-tile">
+          <span className="stats-tile-value">{restaurantsVisites}</span>
+          <span className="stats-tile-label">Restaurants</span>
+        </div>
+        <div className="card stats-tile">
+          <span className="stats-tile-value">{mesVisites.length}</span>
+          <span className="stats-tile-label">Visites</span>
+        </div>
+        <div className="card stats-tile">
+          <span className="stats-tile-value">{favoriIds.size}</span>
+          <span className="stats-tile-label">Favoris</span>
+        </div>
+      </div>
+
+      {isAdmin && (
+        <section className="utilisateur-card profil-admin-section">
+          <h3>Administration</h3>
+          <div className="profil-admin-links">
+            <Link to="/utilisateurs" className="profil-admin-link">
+              Gestion utilisateurs &amp; rôles
+            </Link>
+            <Link to="/stats" className="profil-admin-link">
+              Statistiques globales
+            </Link>
+          </div>
+        </section>
+      )}
 
       <section className="utilisateur-card account-form">
         <h3>Nom affiché</h3>
@@ -193,4 +252,4 @@ function AccountPage() {
   )
 }
 
-export default AccountPage
+export default ProfilPage

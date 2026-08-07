@@ -4,15 +4,23 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App.tsx'
 import { Role } from './api/types.ts'
 import type { Utilisateur } from './api/types.ts'
+import { FavorisProvider } from './contexts/FavorisContext.tsx'
 
-const { useAuthMock, getRestaurantsMock, getAllVisitesMock, getCategoriesMock, getUtilisateursAvecFavorisMock } =
-  vi.hoisted(() => ({
-    useAuthMock: vi.fn(),
-    getRestaurantsMock: vi.fn(),
-    getAllVisitesMock: vi.fn(),
-    getCategoriesMock: vi.fn(),
-    getUtilisateursAvecFavorisMock: vi.fn(),
-  }))
+const {
+  useAuthMock,
+  getRestaurantsMock,
+  getAllVisitesMock,
+  getCategoriesMock,
+  getUtilisateursAvecFavorisMock,
+  getMesFavorisMock,
+} = vi.hoisted(() => ({
+  useAuthMock: vi.fn(),
+  getRestaurantsMock: vi.fn(),
+  getAllVisitesMock: vi.fn(),
+  getCategoriesMock: vi.fn(),
+  getUtilisateursAvecFavorisMock: vi.fn(),
+  getMesFavorisMock: vi.fn(),
+}))
 
 vi.mock('./contexts/AuthContext.tsx', () => ({
   useAuth: useAuthMock,
@@ -26,6 +34,7 @@ vi.mock('./api/client.ts', async () => {
     getAllVisites: getAllVisitesMock,
     getCategories: getCategoriesMock,
     getUtilisateursAvecFavoris: getUtilisateursAvecFavorisMock,
+    getMesFavoris: getMesFavorisMock,
   }
 })
 
@@ -39,7 +48,9 @@ const loggedInUser: Utilisateur = {
 function renderAppAt(path: string) {
   return render(
     <MemoryRouter initialEntries={[path]}>
-      <App />
+      <FavorisProvider>
+        <App />
+      </FavorisProvider>
     </MemoryRouter>,
   )
 }
@@ -50,6 +61,7 @@ describe('App - protection des routes', () => {
     getAllVisitesMock.mockReset().mockResolvedValue([])
     getCategoriesMock.mockReset().mockResolvedValue([])
     getUtilisateursAvecFavorisMock.mockReset().mockResolvedValue([])
+    getMesFavorisMock.mockReset().mockResolvedValue([])
     useAuthMock.mockReset()
 
     // jsdom n'implémente pas matchMedia : useTheme() en dépend pour la
@@ -128,6 +140,49 @@ describe('App - protection des routes', () => {
 
       expect(await screen.findByText('Aucun restaurant enregistré.')).toBeInTheDocument()
       expect(screen.queryByRole('heading', { name: 'Bienvenue !' })).not.toBeInTheDocument()
+    })
+
+    it("redirige un utilisateur simple vers /profil depuis '/utilisateurs'", async () => {
+      renderAppAt('/utilisateurs')
+
+      expect(await screen.findByRole('heading', { name: loggedInUser.nomAffiche })).toBeInTheDocument()
+    })
+
+    it("redirige un utilisateur simple vers /profil depuis '/stats'", async () => {
+      renderAppAt('/stats')
+
+      expect(await screen.findByRole('heading', { name: loggedInUser.nomAffiche })).toBeInTheDocument()
+    })
+
+    it("redirige '/mon-compte' vers '/profil'", async () => {
+      renderAppAt('/mon-compte')
+
+      expect(await screen.findByRole('heading', { name: loggedInUser.nomAffiche })).toBeInTheDocument()
+    })
+  })
+
+  describe('utilisateur admin', () => {
+    beforeEach(() => {
+      useAuthMock.mockReturnValue({
+        user: { ...loggedInUser, role: Role.Admin },
+        loading: false,
+        login: vi.fn(),
+        register: vi.fn(),
+        logout: vi.fn(),
+        refresh: vi.fn(),
+      })
+    })
+
+    it("accède à '/utilisateurs' sans redirection", async () => {
+      renderAppAt('/utilisateurs')
+
+      expect(await screen.findByText("Annuaire des utilisateurs")).toBeInTheDocument()
+    })
+
+    it("accède à '/stats' sans redirection", async () => {
+      renderAppAt('/stats')
+
+      expect(await screen.findByRole('heading', { name: 'Statistiques' })).toBeInTheDocument()
     })
   })
 })

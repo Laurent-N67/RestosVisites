@@ -18,8 +18,10 @@ import AuthPage from './components/AuthPage.tsx'
 import FavorisPage from './components/FavorisPage.tsx'
 import UtilisateursPage from './components/UtilisateursPage.tsx'
 import StatsPage from './components/StatsPage.tsx'
-import AccountPage from './components/AccountPage.tsx'
+import ProfilPage from './components/ProfilPage.tsx'
 import ProtectedRoute from './components/ProtectedRoute.tsx'
+import RestaurantSearch from './components/RestaurantSearch.tsx'
+import UserMenu from './components/UserMenu.tsx'
 import { useAuth } from './contexts/AuthContext.tsx'
 import { useTheme } from './hooks/useTheme.ts'
 import './App.css'
@@ -49,7 +51,7 @@ function App() {
   const [preselectedRestaurantId, setPreselectedRestaurantId] = useState<
     string | null
   >(null)
-  const [fabOpen, setFabOpen] = useState(false)
+  const [addMenuOpen, setAddMenuOpen] = useState(false)
 
   const loadRestaurants = useCallback(async () => {
     try {
@@ -212,7 +214,7 @@ function App() {
               to="/liste"
               className={location.pathname === '/liste' ? 'active' : ''}
             >
-              Liste
+              Visites
             </Link>
             <Link
               to="/favoris"
@@ -220,23 +222,10 @@ function App() {
             >
               Favoris
             </Link>
-            <Link
-              to="/utilisateurs"
-              className={
-                location.pathname.startsWith('/utilisateurs') ? 'active' : ''
-              }
-            >
-              Utilisateurs
-            </Link>
-            <Link
-              to="/stats"
-              className={location.pathname.startsWith('/stats') ? 'active' : ''}
-            >
-              Stats
-            </Link>
           </nav>
         )}
         <div className="app-actions">
+          {user && <RestaurantSearch restaurants={restaurants} />}
           <button
             type="button"
             className="theme-toggle"
@@ -250,15 +239,42 @@ function App() {
           >
             {theme === 'dark' ? '☀️' : '🌙'}
           </button>
-          {user ? (
-            <div className="app-auth">
-              <Link to="/mon-compte" className="app-auth-name">
-                {user.nomAffiche}
-              </Link>
-              <button type="button" onClick={() => void handleLogout()}>
-                Déconnexion
+          {user && (
+            <div className="header-add">
+              <button
+                type="button"
+                className="header-add-trigger"
+                aria-expanded={addMenuOpen}
+                onClick={() => setAddMenuOpen((value) => !value)}
+              >
+                + Ajouter
               </button>
+              {addMenuOpen && (
+                <div className="header-add-dropdown">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleToggleVisitePanel()
+                      setAddMenuOpen(false)
+                    }}
+                  >
+                    + Visite
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleToggleRestaurantPanel()
+                      setAddMenuOpen(false)
+                    }}
+                  >
+                    + Restaurant
+                  </button>
+                </div>
+              )}
             </div>
+          )}
+          {user ? (
+            <UserMenu user={user} onLogout={() => void handleLogout()} />
           ) : (
             <div className="app-auth">
               <Link to="/login">Connexion</Link>
@@ -330,23 +346,24 @@ function App() {
           <Route
             path="/utilisateurs"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requireAdmin>
                 <UtilisateursPage visites={visites} />
               </ProtectedRoute>
             }
           />
+          <Route path="/mon-compte" element={<Navigate to="/profil" replace />} />
           <Route
-            path="/mon-compte"
+            path="/profil"
             element={
               <ProtectedRoute>
-                <AccountPage />
+                <ProfilPage visites={visites} />
               </ProtectedRoute>
             }
           />
           <Route
             path="/stats"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requireAdmin>
                 <StatsPage
                   restaurants={restaurants}
                   visites={visites}
@@ -389,44 +406,6 @@ function App() {
             />
           )}
         </aside>
-      )}
-
-      {user && activePanel === 'none' && (
-        <div className={fabOpen ? 'fab-group fab-group--open' : 'fab-group'}>
-          {fabOpen && (
-            <>
-              <button
-                type="button"
-                className="fab-mini"
-                onClick={() => {
-                  handleToggleVisitePanel()
-                  setFabOpen(false)
-                }}
-              >
-                + Visite
-              </button>
-              <button
-                type="button"
-                className="fab-mini"
-                onClick={() => {
-                  handleToggleRestaurantPanel()
-                  setFabOpen(false)
-                }}
-              >
-                + Restaurant
-              </button>
-            </>
-          )}
-          <button
-            type="button"
-            className="fab-main"
-            aria-expanded={fabOpen}
-            aria-label="Ajouter"
-            onClick={() => setFabOpen((o) => !o)}
-          >
-            {fabOpen ? '×' : '+'}
-          </button>
-        </div>
       )}
     </div>
   )
