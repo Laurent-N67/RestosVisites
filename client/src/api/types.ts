@@ -110,6 +110,10 @@ export interface CreatedResponse {
   id: string
 }
 
+export interface AjouterPhotoRestaurantResponse {
+  photoId: string
+}
+
 export interface ProblemDetails {
   status?: number
   title?: string

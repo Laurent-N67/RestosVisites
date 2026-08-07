@@ -1,4 +1,5 @@
 import type {
+  AjouterPhotoRestaurantResponse,
   Categorie,
   CreateRestaurantRequest,
   CreateVisiteRequest,
@@ -140,6 +141,35 @@ export function updateRestaurant(
 
 export function deleteRestaurant(id: string): Promise<void> {
   return request<void>(`/api/restaurants/${id}`, { method: 'DELETE' })
+}
+
+export function addRestaurantPhoto(
+  restaurantId: string,
+  url: string,
+): Promise<AjouterPhotoRestaurantResponse> {
+  return request<AjouterPhotoRestaurantResponse>(`/api/restaurants/${restaurantId}/photos`, {
+    method: 'POST',
+    body: JSON.stringify({ url }),
+  })
+}
+
+export function removeRestaurantPhoto(
+  restaurantId: string,
+  photoId: string,
+): Promise<void> {
+  return request<void>(`/api/restaurants/${restaurantId}/photos/${photoId}`, {
+    method: 'DELETE',
+  })
+}
+
+export function setRestaurantPhotoPrincipale(
+  restaurantId: string,
+  photoId: string,
+): Promise<void> {
+  return request<void>(
+    `/api/restaurants/${restaurantId}/photos/${photoId}/principale`,
+    { method: 'PUT' },
+  )
 }
 
 export function getVisites(restaurantId: string): Promise<Visite[]> {

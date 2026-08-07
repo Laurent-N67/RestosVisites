@@ -355,6 +355,97 @@
   margin: 2px 0 0;
 }
 
+/* Étapes du formulaire "Ajouter un restaurant" */
+
+.wizard-steps {
+  display: flex;
+  gap: 6px;
+  margin: 4px 0 8px;
+}
+
+.wizard-step {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  border: 1px solid var(--border);
+  background: var(--field-bg);
+  color: var(--text);
+  border-radius: var(--radius-full);
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.wizard-step:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.wizard-step--active {
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+
+.wizard-step-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--border);
+  color: var(--text-h);
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.wizard-step--active .wizard-step-number {
+  background: var(--accent);
+  color: #fff;
+}
+
+.wizard-step-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wizard-nav {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.wizard-nav button {
+  margin-top: 0;
+}
+
+.wizard-nav-back {
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--field-bg);
+  color: var(--text-h);
+  font-weight: 600;
+}
+
+.wizard-nav > button:not(.wizard-nav-back) {
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+.wizard-nav > button:not(.wizard-nav-back):disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .visite-restaurant-readonly {
   margin: 0;
   padding: 8px 10px;
@@ -556,6 +647,47 @@
 .photo-upload-status {
   font-size: 12px;
   color: var(--text);
+}
+
+.restaurant-photo-grid {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+  margin: 8px 0 0;
+  padding: 0;
+}
+
+.restaurant-photo-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.restaurant-photo-thumb {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.restaurant-photo-item-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.restaurant-photo-item-actions .popup-btn {
+  width: 100%;
+  text-align: center;
+}
+
+.restaurant-photo-badge {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--star);
+  text-align: center;
 }
 
 /* Marker label (permanent tooltip) */
@@ -1251,6 +1383,48 @@
 .detail-header h2 {
   margin: 0 0 4px;
   font-size: 22px;
+}
+
+.detail-cover-photo {
+  margin: 0 0 var(--space-4);
+}
+
+.detail-cover-photo .cover-photo {
+  border-radius: var(--radius-lg);
+  margin: 0;
+}
+
+.restaurant-detail-description {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.restaurant-contact-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 8px 0 0;
+}
+
+.restaurant-contact-row {
+  display: flex;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.restaurant-contact-row dt {
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.restaurant-contact-row dd {
+  margin: 0;
+  color: var(--text);
+}
+
+.restaurant-contact-row dd a {
+  color: var(--accent);
 }
 
 .detail-visites-title {

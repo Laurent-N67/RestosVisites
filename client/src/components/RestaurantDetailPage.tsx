@@ -7,10 +7,10 @@ import { useAuth } from '../contexts/AuthContext.tsx'
 import { useDeleteRestaurant } from '../hooks/useDeleteRestaurant.ts'
 import { useDeleteVisite } from '../hooks/useDeleteVisite.ts'
 import { useFavoriToggle } from '../hooks/useFavoriToggle.ts'
-import { formatDate, formatNoteMoyenne, stars } from '../utils/format.ts'
+import { formatDate, stars } from '../utils/format.ts'
 import { averageNote, estFavoriDeUtilisateur } from '../utils/visites.ts'
 import PhotoLightbox from './PhotoLightbox.tsx'
-import CategoryBadges from './CategoryBadges.tsx'
+import RestaurantDetailCard from './RestaurantDetailCard.tsx'
 
 interface RestaurantDetailPageProps {
   restaurants: Restaurant[]
@@ -87,8 +87,6 @@ function RestaurantDetailPage({
     )
   }
 
-  const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${restaurant.latitude},${restaurant.longitude}`
-
   const restaurantVisites = visites
     .filter((visite) => visite.restaurantId === restaurant.id)
     .sort((a, b) => b.date.localeCompare(a.date))
@@ -100,79 +98,22 @@ function RestaurantDetailPage({
         ← Retour
       </button>
 
-      <div className="popup-header detail-header">
-        <h2>{restaurant.nom}</h2>
-        <div className="popup-actions">
-          <button
-            type="button"
-            className={isFavori ? 'popup-btn popup-btn-favori-active' : 'popup-btn'}
-            disabled={favoriLoading || favoriPending}
-            onClick={() => void toggleFavori()}
-          >
-            {isFavori ? '★ Retirer des favoris' : '☆ Ajouter aux favoris'}
-          </button>
-          {isAdmin && (
-            <>
-              <button
-                type="button"
-                className="popup-btn"
-                onClick={() => onEditRestaurant(restaurant)}
-              >
-                Modifier
-              </button>
-              <button
-                type="button"
-                className="popup-btn popup-btn-danger"
-                disabled={deletingRestaurant}
-                onClick={() => void handleDeleteRestaurant(restaurant)}
-              >
-                {deletingRestaurant ? 'Suppression…' : 'Supprimer'}
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-
-      <p className="popup-adresse">{restaurant.adresse}</p>
-
-      {restaurantVisites.length > 0 && restaurantAverageNote !== null && (
-        <div className="list-card-rating">
-          <span className="list-card-rating-value">
-            {formatNoteMoyenne(restaurantAverageNote)}
-          </span>
-          <span
-            className="popup-stars"
-            aria-label={`Note moyenne ${formatNoteMoyenne(restaurantAverageNote)} sur 5`}
-          >
-            {stars(Math.round(restaurantAverageNote))}
-          </span>
-          <span className="list-card-rating-count">
-            (
-            {restaurantVisites.length}{' '}
-            {restaurantVisites.length > 1 ? 'visites' : 'visite'})
-          </span>
-        </div>
-      )}
-
-      {restaurant.categories.length > 0 && (
-        <CategoryBadges
-          categories={restaurant.categories}
-          max={restaurant.categories.length}
-        />
-      )}
+      <RestaurantDetailCard
+        restaurant={restaurant}
+        averageNote={restaurantAverageNote}
+        visitesCount={restaurantVisites.length}
+        isFavori={isFavori}
+        favoriDisabled={favoriLoading || favoriPending}
+        onToggleFavori={() => void toggleFavori()}
+        isAdmin={isAdmin}
+        onEdit={() => onEditRestaurant(restaurant)}
+        onDelete={() => void handleDeleteRestaurant(restaurant)}
+        deleting={deletingRestaurant}
+      />
       {restaurantError && (
         <p className="popup-status popup-error">{restaurantError}</p>
       )}
       {favoriError && <p className="popup-status popup-error">{favoriError}</p>}
-
-      <a
-        className="popup-directions"
-        href={directionsUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        Itinéraire
-      </a>
 
       <h3 className="detail-visites-title">Historique des visites</h3>
       {visiteError && <p className="popup-status popup-error">{visiteError}</p>}

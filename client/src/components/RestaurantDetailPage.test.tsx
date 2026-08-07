@@ -256,4 +256,58 @@ describe('RestaurantDetailPage', () => {
       'http://localhost:5006/uploads/photo-1.jpg',
     )
   })
+
+  it("affiche le placeholder de couverture et masque les infos absentes quand le restaurant n'a ni photo, ni description, ni contact", () => {
+    renderPage()
+
+    expect(document.querySelector('.cover-photo-placeholder')).toBeInTheDocument()
+    expect(document.querySelector('.cover-photo img')).not.toBeInTheDocument()
+    expect(
+      document.querySelector('.restaurant-detail-description'),
+    ).not.toBeInTheDocument()
+    expect(document.querySelector('.restaurant-contact-info')).not.toBeInTheDocument()
+  })
+
+  it('affiche la photo de couverture, la description et les informations de contact quand elles sont renseignées', () => {
+    const restaurantAvecDetails = {
+      ...restaurant,
+      description: 'Un excellent petit restaurant italien.',
+      telephone: '01 23 45 67 89',
+      siteWeb: 'https://lebon-coin.example.com',
+      horaires: 'Lun-Ven 12h-14h, 19h-22h30',
+      photos: [
+        { id: 'photo-a', url: '/uploads/cover-1.jpg', estPrincipale: false, ordre: 1 },
+        { id: 'photo-b', url: '/uploads/cover-2.jpg', estPrincipale: true, ordre: 0 },
+      ],
+    }
+    renderPage({ restaurants: [restaurantAvecDetails] })
+
+    expect(document.querySelector('.cover-photo-placeholder')).not.toBeInTheDocument()
+    expect(document.querySelector('.cover-photo img')).toHaveAttribute(
+      'src',
+      'http://localhost:5006/uploads/cover-2.jpg',
+    )
+    expect(
+      screen.getByText('Un excellent petit restaurant italien.'),
+    ).toBeInTheDocument()
+    expect(screen.getByText('01 23 45 67 89')).toBeInTheDocument()
+    expect(screen.getByText('https://lebon-coin.example.com')).toBeInTheDocument()
+    expect(screen.getByText('Lun-Ven 12h-14h, 19h-22h30')).toBeInTheDocument()
+  })
+
+  it("utilise la première photo comme couverture quand aucune n'est marquée principale", () => {
+    const restaurantAvecPhotos = {
+      ...restaurant,
+      photos: [
+        { id: 'photo-a', url: '/uploads/premiere.jpg', estPrincipale: false, ordre: 0 },
+        { id: 'photo-b', url: '/uploads/seconde.jpg', estPrincipale: false, ordre: 1 },
+      ],
+    }
+    renderPage({ restaurants: [restaurantAvecPhotos] })
+
+    expect(document.querySelector('.cover-photo img')).toHaveAttribute(
+      'src',
+      'http://localhost:5006/uploads/premiere.jpg',
+    )
+  })
 })
