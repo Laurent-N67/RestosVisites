@@ -577,19 +577,19 @@
 }
 
 .restaurant-card--compact {
-  flex: 0 0 150px;
-  width: 150px;
+  flex: 0 0 120px;
+  width: 120px;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 10px;
+  padding: 8px;
   color: inherit;
   text-decoration: none;
 }
 
 .restaurant-card--compact .cover-photo {
   aspect-ratio: 4 / 3;
-  margin: -10px -10px 0;
+  margin: -8px -8px 0;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 
