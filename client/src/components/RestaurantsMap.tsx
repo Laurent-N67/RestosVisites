@@ -25,7 +25,7 @@ import RecommendationCard from './RecommendationCard.tsx'
 
 const RECENT_VISITS_LIMIT = 4
 const RECOMMANDATIONS_SECTION_LIMIT = 2
-const SIDEBAR_PREVIEW_LIMIT = 5
+const SIDEBAR_PREVIEW_LIMIT = 4
 
 const DEFAULT_CENTER: [number, number] = [46.6034, 1.8883] // Centre de la France
 const DEFAULT_ZOOM = 6

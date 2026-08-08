@@ -351,13 +351,13 @@ describe('RestaurantsMap', () => {
     expect(items.length).toBe(2)
   })
 
-  it('limite la sidebar à un aperçu de 5 restaurants avec un lien vers la liste complète', () => {
+  it('limite la sidebar à un aperçu de 4 restaurants avec un lien vers la liste complète', () => {
     const manyRestaurants = Array.from({ length: 7 }, (_, i) =>
       makeRestaurant(`restaurant-${i + 1}`, `Restaurant ${i + 1}`),
     )
     renderMap({ restaurants: manyRestaurants })
 
-    expect(document.querySelectorAll('.map-sidebar-item').length).toBe(5)
+    expect(document.querySelectorAll('.map-sidebar-item').length).toBe(4)
     expect(screen.getByText('7 résultats')).toBeInTheDocument()
     expect(
       screen.getByRole('link', { name: /Voir tous les restaurants/ }),
