@@ -1079,24 +1079,6 @@
   gap: 6px;
 }
 
-.visite-details {
-  margin-top: 8px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 8px 10px;
-}
-
-.visite-details summary {
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-h);
-}
-
-.visite-details[open] summary {
-  margin-bottom: 4px;
-}
-
 .panel-form button[type='submit'] {
   margin-top: 12px;
   padding: 10px;
@@ -1132,24 +1114,6 @@
 
 .coords-hint--missing {
   color: var(--danger);
-}
-
-.category-picker {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 4px;
-}
-
-.category-picker-group-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text);
-  margin: 4px 0 0;
-}
-
-.category-picker-chips {
-  margin: 2px 0 0;
 }
 
 /* Étapes du formulaire "Ajouter un restaurant" */
@@ -1251,6 +1215,48 @@
   background: var(--accent-bg);
   color: var(--text);
   font-size: 14px;
+}
+
+.visite-restaurant-preview {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card-hover);
+  margin-top: 4px;
+}
+
+.visite-restaurant-preview-thumb {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.visite-restaurant-preview-info {
+  min-width: 0;
+}
+
+.visite-restaurant-preview-nom {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-h);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.visite-restaurant-preview-adresse {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Recherche d'adresse */
@@ -1665,6 +1671,26 @@
   color: var(--text);
 }
 
+.category-badge--prix {
+  background: var(--group-prix-bg);
+  color: var(--group-prix);
+}
+
+.category-badge--cuisine {
+  background: var(--group-cuisine-bg);
+  color: var(--group-cuisine);
+}
+
+.category-badge--style {
+  background: var(--group-style-bg);
+  color: var(--group-style);
+}
+
+.category-badge--autres {
+  background: var(--group-autres-bg);
+  color: var(--group-autres);
+}
+
 .popup-photos {
   display: flex;
   flex-wrap: wrap;
@@ -1821,6 +1847,54 @@
   gap: 5px;
 }
 
+.chip-filter--prix {
+  border-color: var(--group-prix-border);
+  background: var(--group-prix-bg);
+  color: var(--group-prix);
+}
+
+.chip-filter--prix.chip-filter--active,
+.chip-filter--prix:hover {
+  background: var(--group-prix);
+  color: #fff;
+}
+
+.chip-filter--cuisine {
+  border-color: var(--group-cuisine-border);
+  background: var(--group-cuisine-bg);
+  color: var(--group-cuisine);
+}
+
+.chip-filter--cuisine.chip-filter--active,
+.chip-filter--cuisine:hover {
+  background: var(--group-cuisine);
+  color: #fff;
+}
+
+.chip-filter--style {
+  border-color: var(--group-style-border);
+  background: var(--group-style-bg);
+  color: var(--group-style);
+}
+
+.chip-filter--style.chip-filter--active,
+.chip-filter--style:hover {
+  background: var(--group-style);
+  color: #fff;
+}
+
+.chip-filter--autres {
+  border-color: var(--group-autres-border);
+  background: var(--group-autres-bg);
+  color: var(--group-autres);
+}
+
+.chip-filter--autres.chip-filter--active,
+.chip-filter--autres:hover {
+  background: var(--group-autres);
+  color: #fff;
+}
+
 /* Dropdown de filtre par catégorie (vue Liste) */
 
 .category-filter-dropdown {
@@ -1972,6 +2046,79 @@
     width: auto;
     max-height: min(70vh, 480px);
   }
+}
+
+/* Dropdown de catégories scopé à un seul groupe (formulaires) */
+
+.category-group-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-3);
+  margin-top: 4px;
+}
+
+.category-group-trigger--prix {
+  border-color: var(--group-prix-border);
+  background: var(--group-prix-bg);
+  color: var(--group-prix);
+}
+
+.category-group-trigger--prix:hover,
+.category-group-trigger--prix[aria-expanded='true'] {
+  background: var(--group-prix);
+  color: #fff;
+}
+
+.category-group-trigger--cuisine {
+  border-color: var(--group-cuisine-border);
+  background: var(--group-cuisine-bg);
+  color: var(--group-cuisine);
+}
+
+.category-group-trigger--cuisine:hover,
+.category-group-trigger--cuisine[aria-expanded='true'] {
+  background: var(--group-cuisine);
+  color: #fff;
+}
+
+.category-group-trigger--style {
+  border-color: var(--group-style-border);
+  background: var(--group-style-bg);
+  color: var(--group-style);
+}
+
+.category-group-trigger--style:hover,
+.category-group-trigger--style[aria-expanded='true'] {
+  background: var(--group-style);
+  color: #fff;
+}
+
+.category-group-trigger--autres {
+  border-color: var(--group-autres-border);
+  background: var(--group-autres-bg);
+  color: var(--group-autres);
+}
+
+.category-group-trigger--autres:hover,
+.category-group-trigger--autres[aria-expanded='true'] {
+  background: var(--group-autres);
+  color: #fff;
+}
+
+.category-group-trigger--prix[aria-expanded='true'] .category-filter-badge {
+  color: var(--group-prix);
+}
+
+.category-group-trigger--cuisine[aria-expanded='true'] .category-filter-badge {
+  color: var(--group-cuisine);
+}
+
+.category-group-trigger--style[aria-expanded='true'] .category-filter-badge {
+  color: var(--group-style);
+}
+
+.category-group-trigger--autres[aria-expanded='true'] .category-filter-badge {
+  color: var(--group-autres);
 }
 
 .list-sort-label {

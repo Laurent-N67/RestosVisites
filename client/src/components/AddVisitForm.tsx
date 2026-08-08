@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { ApiError, createVisite, updateVisite } from '../api/client.ts'
+import { ApiError, createVisite, resolvePhotoUrl, updateVisite } from '../api/client.ts'
 import { Compagnie, Reservation } from '../api/types.ts'
 import type { Restaurant, Visite } from '../api/types.ts'
 import StarRating from './StarRating.tsx'
@@ -12,6 +12,14 @@ interface AddVisitFormProps {
   initialRestaurantId?: string
   onSaved: (restaurantId: string) => void
 }
+
+type Step = 1 | 2 | 3
+
+const STEPS: { n: Step; label: string }[] = [
+  { n: 1, label: 'Détails de la visite' },
+  { n: 2, label: 'Notes & Avis' },
+  { n: 3, label: 'Photos' },
+]
 
 const compagnieOptions: { value: Compagnie; label: string }[] = [
   { value: Compagnie.Seul, label: 'Seul' },
@@ -30,15 +38,6 @@ function today(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
-function hasSecondaryDetails(visite: Visite | undefined): boolean {
-  return (
-    visite !== undefined &&
-    (visite.budget !== null ||
-      visite.tempsAttente !== null ||
-      visite.reservation !== null)
-  )
-}
-
 function AddVisitForm({
   restaurants,
   visite,
@@ -46,6 +45,7 @@ function AddVisitForm({
   onSaved,
 }: AddVisitFormProps) {
   const isEditing = visite !== undefined
+  const [step, setStep] = useState<Step>(1)
   const [restaurantId, setRestaurantId] = useState(
     visite?.restaurantId ?? initialRestaurantId ?? '',
   )
@@ -67,18 +67,31 @@ function AddVisitForm({
       ? String(visite.tempsAttente)
       : '',
   )
-  const [detailsOpen, setDetailsOpen] = useState(() => hasSecondaryDetails(visite))
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
-  const restaurantNom =
-    restaurants.find((r) => r.id === restaurantId)?.nom ?? restaurantId
+  const selectedRestaurant = restaurants.find((r) => r.id === restaurantId)
+  const restaurantNom = selectedRestaurant?.nom ?? restaurantId
+  const canReachOtherSteps = restaurantId.trim().length > 0
+
+  function goToStep(target: Step) {
+    if (target === step) {
+      return
+    }
+    if (target > step && !canReachOtherSteps) {
+      setError('Sélectionnez un restaurant.')
+      return
+    }
+    setError(null)
+    setStep(target)
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!restaurantId) {
       setError('Sélectionnez un restaurant.')
+      setStep(1)
       return
     }
 
@@ -117,6 +130,7 @@ function AddVisitForm({
       }
       setSuccess(true)
       if (!isEditing) {
+        setStep(1)
         setDate(today())
         setNote(5)
         setCommentaire('')
@@ -125,7 +139,6 @@ function AddVisitForm({
         setReservation(null)
         setBudget('')
         setTempsAttente('')
-        setDetailsOpen(false)
       }
       onSaved(restaurantId)
     } catch (err) {
@@ -156,113 +169,160 @@ function AddVisitForm({
     <form className="panel-form" onSubmit={(event) => void handleSubmit(event)}>
       <h2>{isEditing ? 'Modifier la visite' : 'Enregistrer une visite'}</h2>
 
-      <span className="field-label">Restaurant</span>
-      {isEditing ? (
-        <p className="visite-restaurant-readonly">{restaurantNom}</p>
-      ) : (
-        <select
-          id="visite-restaurant"
-          value={restaurantId}
-          onChange={(event) => setRestaurantId(event.target.value)}
-          required
-        >
-          <option value="" disabled>
-            Choisir un restaurant
-          </option>
-          {restaurants.map((restaurant) => (
-            <option key={restaurant.id} value={restaurant.id}>
-              {restaurant.nom}
-            </option>
-          ))}
-        </select>
-      )}
-
-      <label htmlFor="visite-date">Date</label>
-      <input
-        id="visite-date"
-        type="date"
-        value={date}
-        onChange={(event) => setDate(event.target.value)}
-        required
-      />
-
-      <span className="field-label">Note</span>
-      <StarRating value={note} onChange={setNote} />
-
-      <span className="field-label">Avec qui ?</span>
-      <div className="segmented-control" role="group" aria-label="Avec qui ?">
-        {compagnieOptions.map((option) => (
-          <button
-            key={option.value}
-            type="button"
-            aria-pressed={avecQui === option.value}
-            className={
-              avecQui === option.value ? 'chip-filter chip-filter--active' : 'chip-filter'
-            }
-            onClick={() => setAvecQui(option.value)}
-          >
-            {option.label}
-          </button>
-        ))}
+      <div className="wizard-steps" role="tablist" aria-label="Étapes du formulaire">
+        {STEPS.map(({ n, label }) => {
+          const reachable = n === 1 || canReachOtherSteps
+          return (
+            <button
+              key={n}
+              type="button"
+              role="tab"
+              aria-selected={step === n}
+              className={step === n ? 'wizard-step wizard-step--active' : 'wizard-step'}
+              disabled={!reachable}
+              onClick={() => goToStep(n)}
+            >
+              <span className="wizard-step-number">{n}</span>{' '}
+              <span className="wizard-step-label">{label}</span>
+            </button>
+          )
+        })}
       </div>
 
-      <label htmlFor="visite-commentaire">Commentaire</label>
-      <textarea
-        id="visite-commentaire"
-        value={commentaire}
-        onChange={(event) => setCommentaire(event.target.value)}
-        rows={3}
-      />
+      {step === 1 && (
+        <>
+          {selectedRestaurant && (
+            <div className="visite-restaurant-preview">
+              {selectedRestaurant.photos.length > 0 && (
+                <img
+                  className="visite-restaurant-preview-thumb"
+                  src={resolvePhotoUrl(selectedRestaurant.photos[0].url)}
+                  alt=""
+                  loading="lazy"
+                />
+              )}
+              <div className="visite-restaurant-preview-info">
+                <p className="visite-restaurant-preview-nom">
+                  {selectedRestaurant.nom}
+                </p>
+                <p className="visite-restaurant-preview-adresse">
+                  {selectedRestaurant.adresse}
+                </p>
+              </div>
+            </div>
+          )}
 
-      <span className="field-label">Photos</span>
-      <PhotoUrlInput values={photos} onChange={setPhotos} />
-
-      <details
-        className="visite-details"
-        open={detailsOpen}
-        onToggle={(event) => setDetailsOpen(event.currentTarget.open)}
-      >
-        <summary>Plus de détails</summary>
-
-        <label htmlFor="visite-budget">Budget (€)</label>
-        <input
-          id="visite-budget"
-          type="number"
-          step="0.01"
-          min="0"
-          value={budget}
-          onChange={(event) => setBudget(event.target.value)}
-        />
-
-        <label htmlFor="visite-temps-attente">Temps d'attente (minutes)</label>
-        <input
-          id="visite-temps-attente"
-          type="number"
-          step="1"
-          min="0"
-          value={tempsAttente}
-          onChange={(event) => setTempsAttente(event.target.value)}
-        />
-
-        <span className="field-label">Réservation</span>
-        <div className="segmented-control" role="group" aria-label="Réservation">
-          {reservationOptions.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              aria-pressed={reservation === option.value}
-              className={
-                reservation === option.value
-                  ? 'chip-filter chip-filter--active'
-                  : 'chip-filter'
-              }
-              onClick={() => setReservation(option.value)}
+          <span className="field-label">Restaurant</span>
+          {isEditing ? (
+            <p className="visite-restaurant-readonly">{restaurantNom}</p>
+          ) : (
+            <select
+              id="visite-restaurant"
+              value={restaurantId}
+              onChange={(event) => setRestaurantId(event.target.value)}
+              required
             >
-              {option.label}
-            </button>
-          ))}
-        </div>
-      </details>
+              <option value="" disabled>
+                Choisir un restaurant
+              </option>
+              {restaurants.map((restaurant) => (
+                <option key={restaurant.id} value={restaurant.id}>
+                  {restaurant.nom}
+                </option>
+              ))}
+            </select>
+          )}
+
+          <label htmlFor="visite-date">Date</label>
+          <input
+            id="visite-date"
+            type="date"
+            value={date}
+            onChange={(event) => setDate(event.target.value)}
+            required
+          />
+
+          <span className="field-label">Avec qui ?</span>
+          <div className="segmented-control" role="group" aria-label="Avec qui ?">
+            {compagnieOptions.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                aria-pressed={avecQui === option.value}
+                className={
+                  avecQui === option.value
+                    ? 'chip-filter chip-filter--active'
+                    : 'chip-filter'
+                }
+                onClick={() => setAvecQui(option.value)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+
+          <span className="field-label">Réservation</span>
+          <div className="segmented-control" role="group" aria-label="Réservation">
+            {reservationOptions.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                aria-pressed={reservation === option.value}
+                className={
+                  reservation === option.value
+                    ? 'chip-filter chip-filter--active'
+                    : 'chip-filter'
+                }
+                onClick={() => setReservation(option.value)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+
+          <label htmlFor="visite-budget">Budget (€)</label>
+          <input
+            id="visite-budget"
+            type="number"
+            step="0.01"
+            min="0"
+            value={budget}
+            onChange={(event) => setBudget(event.target.value)}
+          />
+
+          <label htmlFor="visite-temps-attente">Temps d'attente (minutes)</label>
+          <input
+            id="visite-temps-attente"
+            type="number"
+            step="1"
+            min="0"
+            value={tempsAttente}
+            onChange={(event) => setTempsAttente(event.target.value)}
+          />
+        </>
+      )}
+
+      {step === 2 && (
+        <>
+          <span className="field-label">Note</span>
+          <StarRating value={note} onChange={setNote} />
+
+          <label htmlFor="visite-commentaire">Commentaire</label>
+          <textarea
+            id="visite-commentaire"
+            value={commentaire}
+            onChange={(event) => setCommentaire(event.target.value)}
+            rows={3}
+          />
+        </>
+      )}
+
+      {step === 3 && (
+        <>
+          <span className="field-label">Photos</span>
+          <PhotoUrlInput values={photos} onChange={setPhotos} />
+        </>
+      )}
 
       {error && <p className="form-error">{error}</p>}
       {success && (
@@ -273,13 +333,36 @@ function AddVisitForm({
         </p>
       )}
 
-      <button type="submit" disabled={submitting}>
-        {submitting
-          ? 'Enregistrement…'
-          : isEditing
-            ? 'Enregistrer les modifications'
-            : 'Enregistrer la visite'}
-      </button>
+      <div className="wizard-nav">
+        {step > 1 && (
+          <button
+            type="button"
+            className="wizard-nav-back"
+            onClick={() => goToStep((step - 1) as Step)}
+            disabled={submitting}
+          >
+            ← Précédent
+          </button>
+        )}
+        {step < 3 && (
+          <button
+            type="button"
+            onClick={() => goToStep((step + 1) as Step)}
+            disabled={step === 1 && !canReachOtherSteps}
+          >
+            Suivant
+          </button>
+        )}
+        {step === 3 && (
+          <button type="submit" disabled={submitting}>
+            {submitting
+              ? 'Enregistrement…'
+              : isEditing
+                ? 'Enregistrer les modifications'
+                : 'Enregistrer la visite'}
+          </button>
+        )}
+      </div>
     </form>
   )
 }

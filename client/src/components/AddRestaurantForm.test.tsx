@@ -82,7 +82,7 @@ describe('AddRestaurantForm', () => {
     uploadPhotoMock.mockReset()
   })
 
-  it('parcourt les 3 étapes et crée le restaurant', async () => {
+  it('parcourt les 2 étapes et crée le restaurant', async () => {
     createRestaurantMock.mockResolvedValue({ id: 'new-restaurant' })
     const user = userEvent.setup()
     const onSaved = vi.fn()
@@ -92,11 +92,6 @@ describe('AddRestaurantForm', () => {
     // Étape 1 : le bouton "Suivant" est désactivé tant que le nom est vide.
     expect(screen.getByRole('button', { name: 'Suivant' })).toBeDisabled()
     await user.type(screen.getByLabelText('Nom'), 'Chez Mario')
-    await user.click(screen.getByRole('button', { name: 'Suivant' }))
-
-    // Étape 2 : le champ "Adresse" de l'étape 2 est visible, celui de l'étape 1 non.
-    expect(screen.getByLabelText('Adresse')).toBeInTheDocument()
-    expect(screen.queryByLabelText('Nom')).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Choisir une adresse (test)' }))
     expect(
@@ -117,7 +112,7 @@ describe('AddRestaurantForm', () => {
       }),
     )
 
-    // Étape 3 : aucune photo pour le moment.
+    // Étape 2 : aucune photo pour le moment.
     expect(
       await screen.findByText('Aucune photo pour ce restaurant.'),
     ).toBeInTheDocument()
@@ -131,16 +126,15 @@ describe('AddRestaurantForm', () => {
 
     render(<AddRestaurantForm categories={categories} onSaved={vi.fn()} />)
 
-    expect(screen.getByRole('tab', { name: '3 Photos' })).toBeDisabled()
+    expect(screen.getByRole('tab', { name: '2 Photos' })).toBeDisabled()
 
     await user.type(screen.getByLabelText('Nom'), 'Chez Mario')
-    await user.click(screen.getByRole('button', { name: 'Suivant' }))
 
-    // Toujours désactivé à l'étape 2 : le restaurant n'existe pas encore.
-    expect(screen.getByRole('tab', { name: '3 Photos' })).toBeDisabled()
+    // Toujours désactivé : le restaurant n'existe pas encore (pas d'adresse).
+    expect(screen.getByRole('tab', { name: '2 Photos' })).toBeDisabled()
   })
 
-  it("conserve la dernière modification de l'étape 1 même après un aller-retour par l'étape 3", async () => {
+  it("conserve la dernière modification de l'étape 1 même après un aller-retour par l'étape 2", async () => {
     createRestaurantMock.mockResolvedValue({ id: 'new-restaurant' })
     updateRestaurantMock.mockResolvedValue(undefined)
     const user = userEvent.setup()
@@ -149,7 +143,6 @@ describe('AddRestaurantForm', () => {
     render(<AddRestaurantForm categories={categories} onSaved={onSaved} />)
 
     await user.type(screen.getByLabelText('Nom'), 'Chez Mario')
-    await user.click(screen.getByRole('button', { name: 'Suivant' }))
     await user.click(screen.getByRole('button', { name: 'Choisir une adresse (test)' }))
     await user.click(screen.getByRole('button', { name: 'Suivant' }))
 
@@ -157,12 +150,12 @@ describe('AddRestaurantForm', () => {
     await screen.findByText('Aucune photo pour ce restaurant.')
 
     // Retour à l'étape 1, nouvelle modification du nom, puis retour direct à
-    // l'étape 3 via l'onglet (pas via "Suivant") : la dernière valeur doit
+    // l'étape 2 via l'onglet (pas via "Suivant") : la dernière valeur doit
     // quand même être persistée avant de pouvoir terminer.
     await user.click(screen.getByRole('tab', { name: '1 Informations' }))
     await user.clear(screen.getByLabelText('Nom'))
     await user.type(screen.getByLabelText('Nom'), 'Chez Mario Deux')
-    await user.click(screen.getByRole('tab', { name: '3 Photos' }))
+    await user.click(screen.getByRole('tab', { name: '2 Photos' }))
 
     await waitFor(() =>
       expect(updateRestaurantMock).toHaveBeenCalledWith(
@@ -175,19 +168,16 @@ describe('AddRestaurantForm', () => {
     expect(onSaved).toHaveBeenCalledWith('new-restaurant')
   })
 
-  it("bloque le passage à l'étape 3 si aucune adresse n'a été sélectionnée", async () => {
+  it("bloque le passage à l'étape 2 si aucune adresse n'a été sélectionnée", async () => {
     const user = userEvent.setup()
 
     render(<AddRestaurantForm categories={categories} onSaved={vi.fn()} />)
 
     await user.type(screen.getByLabelText('Nom'), 'Chez Mario')
     await user.click(screen.getByRole('button', { name: 'Suivant' }))
-    await user.click(screen.getByRole('button', { name: 'Suivant' }))
 
     expect(
-      await screen.findByText(
-        "Sélectionnez une adresse dans les suggestions pour définir sa position.",
-      ),
+      await screen.findByText('Utilisez la recherche pour localiser le restaurant.'),
     ).toBeInTheDocument()
     expect(createRestaurantMock).not.toHaveBeenCalled()
   })
@@ -204,8 +194,9 @@ describe('AddRestaurantForm', () => {
     )
 
     expect(screen.getByLabelText('Nom')).toHaveValue('Le Bon Coin')
+    expect(screen.getByLabelText('Téléphone')).toHaveValue('0102030405')
 
-    await user.click(screen.getByRole('tab', { name: '3 Photos' }))
+    await user.click(screen.getByRole('tab', { name: '2 Photos' }))
     expect(screen.getByAltText('')).toHaveAttribute(
       'src',
       'http://localhost:5006/uploads/photo-1.jpg',
@@ -213,12 +204,9 @@ describe('AddRestaurantForm', () => {
 
     await user.click(screen.getByRole('tab', { name: '1 Informations' }))
     expect(screen.getByLabelText('Nom')).toHaveValue('Le Bon Coin')
-
-    await user.click(screen.getByRole('tab', { name: '2 Coordonnées' }))
-    expect(screen.getByLabelText('Téléphone')).toHaveValue('0102030405')
   })
 
-  it('étape 2 → 3 en édition sauvegarde les champs saisis via updateRestaurant', async () => {
+  it('étape 1 → 2 en édition sauvegarde les champs saisis via updateRestaurant', async () => {
     updateRestaurantMock.mockResolvedValue(undefined)
     const user = userEvent.setup()
 
@@ -230,7 +218,6 @@ describe('AddRestaurantForm', () => {
       />,
     )
 
-    await user.click(screen.getByRole('tab', { name: '2 Coordonnées' }))
     await user.clear(screen.getByLabelText('Téléphone'))
     await user.type(screen.getByLabelText('Téléphone'), '0600000000')
     await user.click(screen.getByRole('button', { name: 'Suivant' }))
@@ -257,7 +244,7 @@ describe('AddRestaurantForm', () => {
       />,
     )
 
-    await user.click(screen.getByRole('tab', { name: '3 Photos' }))
+    await user.click(screen.getByRole('tab', { name: '2 Photos' }))
 
     await user.type(
       screen.getByPlaceholderText('https://exemple.com/photo.jpg'),
@@ -316,7 +303,7 @@ describe('AddRestaurantForm', () => {
       />,
     )
 
-    await user.click(screen.getByRole('tab', { name: '3 Photos' }))
+    await user.click(screen.getByRole('tab', { name: '2 Photos' }))
 
     const file = new File(['contenu'], 'photo.jpg', { type: 'image/jpeg' })
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement

@@ -12,8 +12,9 @@ import {
 } from '../api/client.ts'
 import type { AddressSuggestion } from '../api/photon.ts'
 import type { Categorie, Restaurant, RestaurantPhoto } from '../api/types.ts'
+import { groupCategories } from '../utils/categories.ts'
 import AddressSearch from './AddressSearch.tsx'
-import CategoryPicker from './CategoryPicker.tsx'
+import CategoryGroupDropdown from './CategoryGroupDropdown.tsx'
 
 interface AddRestaurantFormProps {
   restaurant?: Restaurant
@@ -21,12 +22,11 @@ interface AddRestaurantFormProps {
   onSaved: (restaurantId: string) => void
 }
 
-type Step = 1 | 2 | 3
+type Step = 1 | 2
 
 const STEPS: { n: Step; label: string }[] = [
   { n: 1, label: 'Informations' },
-  { n: 2, label: 'Coordonnées' },
-  { n: 3, label: 'Photos' },
+  { n: 2, label: 'Photos' },
 ]
 
 function AddRestaurantForm({ restaurant, categories, onSaved }: AddRestaurantFormProps) {
@@ -36,11 +36,11 @@ function AddRestaurantForm({ restaurant, categories, onSaved }: AddRestaurantFor
   // Étape 1 — Informations
   const [nom, setNom] = useState(restaurant?.nom ?? '')
   const [description, setDescription] = useState(restaurant?.description ?? '')
-  const [categorieIds, setCategorieIds] = useState<string[]>(
-    restaurant?.categories.map((c) => c.id) ?? [],
+  const [categorieIds, setCategorieIds] = useState<Set<string>>(
+    new Set(restaurant?.categories.map((c) => c.id) ?? []),
   )
+  const categoryGroups = groupCategories(categories)
 
-  // Étape 2 — Coordonnées
   const [adresse, setAdresse] = useState(restaurant?.adresse ?? '')
   const [latitude, setLatitude] = useState<number | null>(
     restaurant?.latitude ?? null,
@@ -52,7 +52,7 @@ function AddRestaurantForm({ restaurant, categories, onSaved }: AddRestaurantFor
   const [siteWeb, setSiteWeb] = useState(restaurant?.siteWeb ?? '')
   const [horaires, setHoraires] = useState(restaurant?.horaires ?? '')
 
-  // Étape 3 — Photos (n'existe que lorsque le restaurant a été créé/enregistré)
+  // Étape 2 — Photos (n'existe que lorsque le restaurant a été créé/enregistré)
   const [restaurantId, setRestaurantId] = useState<string | null>(
     restaurant?.id ?? null,
   )
@@ -68,14 +68,25 @@ function AddRestaurantForm({ restaurant, categories, onSaved }: AddRestaurantFor
 
   const sortedPhotos = [...photos].sort((a, b) => a.ordre - b.ordre)
 
-  const canReachStep2 = restaurantId !== null || nom.trim().length > 0
-  const canReachStep3 = restaurantId !== null
+  const canReachPhotos = restaurantId !== null
 
   function handleAddressSelect(suggestion: AddressSuggestion) {
     setNom(suggestion.nom)
     setAdresse(suggestion.adresse)
     setLatitude(suggestion.latitude)
     setLongitude(suggestion.longitude)
+  }
+
+  function toggleCategorie(id: string) {
+    setCategorieIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
   }
 
   async function goToStep(target: Step) {
@@ -89,26 +100,15 @@ function AddRestaurantForm({ restaurant, categories, onSaved }: AddRestaurantFor
       return
     }
 
-    if (target === 2) {
-      if (restaurantId === null && nom.trim().length === 0) {
-        setError('Le nom est obligatoire.')
-        return
-      }
-      setStep(2)
-      return
-    }
-
-    // target === 3 : on persiste les champs des étapes 1 et 2 avant d'avancer.
+    // target === 2 : on persiste les champs de l'étape 1 avant d'avancer.
     if (nom.trim().length === 0) {
       setError('Le nom est obligatoire.')
       setStep(1)
       return
     }
     if (latitude === null || longitude === null) {
-      setError(
-        "Sélectionnez une adresse dans les suggestions pour définir sa position.",
-      )
-      setStep(2)
+      setError('Utilisez la recherche pour localiser le restaurant.')
+      setStep(1)
       return
     }
 
@@ -119,7 +119,7 @@ function AddRestaurantForm({ restaurant, categories, onSaved }: AddRestaurantFor
         adresse: adresse.trim(),
         latitude,
         longitude,
-        categorieIds,
+        categorieIds: Array.from(categorieIds),
         description: description.trim().length > 0 ? description.trim() : null,
         telephone: telephone.trim().length > 0 ? telephone.trim() : null,
         siteWeb: siteWeb.trim().length > 0 ? siteWeb.trim() : null,
@@ -131,7 +131,7 @@ function AddRestaurantForm({ restaurant, categories, onSaved }: AddRestaurantFor
         const created = await createRestaurant(payload)
         setRestaurantId(created.id)
       }
-      setStep(3)
+      setStep(2)
     } catch (err) {
       if (err instanceof ApiError && err.status === 409) {
         setError('Un restaurant avec ce nom et cette adresse existe déjà.')
@@ -274,7 +274,7 @@ function AddRestaurantForm({ restaurant, categories, onSaved }: AddRestaurantFor
 
       <div className="wizard-steps" role="tablist" aria-label="Étapes du formulaire">
         {STEPS.map(({ n, label }) => {
-          const reachable = n === 1 || (n === 2 && canReachStep2) || (n === 3 && canReachStep3)
+          const reachable = n === 1 || (n === 2 && canReachPhotos)
           return (
             <button
               key={n}
@@ -294,6 +294,12 @@ function AddRestaurantForm({ restaurant, categories, onSaved }: AddRestaurantFor
 
       {step === 1 && (
         <>
+          <AddressSearch
+            label="Rechercher le restaurant"
+            placeholder="Ex : Le Mikado, Strasbourg"
+            onSelect={handleAddressSelect}
+          />
+
           <label htmlFor="restaurant-nom">Nom</label>
           <input
             id="restaurant-nom"
@@ -304,11 +310,17 @@ function AddRestaurantForm({ restaurant, categories, onSaved }: AddRestaurantFor
           />
 
           <span className="field-label">Catégories</span>
-          <CategoryPicker
-            categories={categories}
-            selectedIds={categorieIds}
-            onChange={setCategorieIds}
-          />
+          <div className="category-group-grid">
+            {categoryGroups.map(([groupe, groupCategoriesList]) => (
+              <CategoryGroupDropdown
+                key={groupe}
+                groupe={groupe}
+                categories={groupCategoriesList}
+                selectedIds={categorieIds}
+                onToggle={toggleCategorie}
+              />
+            ))}
+          </div>
 
           <label htmlFor="restaurant-description">Description</label>
           <textarea
@@ -317,12 +329,6 @@ function AddRestaurantForm({ restaurant, categories, onSaved }: AddRestaurantFor
             onChange={(event) => setDescription(event.target.value)}
             rows={3}
           />
-        </>
-      )}
-
-      {step === 2 && (
-        <>
-          <AddressSearch onSelect={handleAddressSelect} />
 
           <label htmlFor="restaurant-adresse">Adresse</label>
           <input
@@ -372,7 +378,7 @@ function AddRestaurantForm({ restaurant, categories, onSaved }: AddRestaurantFor
         </>
       )}
 
-      {step === 3 && restaurantId && (
+      {step === 2 && restaurantId && (
         <div className="restaurant-photos-step">
           <span className="field-label">Photos</span>
 
@@ -466,17 +472,12 @@ function AddRestaurantForm({ restaurant, categories, onSaved }: AddRestaurantFor
           <button
             type="button"
             onClick={() => void goToStep(2)}
-            disabled={nom.trim().length === 0}
+            disabled={nom.trim().length === 0 || submitting}
           >
-            Suivant
-          </button>
-        )}
-        {step === 2 && (
-          <button type="button" onClick={() => void goToStep(3)} disabled={submitting}>
             {submitting ? 'Enregistrement…' : 'Suivant'}
           </button>
         )}
-        {step === 3 && (
+        {step === 2 && (
           <button type="button" onClick={handleFinish} disabled={!restaurantId}>
             Terminer
           </button>

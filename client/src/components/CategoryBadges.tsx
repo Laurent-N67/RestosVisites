@@ -1,4 +1,5 @@
 import type { Categorie } from '../api/types.ts'
+import { groupColorKey } from '../utils/categoryColors.ts'
 
 interface CategoryBadgesProps {
   categories: Categorie[]
@@ -12,7 +13,10 @@ function CategoryBadges({ categories, max = 3 }: CategoryBadgesProps) {
   return (
     <div className="category-badges">
       {visible.map((categorie) => (
-        <span key={categorie.id} className="category-badge">
+        <span
+          key={categorie.id}
+          className={`category-badge category-badge--${groupColorKey(categorie.groupe)}`}
+        >
           {categorie.nom}
         </span>
       ))}

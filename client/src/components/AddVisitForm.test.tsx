@@ -51,6 +51,11 @@ const existingVisite: Visite = {
   tempsAttente: 15,
 }
 
+async function goToLastStep(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole('button', { name: 'Suivant' }))
+  await user.click(screen.getByRole('button', { name: 'Suivant' }))
+}
+
 describe('AddVisitForm', () => {
   beforeEach(() => {
     createVisiteMock.mockReset()
@@ -71,6 +76,7 @@ describe('AddVisitForm', () => {
     )
 
     await user.click(screen.getByRole('button', { name: 'Couple' }))
+    await goToLastStep(user)
     await user.click(screen.getByRole('button', { name: 'Enregistrer la visite' }))
 
     await waitFor(() => expect(createVisiteMock).toHaveBeenCalledTimes(1))
@@ -79,7 +85,7 @@ describe('AddVisitForm', () => {
     )
   })
 
-  it('démarre repliée pour une nouvelle visite et envoie null pour les champs optionnels', async () => {
+  it('envoie null pour les champs optionnels non renseignés', async () => {
     createVisiteMock.mockResolvedValue({ id: 'new-visite' })
     const user = userEvent.setup()
 
@@ -91,12 +97,7 @@ describe('AddVisitForm', () => {
       />,
     )
 
-    // La section "Plus de détails" est repliée par défaut : le champ
-    // Budget n'est pas exposé par le navigateur tant que <details> est fermé.
-    expect(screen.getByText('Plus de détails').closest('details')).not.toHaveAttribute(
-      'open',
-    )
-
+    await goToLastStep(user)
     await user.click(screen.getByRole('button', { name: 'Enregistrer la visite' }))
 
     await waitFor(() => expect(createVisiteMock).toHaveBeenCalledTimes(1))
@@ -111,14 +112,10 @@ describe('AddVisitForm', () => {
     )
   })
 
-  it('auto-déplie "Plus de détails" en édition quand budget/tempsAttente/réservation sont renseignés', () => {
-    render(
-      <AddVisitForm restaurants={restaurants} visite={existingVisite} onSaved={vi.fn()} />,
-    )
+  it('bloque le passage à l\'étape suivante tant qu\'aucun restaurant n\'est sélectionné', () => {
+    render(<AddVisitForm restaurants={restaurants} onSaved={vi.fn()} />)
 
-    expect(screen.getByText('Plus de détails').closest('details')).toHaveAttribute(
-      'open',
-    )
+    expect(screen.getByRole('button', { name: 'Suivant' })).toBeDisabled()
   })
 
   it('préremplit avecQui, réservation, budget et tempsAttente en édition', () => {
@@ -147,6 +144,7 @@ describe('AddVisitForm', () => {
     )
 
     await user.click(screen.getByRole('button', { name: 'Non' }))
+    await goToLastStep(user)
     await user.click(
       screen.getByRole('button', { name: 'Enregistrer les modifications' }),
     )
@@ -161,5 +159,17 @@ describe('AddVisitForm', () => {
         tempsAttente: 15,
       }),
     )
+  })
+
+  it('affiche la note et le commentaire à l\'étape "Notes & Avis"', async () => {
+    const user = userEvent.setup()
+
+    render(
+      <AddVisitForm restaurants={restaurants} visite={existingVisite} onSaved={vi.fn()} />,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Suivant' }))
+    expect(screen.getByRole('radiogroup', { name: 'Note' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Commentaire')).toHaveValue('Très bon')
   })
 })

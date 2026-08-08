@@ -5,9 +5,15 @@ import { getSessionPosition } from '../utils/geolocation.ts'
 
 interface AddressSearchProps {
   onSelect: (suggestion: AddressSuggestion) => void
+  label?: string
+  placeholder?: string
 }
 
-function AddressSearch({ onSelect }: AddressSearchProps) {
+function AddressSearch({
+  onSelect,
+  label = 'Rechercher une adresse',
+  placeholder = 'Ex: 10 rue de la Paix, Paris',
+}: AddressSearchProps) {
   const [query, setQuery] = useState('')
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([])
   const [loading, setLoading] = useState(false)
@@ -67,9 +73,7 @@ function AddressSearch({ onSelect }: AddressSearchProps) {
 
   return (
     <div className="address-search">
-      <label htmlFor="address-search-input">
-        Rechercher une adresse
-      </label>
+      <label htmlFor="address-search-input">{label}</label>
       <input
         id="address-search-input"
         type="text"
@@ -80,7 +84,7 @@ function AddressSearch({ onSelect }: AddressSearchProps) {
         }}
         onFocus={() => setOpen(true)}
         onBlur={() => window.setTimeout(() => setOpen(false), 150)}
-        placeholder="Ex: 10 rue de la Paix, Paris"
+        placeholder={placeholder}
         autoComplete="off"
       />
       {open && (
