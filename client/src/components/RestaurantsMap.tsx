@@ -17,13 +17,13 @@ import { useFavoris } from '../contexts/FavorisContext.tsx'
 import { useRecommandations } from '../hooks/useRecommandations.ts'
 import { averageNote, buildJournal } from '../utils/visites.ts'
 import type { JournalEntry } from '../utils/visites.ts'
-import { formatNoteMoyenne, stars } from '../utils/format.ts'
+import { formatDate, formatNoteMoyenne, stars } from '../utils/format.ts'
 import CoverPhoto from './CoverPhoto.tsx'
 import FavorisSlots from './FavorisSlots.tsx'
 import { HeartIcon } from './icons/Icons.tsx'
 import RecommendationCard from './RecommendationCard.tsx'
 
-const RECENT_VISITS_LIMIT = 6
+const RECENT_VISITS_LIMIT = 4
 const RECOMMANDATIONS_SECTION_LIMIT = 2
 
 const DEFAULT_CENTER: [number, number] = [46.6034, 1.8883] // Centre de la France
@@ -98,6 +98,15 @@ function recentVisitCoverUrl(entry: JournalEntry): string | undefined {
     entry.restaurant.photos.find((photo) => photo.estPrincipale)?.url ??
     entry.restaurant.photos[0]?.url
   )
+}
+
+/**
+ * Type de cuisine d'un restaurant (catégorie du groupe "Type de cuisine"),
+ * affiché sur la ligne "Visites récentes" à côté de la date — un restaurant
+ * peut ne pas en avoir (catégorie non renseignée).
+ */
+function cuisineType(restaurant: Restaurant): string | undefined {
+  return restaurant.categories.find((c) => c.groupe === 'Type de cuisine')?.nom
 }
 
 function FitBounds({ restaurants }: { restaurants: Restaurant[] }) {
@@ -439,7 +448,7 @@ function RestaurantsMap({
 
       <div className="map-page-sections">
         {recentJournalEntries.length > 0 && (
-          <section className="map-section">
+          <section className="map-section map-section--visites">
             <div className="map-section-header">
               <h3>Visites récentes</h3>
               {journalEntries.length > RECENT_VISITS_LIMIT && (
@@ -449,33 +458,41 @@ function RestaurantsMap({
               )}
             </div>
             <div className="map-recent-visits-list">
-              {recentJournalEntries.map((entry) => (
-                <Link key={entry.visite.id} to="/visites" className="map-recent-visit-row">
-                  <div className="map-recent-visit-thumb">
-                    <CoverPhoto url={recentVisitCoverUrl(entry)} alt={entry.restaurant.nom} />
-                  </div>
-                  <div className="map-recent-visit-body">
-                    <span className="map-recent-visit-name">{entry.restaurant.nom}</span>
+              {recentJournalEntries.map((entry) => {
+                const cuisine = cuisineType(entry.restaurant)
+                return (
+                  <Link key={entry.visite.id} to="/visites" className="map-recent-visit-row">
+                    <div className="map-recent-visit-thumb">
+                      <CoverPhoto url={recentVisitCoverUrl(entry)} alt={entry.restaurant.nom} />
+                    </div>
+                    <div className="map-recent-visit-body">
+                      <span className="map-recent-visit-name">{entry.restaurant.nom}</span>
+                      <span className="map-recent-visit-address">{entry.restaurant.adresse}</span>
+                      <span className="map-recent-visit-meta">
+                        {cuisine ? `${cuisine} · ` : ''}
+                        {formatDate(entry.visite.date)}
+                      </span>
+                    </div>
                     <span
                       className="popup-stars map-recent-visit-rating"
                       aria-label={`Note ${entry.visite.note} sur 5`}
                     >
                       {stars(entry.visite.note)}
                     </span>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                )
+              })}
             </div>
           </section>
         )}
 
         <section className="map-section map-section--favoris">
           <h3>Mes favoris (6 max)</h3>
-          <FavorisSlots restaurants={restaurants} />
+          <FavorisSlots restaurants={restaurants} visites={visites} />
         </section>
 
         {recommandationsSection.length > 0 && (
-          <section className="map-section">
+          <section className="map-section map-section--recommandations">
             <div className="map-section-header">
               <h3>Recommandés pour vous</h3>
               <Link to="/favoris" className="map-section-link">

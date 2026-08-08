@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { Restaurant, Utilisateur } from '../api/types.ts'
+import type { Restaurant, Utilisateur, Visite } from '../api/types.ts'
 import { Role } from '../api/types.ts'
 import { FavorisProvider } from '../contexts/FavorisContext.tsx'
 import FavorisSlots, { MAX_FAVORIS } from './FavorisSlots.tsx'
@@ -100,11 +100,11 @@ function makeRestaurant(id: string, nom: string): Restaurant {
   }
 }
 
-function renderSlots(restaurantsList: Restaurant[] = restaurants) {
+function renderSlots(restaurantsList: Restaurant[] = restaurants, visites: Visite[] = []) {
   return render(
     <MemoryRouter>
       <FavorisProvider>
-        <FavorisSlots restaurants={restaurantsList} />
+        <FavorisSlots restaurants={restaurantsList} visites={visites} />
       </FavorisProvider>
     </MemoryRouter>,
   )
@@ -193,6 +193,51 @@ describe('FavorisSlots', () => {
     expect(document.querySelectorAll('.favoris-slot--empty').length).toBe(
       MAX_FAVORIS,
     )
+  })
+
+  it('affiche la note moyenne et la ville sur un emplacement rempli', async () => {
+    getMesFavorisMock.mockResolvedValue([
+      { restaurantId: 'restaurant-1', dateAjout: '2026-06-01' },
+    ])
+    const visites: Visite[] = [
+      {
+        id: 'visite-1',
+        restaurantId: 'restaurant-1',
+        date: '2026-07-01',
+        note: 4,
+        commentaire: null,
+        urlsPhotos: [],
+        utilisateurId: 'user-1',
+        utilisateurNomAffiche: 'Une Personne',
+        avecQui: null,
+        reservation: null,
+        budget: null,
+        tempsAttente: null,
+      },
+      {
+        id: 'visite-2',
+        restaurantId: 'restaurant-1',
+        date: '2026-08-01',
+        note: 5,
+        commentaire: null,
+        urlsPhotos: [],
+        utilisateurId: 'user-1',
+        utilisateurNomAffiche: 'Une Personne',
+        avecQui: null,
+        reservation: null,
+        budget: null,
+        tempsAttente: null,
+      },
+    ]
+    const restaurantsAvecAdresse: Restaurant[] = [
+      { ...restaurants[0], adresse: '1 rue de Paris, 75001 Paris, France' },
+    ]
+    renderSlots(restaurantsAvecAdresse, visites)
+
+    await screen.findByText('Le Bon Coin')
+
+    expect(screen.getByText('4.5')).toBeInTheDocument()
+    expect(screen.getByText('Paris')).toBeInTheDocument()
   })
 
   it('ajoute un favori via la popover de recherche (onSelect)', async () => {

@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import type { Restaurant } from '../api/types.ts'
+import type { Restaurant, Visite } from '../api/types.ts'
 import { useFavoris } from '../contexts/FavorisContext.tsx'
 import { errorMessage } from '../utils/errors.ts'
+import { averageNote } from '../utils/visites.ts'
+import { formatNoteMoyenne, stars, villeFromAdresse } from '../utils/format.ts'
 import CoverPhoto from './CoverPhoto.tsx'
 import { HeartIcon } from './icons/Icons.tsx'
 import RestaurantSearch from './RestaurantSearch.tsx'
@@ -16,6 +18,7 @@ export const MAX_FAVORIS = 6
 
 interface FavorisSlotsProps {
   restaurants: Restaurant[]
+  visites: Visite[]
 }
 
 /**
@@ -30,7 +33,7 @@ interface FavorisSlotsProps {
  * inline (réutilise `RestaurantSearch`) pour ajouter un restaurant sans
  * quitter la page.
  */
-function FavorisSlots({ restaurants }: FavorisSlotsProps) {
+function FavorisSlots({ restaurants, visites }: FavorisSlotsProps) {
   const { favoriIds, toggle, isPending } = useFavoris()
   const [searchOpen, setSearchOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -73,6 +76,10 @@ function FavorisSlots({ restaurants }: FavorisSlotsProps) {
           const photoPrincipale =
             restaurant.photos.find((photo) => photo.estPrincipale) ??
             restaurant.photos[0]
+          const average = averageNote(
+            visites.filter((visite) => visite.restaurantId === restaurant.id),
+          )
+          const ville = villeFromAdresse(restaurant.adresse)
           return (
             <article
               key={restaurant.id}
@@ -90,6 +97,15 @@ function FavorisSlots({ restaurants }: FavorisSlotsProps) {
               <Link to={`/restaurants/${restaurant.id}`} className="favoris-slot-link">
                 <CoverPhoto url={photoPrincipale?.url} alt={restaurant.nom} />
                 <h4>{restaurant.nom}</h4>
+                {average !== null && (
+                  <p className="favoris-slot-rating">
+                    <span className="popup-stars" aria-hidden="true">
+                      {stars(Math.round(average))}
+                    </span>{' '}
+                    {formatNoteMoyenne(average)}
+                  </p>
+                )}
+                {ville && <p className="favoris-slot-ville">{ville}</p>}
               </Link>
             </article>
           )

@@ -394,7 +394,7 @@ describe('RestaurantsMap', () => {
       expect(screen.queryByText('Visites récentes')).not.toBeInTheDocument()
     })
 
-    it('affiche la section "Visites récentes" tronquée aux 6 dernières visites, avec un lien "Voir tout" au-delà', async () => {
+    it('affiche la section "Visites récentes" tronquée aux 4 dernières visites, avec un lien "Voir tout" au-delà', async () => {
       const sevenVisites = Array.from({ length: 7 }, (_, index) =>
         makeVisite({
           id: `visite-${index}`,
@@ -406,7 +406,7 @@ describe('RestaurantsMap', () => {
 
       expect(await screen.findByText('Visites récentes')).toBeInTheDocument()
       const rows = document.querySelectorAll('.map-recent-visit-row')
-      expect(rows.length).toBe(6)
+      expect(rows.length).toBe(4)
       for (const row of rows) {
         expect(row).toHaveAttribute('href', '/visites')
       }

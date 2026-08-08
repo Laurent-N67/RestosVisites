@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatDate, formatDistanceKm, stars } from './format.ts'
+import { formatDate, formatDistanceKm, stars, villeFromAdresse } from './format.ts'
 
 describe('formatDate', () => {
   it('formate une date ISO au format fr-FR', () => {
@@ -41,5 +41,21 @@ describe('formatDistanceKm', () => {
 
   it('affiche toujours une décimale, même pour un nombre entier', () => {
     expect(formatDistanceKm(5)).toBe('5,0 km')
+  })
+})
+
+describe('villeFromAdresse', () => {
+  it('extrait la ville en retirant le code postal (format Nominatim classique)', () => {
+    expect(villeFromAdresse('127 Route de Mittelhausbergen, 67200 Strasbourg, France')).toBe(
+      'Strasbourg',
+    )
+  })
+
+  it('gère un code postal avec tiret (format japonais)', () => {
+    expect(villeFromAdresse('3 Chome-19-21 錦通, 460-0003 Nagoya, Japon')).toBe('Nagoya')
+  })
+
+  it("renvoie l'adresse complète si elle ne contient pas au moins 2 segments", () => {
+    expect(villeFromAdresse('1 rue de Paris')).toBe('1 rue de Paris')
   })
 })
