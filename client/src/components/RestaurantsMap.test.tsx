@@ -359,7 +359,7 @@ describe('RestaurantsMap', () => {
       renderMap({ visites: sevenVisites })
 
       expect(await screen.findByText('Visites récentes')).toBeInTheDocument()
-      expect(document.querySelectorAll('.journal-card').length).toBe(6)
+      expect(document.querySelectorAll('.map-recent-visit-row').length).toBe(6)
       expect(screen.getByRole('link', { name: 'Voir tout' })).toHaveAttribute(
         'href',
         '/visites',

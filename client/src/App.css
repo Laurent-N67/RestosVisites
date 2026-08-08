@@ -106,22 +106,31 @@
 
 /* Vue Carte : sidebar façon Google Maps */
 
-/* Enveloppe de toute la page Carte (Phase 7c) : contrairement à `.map-view`
-   seul (qui occupait 100% de `.app-main` sans scroll de page), cette
-   enveloppe permet de faire défiler vers les sections basses (visites
-   récentes / favoris / recommandés) sous la carte. */
+/* Enveloppe de toute la page Carte (Phase 7d) : deux bandes empilées
+   (carte+panneaux, puis les 3 colonnes basses) qui doivent occuper
+   exactement la hauteur disponible SANS scroll de page — l'utilisateur a
+   explicitement rejeté le scroll de page introduit en Phase 7c au profit de
+   ce mockup en tableau de bord (tout tient à l'écran, chaque colonne basse
+   défile individuellement si besoin, cf. `.map-page-sections` plus bas).
+   `overflow: hidden` empêche tout débordement de faire apparaître un
+   scrollbar de page. Sur mobile (<900px, cf. media query après les règles de
+   base), ce parti pris est abandonné : le scroll de page normal reprend. */
 .map-page {
   height: 100%;
-  overflow-y: auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .map-view {
   display: flex;
-  /* Hauteur bornée (pas 100%) : laisse de la place visible aux sections
-     sous la carte tout en gardant Leaflet fonctionnel (MapContainer a
-     besoin d'une hauteur explicite non nulle pour calculer sa taille). */
-  height: 70vh;
-  min-height: 420px;
+  /* Part majoritaire de la hauteur (~75%) : 3 (sur 4 = 3+1) parts du flex
+     partagé avec `.map-page-sections` ci-dessous. `min-height` en px sert de
+     plancher concret sur les petits écrans, nécessaire à Leaflet
+     (MapContainer a besoin d'une hauteur explicite non nulle pour calculer
+     sa taille) et pour garder la carte utilisable. */
+  flex: 3 1 0;
+  min-height: 380px;
 }
 
 .map-sidebar {
@@ -203,12 +212,21 @@
 }
 
 @media (max-width: 900px) {
+  /* La contrainte "zéro scroll de page" (Phase 7d) est un choix esthétique
+     de tableau de bord desktop — sur mobile, tasser 3 colonnes basses sans
+     aucun scroll de page rendrait l'UI inutilisable. On revient donc ici au
+     scroll de page normal, comme avant Phase 7d. */
+  .map-page {
+    overflow-y: auto;
+  }
+
   .map-view {
     position: relative;
-    /* Un peu moins qu'en desktop : les sections basses doivent rester
-       atteignables sans excès de scroll sur les petits écrans, où elles
-       s'empilent en pleine largeur. */
+    /* Plus de partage flex avec les sections basses ici : hauteur fixe en
+       vh, comme le reste de la page redevient défilable normalement. */
+    flex: none;
     height: 60vh;
+    min-height: 320px;
   }
 
   .map-sidebar-toggle {
@@ -285,30 +303,48 @@
   }
 }
 
-/* Sections basses de la page Carte (Phase 7c) : visites récentes / favoris /
-   recommandés, sous la carte + panneau détail. */
+/* Bande basse compacte de la page Carte (Phase 7d, ex-"sections basses"
+   Phase 7c) : 3 colonnes côte à côte (visites récentes / favoris /
+   recommandés), sous la carte + panneau détail, sur le quart restant de la
+   hauteur (~25%, part flex complémentaire de `.map-view` ci-dessus).
+   `overflow: hidden` ici + `overflow` interne sur chaque colonne (plus bas)
+   : c'est CETTE bande, pas la page entière, qui peut avoir besoin de
+   défiler (verticalement pour les visites récentes, horizontalement pour
+   les recommandations) si son contenu dépasse la hauteur fixe qui lui est
+   allouée. */
 
 .map-page-sections {
   display: flex;
+  flex-direction: row;
+  flex: 1 1 0;
+  min-height: 200px;
+  gap: 24px;
+  padding: 12px 20px;
+  overflow: hidden;
+}
+
+.map-section {
+  flex: 1;
+  min-width: 0;
+  display: flex;
   flex-direction: column;
-  gap: 32px;
-  padding: 24px 20px 40px;
-  max-width: 1200px;
-  margin: 0 auto;
+  overflow: hidden;
 }
 
 .map-section h3 {
-  margin: 0 0 14px;
+  flex-shrink: 0;
+  margin: 0 0 8px;
   font-size: 16px;
 }
 
 .map-section-header {
+  flex-shrink: 0;
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 14px;
+  margin-bottom: 8px;
 }
 
 .map-section-header h3 {
@@ -319,6 +355,128 @@
   font-size: 13px;
   font-weight: 600;
   color: var(--accent);
+}
+
+/* Colonne "Visites récentes" : lignes compactes (vignette carrée + nom +
+   note), pas les grandes cartes photo-forward de `JournalCard` (bien trop
+   hautes pour tenir à plusieurs dans une colonne d'à peine ~200px). La liste
+   défile verticalement dans les limites de la colonne si elle contient plus
+   d'entrées que la hauteur disponible n'en montre. */
+
+.map-recent-visits-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.map-recent-visit-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  color: inherit;
+  text-decoration: none;
+  transition: background var(--transition-base);
+}
+
+.map-recent-visit-row:hover {
+  background: var(--bg-card-hover);
+}
+
+.map-recent-visit-thumb {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+}
+
+.map-recent-visit-thumb .cover-photo {
+  width: 40px;
+  height: 40px;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-sm);
+  margin: 0;
+}
+
+.map-recent-visit-thumb .cover-photo-placeholder {
+  font-size: 16px;
+}
+
+.map-recent-visit-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.map-recent-visit-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-h);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.map-recent-visit-rating {
+  font-size: 11px;
+}
+
+/* Colonne "Recommandés pour vous" : rangée horizontale de mini-cartes
+   compactes (`RecommendationCard` en variante `compact`), qui défile
+   horizontalement plutôt que de wrapper sur plusieurs lignes (pas de place
+   verticale pour ça dans cette bande). */
+
+.map-recommendations-row {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.restaurant-card--compact {
+  flex: 0 0 120px;
+  width: 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.restaurant-card--compact .cover-photo {
+  aspect-ratio: 4 / 3;
+  margin: -8px -8px 0;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.restaurant-card--compact h3 {
+  margin: 0;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recommandation-compact-rating {
+  margin: 0;
+  font-size: 11px;
+}
+
+.recommandation-compact-meta {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Grille Favoris à emplacements fixes */
@@ -419,6 +577,107 @@
   color: var(--text);
   font-size: 12px;
   text-decoration: underline;
+}
+
+/* Colonne "Favoris" de la bande basse de la page Carte (Phase 7d) : mêmes
+   emplacements que la grille pleine taille de `FavorisSlots` (utilisée telle
+   quelle, sans changement de sa logique), mais resserrés pour que les 6
+   emplacements (2 rangées de 3, comme le mockup) tiennent dans la hauteur
+   réduite de la bande basse. Portée via `.map-section--favoris` plutôt
+   qu'une réduction globale de `.favoris-slot` : `FavorisSlots` est aussi
+   utilisé pleine taille par `FavorisPage`, qui ne doit pas hériter de ce
+   resserrement. */
+.map-section--favoris {
+  gap: 0;
+}
+
+.map-section--favoris .favoris-slots {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.map-section--favoris .favoris-slots-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.map-section--favoris .favoris-slot {
+  min-height: 90px;
+}
+
+.map-section--favoris .favoris-slot--filled {
+  padding: 6px;
+}
+
+.map-section--favoris .favoris-slot--filled h4 {
+  font-size: 11px;
+}
+
+.map-section--favoris .favoris-slot--empty {
+  font-size: 18px;
+}
+
+/* Cette règle DOIT rester après les définitions de base ci-dessus (source
+   order + spécificité égale) — voir le bug récurrent déjà rencontré avec
+   .map-sidebar, où un override mobile placé avant sa règle de base perdait
+   silencieusement. Sur mobile, la bande basse compacte redevient un
+   empilement plein-largeur classique (comme la Phase 7c d'origine) : la
+   contrainte "zéro scroll" est un parti pris desktop (cf. `.map-page`
+   ci-dessus), pas réaliste à imposer à 3 colonnes sur un écran de téléphone. */
+@media (max-width: 900px) {
+  .map-page-sections {
+    flex: none;
+    flex-direction: column;
+    min-height: 0;
+    gap: 32px;
+    padding: 24px 20px 40px;
+    overflow: visible;
+  }
+
+  .map-section {
+    overflow: visible;
+  }
+
+  .map-recent-visits-list,
+  .map-section--favoris .favoris-slots {
+    flex: none;
+    overflow-y: visible;
+    max-height: none;
+  }
+
+  .map-recommendations-row {
+    flex: none;
+    overflow-x: visible;
+    flex-wrap: wrap;
+  }
+
+  .restaurant-card--compact {
+    flex: 0 1 140px;
+  }
+
+  .map-section--favoris .favoris-slots-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+  }
+
+  .map-section--favoris .favoris-slot {
+    min-height: 150px;
+  }
+
+  .map-section--favoris .favoris-slot--filled {
+    padding: var(--space-3);
+  }
+
+  .map-section--favoris .favoris-slot--filled h4 {
+    font-size: 13px;
+  }
+
+  .map-section--favoris .favoris-slot--empty {
+    font-size: 26px;
+  }
 }
 
 .theme-toggle {

@@ -14,10 +14,10 @@ import type { Theme } from '../hooks/useTheme.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { useRecommandations } from '../hooks/useRecommandations.ts'
 import { averageNote, buildJournal } from '../utils/visites.ts'
+import type { JournalEntry } from '../utils/visites.ts'
 import { formatNoteMoyenne, stars } from '../utils/format.ts'
 import CategoryBadges from './CategoryBadges.tsx'
 import CoverPhoto from './CoverPhoto.tsx'
-import { JournalCard } from './VisitesJournalPage.tsx'
 import FavorisSlots from './FavorisSlots.tsx'
 import RecommendationCard from './RecommendationCard.tsx'
 
@@ -80,6 +80,22 @@ function computeNoteSummaries(visites: Visite[]): Map<string, NoteSummary> {
     }
   }
   return summaries
+}
+
+/**
+ * Photo de couverture d'une entrée de journal, avec la même chaîne de repli
+ * que `JournalCard` (photo de la visite elle-même → photo principale/première
+ * photo du restaurant → placeholder de `CoverPhoto`) — dupliquée ici plutôt
+ * qu'importée car la ligne compacte "Visites récentes" de la page Carte
+ * n'a pas besoin du reste du rendu (étoiles pleine taille, actions
+ * modifier/supprimer, etc.) de `JournalCard`.
+ */
+function recentVisitCoverUrl(entry: JournalEntry): string | undefined {
+  return (
+    entry.visite.urlsPhotos[0] ??
+    entry.restaurant.photos.find((photo) => photo.estPrincipale)?.url ??
+    entry.restaurant.photos[0]?.url
+  )
 }
 
 function FitBounds({ restaurants }: { restaurants: Restaurant[] }) {
@@ -396,20 +412,37 @@ function RestaurantsMap({
                 </Link>
               )}
             </div>
-            <div className="journal-cards">
+            <div className="map-recent-visits-list">
               {recentJournalEntries.map((entry) => (
-                <JournalCard
+                <Link
                   key={entry.visite.id}
-                  entry={entry}
-                  onEditVisite={onEditVisite}
-                  onVisiteDeleted={onVisiteDeleted}
-                />
+                  to={`/restaurants/${entry.restaurant.id}`}
+                  className="map-recent-visit-row"
+                >
+                  <div className="map-recent-visit-thumb">
+                    <CoverPhoto
+                      url={recentVisitCoverUrl(entry)}
+                      alt={entry.restaurant.nom}
+                    />
+                  </div>
+                  <div className="map-recent-visit-body">
+                    <span className="map-recent-visit-name">
+                      {entry.restaurant.nom}
+                    </span>
+                    <span
+                      className="popup-stars map-recent-visit-rating"
+                      aria-label={`Note ${entry.visite.note} sur 5`}
+                    >
+                      {stars(entry.visite.note)}
+                    </span>
+                  </div>
+                </Link>
               ))}
             </div>
           </section>
         )}
 
-        <section className="map-section">
+        <section className="map-section map-section--favoris">
           <h3>Favoris</h3>
           <FavorisSlots restaurants={restaurants} />
         </section>
@@ -417,12 +450,13 @@ function RestaurantsMap({
         {recommandationsSection.length > 0 && (
           <section className="map-section">
             <h3>Recommandés pour vous</h3>
-            <div className="restaurant-cards">
+            <div className="map-recommendations-row">
               {recommandationsSection.map((recommandation) => (
                 <RecommendationCard
                   key={recommandation.restaurant.id}
                   recommandation={recommandation}
                   visites={visites}
+                  compact
                 />
               ))}
             </div>
