@@ -102,6 +102,8 @@
   height: 100%;
   flex: 1;
   min-width: 0;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 }
 
 /* Vue Carte : sidebar façon Google Maps */
@@ -131,15 +133,18 @@
      sa taille) et pour garder la carte utilisable. */
   flex: 2.6 1 0;
   min-height: 380px;
+  gap: 16px;
+  padding: 16px 20px 0;
 }
 
 .map-sidebar {
-  width: 340px;
+  width: 260px;
   flex-shrink: 0;
   overflow-y: auto;
   padding: 16px;
-  border-right: 1px solid var(--border);
-  background: var(--bg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  background: var(--bg-card);
 }
 
 .map-sidebar-list {
@@ -289,7 +294,7 @@
    (évite un saut de layout). */
 
 .map-detail-column {
-  width: 380px;
+  width: 420px;
   flex-shrink: 0;
 }
 
@@ -298,7 +303,8 @@
   overflow-y: auto;
   height: 100%;
   padding: 20px;
-  border-left: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
   background: var(--bg-card);
 }
 
@@ -312,7 +318,8 @@
   gap: 12px;
   padding: 32px;
   color: var(--text);
-  border-left: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
   background: var(--bg-card);
 }
 
@@ -343,11 +350,62 @@
   color: var(--text);
 }
 
-.detail-panel-add-visite {
+.detail-panel-actions {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.detail-panel-favori-btn {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--bg);
+  color: var(--text);
+}
+
+.detail-panel-favori-btn--active {
+  color: var(--accent);
+  border-color: var(--accent-border);
+  background: var(--accent-bg);
+}
+
+.detail-panel-edit-btn {
+  flex-shrink: 0;
+  padding: 0 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--bg);
+  color: var(--text-h);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.detail-panel-primary-btn {
+  flex: 1;
+  padding: 0 16px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.detail-panel-delete-link {
   display: block;
-  width: 100%;
-  text-align: center;
-  margin-top: 12px;
+  margin-top: 10px;
+  border: none;
+  background: none;
+  color: var(--text);
+  font-size: 12px;
+  text-decoration: underline;
 }
 
 /* Cette règle DOIT rester après la définition de base ci-dessus (source
@@ -437,41 +495,61 @@
   color: var(--accent);
 }
 
-/* Colonne "Visites récentes" : rangée horizontale de vraies cartes photo
-   (façon `restaurant-card--compact`), plutôt que des lignes compactes trop
-   austères pour un tableau de bord premium (Phase 8). Défile horizontalement
-   plutôt que de wrapper sur plusieurs lignes (pas de place verticale pour ça
-   dans cette bande). */
+/* Colonne "Visites récentes" : lignes compactes (miniature + nom + note),
+   qui défilent verticalement si besoin dans la hauteur allouée à cette
+   bande. */
 
 .map-recent-visits-list {
   flex: 1;
   min-height: 0;
-  display: flex;
-  flex-direction: row;
-  overflow-x: auto;
-  overflow-y: hidden;
-  gap: 12px;
-}
-
-.map-recent-visit-card {
-  flex: 0 0 150px;
-  width: 150px;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 10px;
+}
+
+.map-recent-visit-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px;
+  border-radius: var(--radius-sm);
   color: inherit;
   text-decoration: none;
+  transition: background var(--transition-base);
 }
 
-.map-recent-visit-card .cover-photo {
-  aspect-ratio: 4 / 3;
-  margin: -10px -10px 0;
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+.map-recent-visit-row:hover {
+  background: var(--bg-card-hover);
 }
 
-.map-recent-visit-card h4 {
+.map-recent-visit-thumb {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+}
+
+.map-recent-visit-thumb .cover-photo {
+  width: 40px;
+  height: 40px;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-sm);
   margin: 0;
+}
+
+.map-recent-visit-thumb .cover-photo-placeholder {
+  font-size: 16px;
+}
+
+.map-recent-visit-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.map-recent-visit-name {
   font-size: 13px;
   font-weight: 600;
   color: var(--text-h);
@@ -481,15 +559,7 @@
 }
 
 .map-recent-visit-rating {
-  margin: 0;
   font-size: 11px;
-  color: var(--text);
-}
-
-.map-recent-visit-date {
-  margin: 0;
-  font-size: 11px;
-  color: var(--text);
 }
 
 /* Colonne "Recommandés pour vous" : rangée horizontale de mini-cartes
@@ -684,19 +754,19 @@
 }
 
 .map-section--favoris .favoris-slot {
-  min-height: 130px;
+  min-height: 96px;
 }
 
 .map-section--favoris .favoris-slot--filled {
-  padding: 10px;
+  padding: 6px;
 }
 
 .map-section--favoris .favoris-slot--filled h4 {
-  font-size: 13px;
+  font-size: 11px;
 }
 
 .map-section--favoris .favoris-slot--empty {
-  font-size: 32px;
+  font-size: 20px;
 }
 
 /* Cette règle DOIT rester après les définitions de base ci-dessus (source
@@ -2075,7 +2145,8 @@
 
 .detail-header h2 {
   margin: 0 0 4px;
-  font-size: 22px;
+  font-size: 26px;
+  font-weight: 700;
 }
 
 .detail-cover-photo {

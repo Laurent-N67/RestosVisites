@@ -14,6 +14,7 @@ interface RestaurantDetailCardProps {
   onEdit: () => void
   onDelete: () => void
   deleting: boolean
+  hideActions?: boolean
 }
 
 function RestaurantDetailCard({
@@ -27,6 +28,7 @@ function RestaurantDetailCard({
   onEdit,
   onDelete,
   deleting,
+  hideActions = false,
 }: RestaurantDetailCardProps) {
   const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${restaurant.latitude},${restaurant.longitude}`
 
@@ -41,31 +43,33 @@ function RestaurantDetailCard({
 
       <div className="popup-header detail-header">
         <h2>{restaurant.nom}</h2>
-        <div className="popup-actions">
-          <button
-            type="button"
-            className={isFavori ? 'popup-btn popup-btn-favori-active' : 'popup-btn'}
-            disabled={favoriDisabled}
-            onClick={onToggleFavori}
-          >
-            {isFavori ? '★ Retirer des favoris' : '☆ Ajouter aux favoris'}
-          </button>
-          {isAdmin && (
-            <>
-              <button type="button" className="popup-btn" onClick={onEdit}>
-                Modifier
-              </button>
-              <button
-                type="button"
-                className="popup-btn popup-btn-danger"
-                disabled={deleting}
-                onClick={onDelete}
-              >
-                {deleting ? 'Suppression…' : 'Supprimer'}
-              </button>
-            </>
-          )}
-        </div>
+        {!hideActions && (
+          <div className="popup-actions">
+            <button
+              type="button"
+              className={isFavori ? 'popup-btn popup-btn-favori-active' : 'popup-btn'}
+              disabled={favoriDisabled}
+              onClick={onToggleFavori}
+            >
+              {isFavori ? '★ Retirer des favoris' : '☆ Ajouter aux favoris'}
+            </button>
+            {isAdmin && (
+              <>
+                <button type="button" className="popup-btn" onClick={onEdit}>
+                  Modifier
+                </button>
+                <button
+                  type="button"
+                  className="popup-btn popup-btn-danger"
+                  disabled={deleting}
+                  onClick={onDelete}
+                >
+                  {deleting ? 'Suppression…' : 'Supprimer'}
+                </button>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       <p className="popup-adresse">{restaurant.adresse}</p>

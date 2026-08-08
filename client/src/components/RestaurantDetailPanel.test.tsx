@@ -171,11 +171,11 @@ describe('RestaurantDetailPanel', () => {
     const user = userEvent.setup()
     renderPanel()
 
-    const toggle = screen.getByRole('button', { name: '☆ Ajouter aux favoris' })
+    const toggle = screen.getByRole('button', { name: 'Ajouter Le Bon Coin aux favoris' })
     await user.click(toggle)
 
     expect(
-      await screen.findByRole('button', { name: '★ Retirer des favoris' }),
+      await screen.findByRole('button', { name: 'Retirer Le Bon Coin des favoris' }),
     ).toBeInTheDocument()
   })
 
@@ -194,9 +194,12 @@ describe('RestaurantDetailPanel', () => {
   it('affiche les actions Modifier/Supprimer pour un admin', () => {
     renderPanel()
 
-    // Une pour le restaurant, une par visite (2 visites) = 3.
+    // Une pour le restaurant, une par visite (2 visites) = 3. Le bouton
+    // "Supprimer" du restaurant est désormais le lien discret "Supprimer ce
+    // restaurant" (cf. `detail-panel-delete-link`), d'où le matcher par
+    // préfixe plutôt qu'un nom exact.
     expect(screen.getAllByRole('button', { name: 'Modifier' }).length).toBe(3)
-    expect(screen.getAllByRole('button', { name: 'Supprimer' }).length).toBe(3)
+    expect(screen.getAllByRole('button', { name: /^Supprimer/ }).length).toBe(3)
   })
 
   it('supprime le restaurant, notifie le parent et ferme le panneau', async () => {
@@ -206,7 +209,7 @@ describe('RestaurantDetailPanel', () => {
     const onClose = vi.fn()
     renderPanel({ onRestaurantDeleted, onClose })
 
-    await user.click(screen.getAllByRole('button', { name: 'Supprimer' })[0])
+    await user.click(screen.getByRole('button', { name: 'Supprimer ce restaurant' }))
 
     await waitFor(() =>
       expect(deleteRestaurantMock).toHaveBeenCalledWith('restaurant-1'),

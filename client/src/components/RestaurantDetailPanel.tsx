@@ -5,6 +5,7 @@ import { useDeleteRestaurant } from '../hooks/useDeleteRestaurant.ts'
 import { useDeleteVisite } from '../hooks/useDeleteVisite.ts'
 import { useFavoriToggle } from '../hooks/useFavoriToggle.ts'
 import { averageNote } from '../utils/visites.ts'
+import { HeartIcon } from './icons/Icons.tsx'
 import RestaurantDetailCard from './RestaurantDetailCard.tsx'
 import { VisitesSection } from './RestaurantMarker.tsx'
 import type { VisitesState } from './RestaurantMarker.tsx'
@@ -98,19 +99,58 @@ function RestaurantDetailPanel({
         onEdit={() => onEditRestaurant(restaurant)}
         onDelete={() => void handleDeleteRestaurant(restaurant)}
         deleting={deletingRestaurant}
+        hideActions
       />
       {restaurantError && (
         <p className="popup-status popup-error">{restaurantError}</p>
       )}
       {favoriError && <p className="popup-status popup-error">{favoriError}</p>}
 
-      <button
-        type="button"
-        className="detail-panel-add-visite popup-btn"
-        onClick={() => onAddVisite(restaurant.id)}
-      >
-        + Ajouter une visite
-      </button>
+      <div className="detail-panel-actions">
+        <button
+          type="button"
+          className={
+            isFavori
+              ? 'detail-panel-favori-btn detail-panel-favori-btn--active'
+              : 'detail-panel-favori-btn'
+          }
+          disabled={favoriLoading || favoriPending}
+          aria-label={
+            isFavori
+              ? `Retirer ${restaurant.nom} des favoris`
+              : `Ajouter ${restaurant.nom} aux favoris`
+          }
+          onClick={() => void toggleFavori()}
+        >
+          <HeartIcon fill={isFavori ? 'currentColor' : 'none'} />
+        </button>
+        {isAdmin && (
+          <button
+            type="button"
+            className="detail-panel-edit-btn"
+            onClick={() => onEditRestaurant(restaurant)}
+          >
+            Modifier
+          </button>
+        )}
+        <button
+          type="button"
+          className="detail-panel-primary-btn"
+          onClick={() => onAddVisite(restaurant.id)}
+        >
+          + Ajouter une visite
+        </button>
+      </div>
+      {isAdmin && (
+        <button
+          type="button"
+          className="detail-panel-delete-link"
+          disabled={deletingRestaurant}
+          onClick={() => void handleDeleteRestaurant(restaurant)}
+        >
+          {deletingRestaurant ? 'Suppression…' : 'Supprimer ce restaurant'}
+        </button>
+      )}
 
       <h3 className="detail-visites-title">Historique des visites</h3>
 

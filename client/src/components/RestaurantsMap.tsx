@@ -17,15 +17,14 @@ import { useFavoris } from '../contexts/FavorisContext.tsx'
 import { useRecommandations } from '../hooks/useRecommandations.ts'
 import { averageNote, buildJournal } from '../utils/visites.ts'
 import type { JournalEntry } from '../utils/visites.ts'
-import { formatDate, formatNoteMoyenne, stars } from '../utils/format.ts'
-import CategoryBadges from './CategoryBadges.tsx'
+import { formatNoteMoyenne, stars } from '../utils/format.ts'
 import CoverPhoto from './CoverPhoto.tsx'
 import FavorisSlots from './FavorisSlots.tsx'
 import { HeartIcon } from './icons/Icons.tsx'
 import RecommendationCard from './RecommendationCard.tsx'
 
 const RECENT_VISITS_LIMIT = 6
-const RECOMMANDATIONS_SECTION_LIMIT = 4
+const RECOMMANDATIONS_SECTION_LIMIT = 2
 
 const DEFAULT_CENTER: [number, number] = [46.6034, 1.8883] // Centre de la France
 const DEFAULT_ZOOM = 6
@@ -358,9 +357,6 @@ function RestaurantsMap({
                             </span>
                           </p>
                         )}
-                        {restaurant.categories.length > 0 && (
-                          <CategoryBadges categories={restaurant.categories} />
-                        )}
                       </div>
                     </button>
                     <button
@@ -454,25 +450,19 @@ function RestaurantsMap({
             </div>
             <div className="map-recent-visits-list">
               {recentJournalEntries.map((entry) => (
-                <Link
-                  key={entry.visite.id}
-                  to={`/restaurants/${entry.restaurant.id}`}
-                  className="map-recent-visit-card card card--interactive"
-                >
-                  <CoverPhoto
-                    url={recentVisitCoverUrl(entry)}
-                    alt={entry.restaurant.nom}
-                  />
-                  <h4>{entry.restaurant.nom}</h4>
-                  <p
-                    className="popup-stars map-recent-visit-rating"
-                    aria-label={`Note ${entry.visite.note} sur 5`}
-                  >
-                    {stars(entry.visite.note)}
-                  </p>
-                  <p className="map-recent-visit-date">
-                    {formatDate(entry.visite.date)}
-                  </p>
+                <Link key={entry.visite.id} to="/visites" className="map-recent-visit-row">
+                  <div className="map-recent-visit-thumb">
+                    <CoverPhoto url={recentVisitCoverUrl(entry)} alt={entry.restaurant.nom} />
+                  </div>
+                  <div className="map-recent-visit-body">
+                    <span className="map-recent-visit-name">{entry.restaurant.nom}</span>
+                    <span
+                      className="popup-stars map-recent-visit-rating"
+                      aria-label={`Note ${entry.visite.note} sur 5`}
+                    >
+                      {stars(entry.visite.note)}
+                    </span>
+                  </div>
                 </Link>
               ))}
             </div>
