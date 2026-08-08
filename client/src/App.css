@@ -362,6 +362,18 @@
   background: var(--bg-card);
 }
 
+/* `.popup-visites-list` (VisitesSection, réutilisé ici depuis RestaurantMarker.tsx)
+   a un `max-height`/`overflow-y` pensé pour la Popup Leaflet d'origine, où
+   l'espace est très limité — dans ce panneau, il crée un double scroll (la
+   liste des visites défile dans sa propre boîte à l'intérieur du panneau qui
+   défile déjà lui-même). On neutralise cette limite ici pour que tout le
+   panneau ne défile qu'une seule fois, comme `.detail-visites-list` le fait
+   déjà pour la page de détail standalone. */
+.restaurant-detail-panel .popup-visites-list {
+  max-height: none;
+  overflow: visible;
+}
+
 .map-detail-empty {
   height: 100%;
   display: flex;
