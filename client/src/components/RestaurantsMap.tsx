@@ -17,7 +17,7 @@ import { useFavoris } from '../contexts/FavorisContext.tsx'
 import { useRecommandations } from '../hooks/useRecommandations.ts'
 import { averageNote, buildJournal } from '../utils/visites.ts'
 import type { JournalEntry } from '../utils/visites.ts'
-import { formatDate, formatNoteMoyenne, stars } from '../utils/format.ts'
+import { formatDate, formatNoteMoyenne, stars, villeFromAdresse } from '../utils/format.ts'
 import CoverPhoto from './CoverPhoto.tsx'
 import FavorisSlots from './FavorisSlots.tsx'
 import { HeartIcon } from './icons/Icons.tsx'
@@ -25,6 +25,7 @@ import RecommendationCard from './RecommendationCard.tsx'
 
 const RECENT_VISITS_LIMIT = 4
 const RECOMMANDATIONS_SECTION_LIMIT = 2
+const SIDEBAR_PREVIEW_LIMIT = 5
 
 const DEFAULT_CENTER: [number, number] = [46.6034, 1.8883] // Centre de la France
 const DEFAULT_ZOOM = 6
@@ -227,10 +228,30 @@ function RestaurantsMap({
   )
   const recentJournalEntries = journalEntries.slice(0, RECENT_VISITS_LIMIT)
 
+  // Nombre de visites personnelles + date de la dernière, par restaurant
+  // (pas la moyenne globale de `noteSummaries`, qui elle porte sur toutes
+  // les visites tous utilisateurs confondus) — affiché sur la liste sidebar.
+  // `journalEntries` est déjà trié du plus récent au plus ancien
+  // (`buildJournal`), donc la première entrée rencontrée par restaurant
+  // porte déjà sa date la plus récente.
+  const personalVisitSummaries = useMemo(() => {
+    const summaries = new Map<string, { count: number; lastDate: string }>()
+    for (const entry of journalEntries) {
+      const existing = summaries.get(entry.restaurant.id)
+      if (existing) {
+        existing.count += 1
+      } else {
+        summaries.set(entry.restaurant.id, { count: 1, lastDate: entry.visite.date })
+      }
+    }
+    return summaries
+  }, [journalEntries])
+
   const sortedRestaurants = useMemo(
     () => [...restaurants].sort((a, b) => a.nom.localeCompare(b.nom, 'fr')),
     [restaurants],
   )
+  const previewRestaurants = sortedRestaurants.slice(0, SIDEBAR_PREVIEW_LIMIT)
 
   const selectedRestaurant =
     restaurants.find((r) => r.id === selectedRestaurantId) ?? null
@@ -319,17 +340,26 @@ function RestaurantsMap({
             sidebarOpen ? 'map-sidebar map-sidebar--open' : 'map-sidebar'
           }
         >
+          <div className="map-sidebar-header">
+            <h3>Restaurants</h3>
+            <p className="map-sidebar-count">{restaurants.length} résultats</p>
+          </div>
+
           {sortedRestaurants.length === 0 && (
             <p className="list-empty">Aucun restaurant enregistré.</p>
           )}
           <ul className="map-sidebar-list">
-            {sortedRestaurants.map((restaurant) => {
+            {previewRestaurants.map((restaurant) => {
               const summary = noteSummaries.get(restaurant.id) ?? null
+              const personal = personalVisitSummaries.get(restaurant.id) ?? null
               const selected = restaurant.id === selectedRestaurantId
               const photoPrincipale =
                 restaurant.photos.find((photo) => photo.estPrincipale) ??
                 restaurant.photos[0]
               const isFavori = favoriIds.has(restaurant.id)
+              const cuisine = cuisineType(restaurant)
+              const ville = villeFromAdresse(restaurant.adresse)
+              const meta = [cuisine, ville].filter(Boolean).join(' · ')
               return (
                 <li key={restaurant.id}>
                   <div
@@ -349,7 +379,6 @@ function RestaurantsMap({
                       </div>
                       <div className="map-sidebar-item-body">
                         <h3>{restaurant.nom}</h3>
-                        <p className="popup-adresse">{restaurant.adresse}</p>
                         {summary && (
                           <p className="list-card-rating">
                             <span className="list-card-rating-value">
@@ -364,6 +393,13 @@ function RestaurantsMap({
                             <span className="list-card-rating-count">
                               ({summary.count} {summary.count > 1 ? 'visites' : 'visite'})
                             </span>
+                          </p>
+                        )}
+                        {meta && <p className="map-sidebar-item-meta">{meta}</p>}
+                        {personal && (
+                          <p className="map-sidebar-item-personal">
+                            {personal.count} {personal.count > 1 ? 'visites' : 'visite'} ·
+                            Dernière le {formatDate(personal.lastDate)}
                           </p>
                         )}
                       </div>
@@ -390,6 +426,12 @@ function RestaurantsMap({
               )
             })}
           </ul>
+          {sortedRestaurants.length > 0 && (
+            <Link to="/liste" className="map-sidebar-view-all">
+              Voir tous les restaurants
+              <span aria-hidden="true">→</span>
+            </Link>
+          )}
         </aside>
 
         <MapContainer

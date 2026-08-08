@@ -138,13 +138,28 @@
 }
 
 .map-sidebar {
-  width: 260px;
+  width: 320px;
   flex-shrink: 0;
   overflow-y: auto;
   padding: 16px;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   background: var(--bg-card);
+}
+
+.map-sidebar-header {
+  margin-bottom: 12px;
+}
+
+.map-sidebar-header h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.map-sidebar-count {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--text);
 }
 
 .map-sidebar-list {
@@ -154,6 +169,26 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.map-sidebar-view-all {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 13px;
+  text-decoration: none;
+  transition: background var(--transition-base);
+}
+
+.map-sidebar-view-all:hover {
+  background: var(--accent-bg);
 }
 
 .map-sidebar-item {
@@ -195,20 +230,20 @@
 
 .map-sidebar-item-thumb {
   flex-shrink: 0;
-  width: 52px;
-  height: 52px;
+  width: 60px;
+  height: 60px;
 }
 
 .map-sidebar-item-thumb .cover-photo {
-  width: 52px;
-  height: 52px;
+  width: 60px;
+  height: 60px;
   aspect-ratio: 1 / 1;
   border-radius: var(--radius-sm);
   margin: 0;
 }
 
 .map-sidebar-item-thumb .cover-photo-placeholder {
-  font-size: 20px;
+  font-size: 22px;
 }
 
 .map-sidebar-item-body {
@@ -219,6 +254,25 @@
 .map-sidebar-item h3 {
   margin: 0 0 4px;
   font-size: 15px;
+}
+
+.map-sidebar-item-meta {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.map-sidebar-item-personal {
+  margin: 4px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-h);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .map-sidebar-item--selected {
@@ -606,6 +660,7 @@
   flex: 1;
   min-height: 0;
   display: flex;
+  align-items: flex-start;
   gap: 10px;
   overflow-x: auto;
   padding-bottom: 4px;
@@ -638,13 +693,18 @@
 }
 
 .recommandation-compact-rating {
-  margin: 0;
-  font-size: 11px;
+  margin: 2px 0 0;
+  font-size: 10px;
+  color: var(--text);
+}
+
+.recommandation-compact-rating .popup-stars {
+  font-size: 10px;
 }
 
 .recommandation-compact-meta {
   margin: 0;
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text);
   white-space: nowrap;
   overflow: hidden;

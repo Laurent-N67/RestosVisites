@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import type { Visite } from '../api/types.ts'
 import type { RestaurantRecommande } from '../utils/recommandations.ts'
 import { averageNote } from '../utils/visites.ts'
-import { formatDistanceKm, formatNoteMoyenne, stars } from '../utils/format.ts'
+import { formatDistanceKm, formatNoteMoyenne, stars, villeFromAdresse } from '../utils/format.ts'
 import CategoryBadges from './CategoryBadges.tsx'
 import CoverPhoto from './CoverPhoto.tsx'
 
@@ -40,16 +40,19 @@ function RecommendationCard({ recommandation, visites, compact = false }: Recomm
       >
         <CoverPhoto url={coverUrl} alt={restaurant.nom} />
         <h3>{restaurant.nom}</h3>
-        <span className="recommandation-score-badge">{score}% compatible</span>
         {average !== null && (
           <p
-            className="popup-stars recommandation-compact-rating"
+            className="recommandation-compact-rating"
             aria-label={`Note moyenne ${formatNoteMoyenne(average)} sur 5`}
           >
-            {stars(Math.round(average))}
+            <span className="popup-stars" aria-hidden="true">
+              {stars(Math.round(average))}
+            </span>{' '}
+            {formatNoteMoyenne(average)}
           </p>
         )}
-        <p className="recommandation-compact-meta">{restaurant.adresse}</p>
+        <p className="recommandation-compact-meta">{villeFromAdresse(restaurant.adresse)}</p>
+        <span className="recommandation-score-badge">{score}% compatible</span>
       </Link>
     )
   }

@@ -114,6 +114,22 @@ const restaurantB: Restaurant = {
 const restaurants = [restaurantA, restaurantB]
 const visites: Visite[] = []
 
+function makeRestaurant(id: string, nom: string): Restaurant {
+  return {
+    id,
+    nom,
+    adresse: `Adresse ${nom}`,
+    latitude: 45,
+    longitude: 5,
+    categories: [],
+    description: null,
+    telephone: null,
+    siteWeb: null,
+    horaires: null,
+    photos: [],
+  }
+}
+
 function makeVisite(overrides: Partial<Visite>): Visite {
   return {
     id: 'visite-x',
@@ -333,6 +349,30 @@ describe('RestaurantsMap', () => {
 
     const items = document.querySelectorAll('.map-sidebar-item-thumb')
     expect(items.length).toBe(2)
+  })
+
+  it('limite la sidebar à un aperçu de 5 restaurants avec un lien vers la liste complète', () => {
+    const manyRestaurants = Array.from({ length: 7 }, (_, i) =>
+      makeRestaurant(`restaurant-${i + 1}`, `Restaurant ${i + 1}`),
+    )
+    renderMap({ restaurants: manyRestaurants })
+
+    expect(document.querySelectorAll('.map-sidebar-item').length).toBe(5)
+    expect(screen.getByText('7 résultats')).toBeInTheDocument()
+    expect(
+      screen.getByRole('link', { name: /Voir tous les restaurants/ }),
+    ).toHaveAttribute('href', '/liste')
+  })
+
+  it('affiche le nombre de visites personnelles et la date de la dernière dans la sidebar', () => {
+    renderMap({
+      visites: [
+        makeVisite({ id: 'v1', date: '2026-06-01' }),
+        makeVisite({ id: 'v2', date: '2026-08-01' }),
+      ],
+    })
+
+    expect(screen.getByText('2 visites · Dernière le 01/08/2026')).toBeInTheDocument()
   })
 
   it('révèle le marqueur sélectionné via zoomToShowLayer du groupe de clustering (au cas où il serait masqué dans un cluster)', async () => {
