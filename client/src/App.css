@@ -526,14 +526,17 @@
    (une seule rangée de 6 emplacements, cf. plus bas) ont besoin de
    nettement plus de place que les recommandations (seulement 2 cartes,
    cf. RECOMMANDATIONS_SECTION_LIMIT) — sans ça, la colonne Recommandés
-   laisse un grand vide inutilisé à côté de ses 2 cartes. */
+   laisse un grand vide inutilisé à côté de ses 2 cartes. Visites récentes
+   redonne une partie de sa largeur à Recommandés (ses lignes texte n'ont
+   pas besoin d'autant d'espace, contrairement aux cartes photo-forward de
+   Recommandés qui doivent pouvoir grandir). */
 .map-section--visites {
-  flex: 1.3 1 0;
+  flex: 0.9 1 0;
 }
 
 .map-section--recommandations {
-  flex: 0.8 1 0;
-  max-width: 300px;
+  flex: 1.3 1 0;
+  max-width: 420px;
 }
 
 .map-section h3 {
@@ -661,31 +664,31 @@
   min-height: 0;
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: 16px;
   overflow-x: auto;
   padding-bottom: 4px;
 }
 
 .restaurant-card--compact {
-  flex: 0 0 120px;
-  width: 120px;
+  flex: 0 0 160px;
+  width: 160px;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 8px;
+  padding: 12px;
   color: inherit;
   text-decoration: none;
 }
 
 .restaurant-card--compact .cover-photo {
   aspect-ratio: 4 / 3;
-  margin: -8px -8px 0;
+  margin: -12px -12px 0;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 
 .restaurant-card--compact h3 {
   margin: 0;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
@@ -694,17 +697,17 @@
 
 .recommandation-compact-rating {
   margin: 2px 0 0;
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text);
 }
 
 .recommandation-compact-rating .popup-stars {
-  font-size: 10px;
+  font-size: 11px;
 }
 
 .recommandation-compact-meta {
   margin: 0;
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text);
   white-space: nowrap;
   overflow: hidden;
@@ -714,7 +717,7 @@
 .recommandation-score-badge {
   display: inline-block;
   margin-top: 4px;
-  padding: 2px 8px;
+  padding: 3px 10px;
   border-radius: var(--radius-full);
   background: var(--accent-bg);
   color: var(--accent);
