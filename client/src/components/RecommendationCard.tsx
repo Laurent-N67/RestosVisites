@@ -25,7 +25,7 @@ interface RecommendationCardProps {
  * Carte, plutôt que dupliquée dans un second composant.
  */
 function RecommendationCard({ recommandation, visites, compact = false }: RecommendationCardProps) {
-  const { restaurant, categoriesCommunes, distanceKm } = recommandation
+  const { restaurant, categoriesCommunes, distanceKm, score } = recommandation
   const restaurantVisites = visites
     .filter((visite) => visite.restaurantId === restaurant.id)
     .sort((a, b) => b.date.localeCompare(a.date))
@@ -40,6 +40,7 @@ function RecommendationCard({ recommandation, visites, compact = false }: Recomm
       >
         <CoverPhoto url={coverUrl} alt={restaurant.nom} />
         <h3>{restaurant.nom}</h3>
+        <span className="recommandation-score-badge">{score}% compatible</span>
         {average !== null && (
           <p
             className="popup-stars recommandation-compact-rating"

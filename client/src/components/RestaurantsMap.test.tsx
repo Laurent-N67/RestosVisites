@@ -183,6 +183,19 @@ function findMarkerByRestaurantName(name: string): HTMLElement {
   return marker as HTMLElement
 }
 
+/**
+ * Bouton "sélectionner" d'un item de la sidebar, par nom de restaurant.
+ * Depuis l'ajout du cœur favori en frère du bouton de sélection (Phase 8),
+ * `getByRole('button', { name: /nom/ })` seul est ambigu : le bouton favori
+ * porte aussi le nom du restaurant dans son `aria-label` ("Ajouter X aux
+ * favoris"). `getAllByRole` + premier élément lève l'ambiguïté en se basant
+ * sur l'ordre du DOM (le bouton de sélection est toujours rendu avant le
+ * bouton favori, cf. `RestaurantsMap.tsx`).
+ */
+function getSidebarSelectButton(name: string): HTMLElement {
+  return screen.getAllByRole('button', { name: new RegExp(name) })[0]
+}
+
 describe('RestaurantsMap', () => {
   beforeEach(() => {
     getVisitesMock.mockReset()
@@ -200,12 +213,15 @@ describe('RestaurantsMap', () => {
     vi.restoreAllMocks()
   })
 
-  it("n'affiche pas de panneau de détail tant qu'aucun restaurant n'est sélectionné", () => {
+  it("n'affiche pas de panneau de détail tant qu'aucun restaurant n'est sélectionné, mais affiche l'état vide", () => {
     renderMap()
 
     expect(
       document.querySelector('.restaurant-detail-panel'),
     ).not.toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: 'Sélectionnez un restaurant' }),
+    ).toBeInTheDocument()
   })
 
   it('sélectionne un restaurant et affiche le panneau de détail au clic dans la sidebar', async () => {
@@ -213,12 +229,42 @@ describe('RestaurantsMap', () => {
     renderMap()
 
     await user.click(
-      screen.getByRole('button', { name: /Chez Aline/ }),
+      getSidebarSelectButton('Chez Aline'),
     )
 
     expect(
       await screen.findByRole('heading', { name: 'Chez Aline', level: 2 }),
     ).toBeInTheDocument()
+  })
+
+  it('ajoute un favori au clic sur le cœur de la sidebar sans sélectionner le restaurant', async () => {
+    const user = userEvent.setup()
+    addFavoriMock.mockResolvedValue(undefined)
+    renderMap()
+
+    await user.click(
+      screen.getByRole('button', { name: 'Ajouter Chez Aline aux favoris' }),
+    )
+
+    expect(addFavoriMock).toHaveBeenCalledWith('restaurant-a')
+    expect(
+      document.querySelector('.restaurant-detail-panel'),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: 'Sélectionnez un restaurant' }),
+    ).toBeInTheDocument()
+  })
+
+  it("n'échoue pas silencieusement quand l'ajout du favori est rejeté (plafond atteint)", async () => {
+    const user = userEvent.setup()
+    addFavoriMock.mockRejectedValue(new Error('422'))
+    renderMap()
+
+    await user.click(
+      screen.getByRole('button', { name: 'Ajouter Chez Aline aux favoris' }),
+    )
+
+    await waitFor(() => expect(addFavoriMock).toHaveBeenCalled())
   })
 
   it('sélectionne un restaurant et affiche le panneau de détail au clic sur son marqueur', async () => {
@@ -253,7 +299,7 @@ describe('RestaurantsMap', () => {
     const user = userEvent.setup()
     renderMap()
 
-    await user.click(screen.getByRole('button', { name: /Chez Aline/ }))
+    await user.click(getSidebarSelectButton('Chez Aline'))
     expect(
       await screen.findByRole('heading', { name: 'Chez Aline', level: 2 }),
     ).toBeInTheDocument()
@@ -272,7 +318,7 @@ describe('RestaurantsMap', () => {
     const onAddVisite = vi.fn()
     renderMap({ onAddVisite })
 
-    await user.click(screen.getByRole('button', { name: /Chez Aline/ }))
+    await user.click(getSidebarSelectButton('Chez Aline'))
     await screen.findByRole('heading', { name: 'Chez Aline', level: 2 })
 
     await user.click(
@@ -304,7 +350,7 @@ describe('RestaurantsMap', () => {
     const user = userEvent.setup()
     renderMap()
 
-    await user.click(screen.getByRole('button', { name: /Chez Aline/ }))
+    await user.click(getSidebarSelectButton('Chez Aline'))
     await screen.findByRole('heading', { name: 'Chez Aline', level: 2 })
 
     await waitFor(() => expect(zoomToShowLayerSpy).toHaveBeenCalledTimes(1))
@@ -317,7 +363,7 @@ describe('RestaurantsMap', () => {
     const user = userEvent.setup()
     renderMap()
 
-    await user.click(screen.getByRole('button', { name: /Chez Aline/ }))
+    await user.click(getSidebarSelectButton('Chez Aline'))
     await screen.findByRole('heading', { name: 'Chez Aline', level: 2 })
 
     // react-leaflet-cluster ajoute les marqueurs au groupe de clustering de
@@ -359,8 +405,8 @@ describe('RestaurantsMap', () => {
       renderMap({ visites: sevenVisites })
 
       expect(await screen.findByText('Visites récentes')).toBeInTheDocument()
-      expect(document.querySelectorAll('.map-recent-visit-row').length).toBe(6)
-      expect(screen.getByRole('link', { name: 'Voir tout' })).toHaveAttribute(
+      expect(document.querySelectorAll('.map-recent-visit-card').length).toBe(6)
+      expect(screen.getAllByRole('link', { name: 'Voir tout' })[0]).toHaveAttribute(
         'href',
         '/visites',
       )
@@ -369,7 +415,9 @@ describe('RestaurantsMap', () => {
     it('affiche la grille Favoris à 6 emplacements sous la carte', async () => {
       renderMap()
 
-      expect(await screen.findByRole('heading', { name: 'Favoris', level: 3 })).toBeInTheDocument()
+      expect(
+        await screen.findByRole('heading', { name: 'Mes favoris (6 max)', level: 3 }),
+      ).toBeInTheDocument()
       await waitFor(() =>
         expect(document.querySelectorAll('.favoris-slot').length).toBe(6),
       )

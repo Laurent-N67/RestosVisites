@@ -39,17 +39,21 @@ function makeVisite(overrides: Partial<Visite>): Visite {
   }
 }
 
-function renderCard(recommandation: RestaurantRecommande, visites: Visite[] = []) {
+function renderCard(
+  recommandation: RestaurantRecommande,
+  visites: Visite[] = [],
+  compact = false,
+) {
   return render(
     <MemoryRouter>
-      <RecommendationCard recommandation={recommandation} visites={visites} />
+      <RecommendationCard recommandation={recommandation} visites={visites} compact={compact} />
     </MemoryRouter>,
   )
 }
 
 describe('RecommendationCard', () => {
   it('affiche le nom, l\'adresse, les catégories communes et un lien vers la fiche', () => {
-    renderCard({ restaurant, categoriesCommunes: [categorie], distanceKm: null })
+    renderCard({ restaurant, categoriesCommunes: [categorie], distanceKm: null, score: 75 })
 
     expect(screen.getByText('Le Bon Coin')).toBeInTheDocument()
     expect(screen.getByText('1 rue de Paris')).toBeInTheDocument()
@@ -60,13 +64,13 @@ describe('RecommendationCard', () => {
   })
 
   it('affiche la distance formatée quand elle est disponible', () => {
-    renderCard({ restaurant, categoriesCommunes: [categorie], distanceKm: 3.4 })
+    renderCard({ restaurant, categoriesCommunes: [categorie], distanceKm: 3.4, score: 75 })
 
     expect(screen.getByText(/3[.,]4/)).toBeInTheDocument()
   })
 
   it("n'affiche aucune distance quand elle vaut null", () => {
-    renderCard({ restaurant, categoriesCommunes: [categorie], distanceKm: null })
+    renderCard({ restaurant, categoriesCommunes: [categorie], distanceKm: null, score: 75 })
 
     expect(document.querySelector('.recommandation-distance')).not.toBeInTheDocument()
   })
@@ -76,8 +80,14 @@ describe('RecommendationCard', () => {
       makeVisite({ id: 'v1', date: '2026-01-01', urlsPhotos: ['ancienne.jpg'] }),
       makeVisite({ id: 'v2', date: '2026-06-01', urlsPhotos: ['recente.jpg'] }),
     ]
-    renderCard({ restaurant, categoriesCommunes: [categorie], distanceKm: null }, visites)
+    renderCard({ restaurant, categoriesCommunes: [categorie], distanceKm: null, score: 75 }, visites)
 
     expect(screen.getByAltText('Le Bon Coin')).toHaveAttribute('src', 'recente.jpg')
+  })
+
+  it('affiche le score de compatibilité en variante compacte', () => {
+    renderCard({ restaurant, categoriesCommunes: [categorie], distanceKm: null, score: 92 }, [], true)
+
+    expect(screen.getByText('92% compatible')).toBeInTheDocument()
   })
 })

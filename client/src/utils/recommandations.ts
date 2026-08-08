@@ -4,6 +4,14 @@ export interface RestaurantRecommande {
   restaurant: Restaurant
   categoriesCommunes: Categorie[]
   distanceKm: number | null
+  /**
+   * Score de compatibilité (0-100, arrondi) : proportion des catégories
+   * préférées de l'utilisateur (favoris + restaurants visités) que ce
+   * candidat couvre. Toujours dans `]0, 100]` puisque `categoriesCommunes`
+   * n'est jamais vide ici (cf. le `continue` plus bas qui exclut les
+   * candidats sans catégorie commune).
+   */
+  score: number
 }
 
 const EARTH_RADIUS_KM = 6371
@@ -91,8 +99,11 @@ export function calculerRecommandations(
     }
 
     const distanceKm = position ? haversineKm(position, restaurant) : null
+    const score = Math.round(
+      (categoriesCommunes.length / categoriesPreferees.size) * 100,
+    )
 
-    candidats.push({ restaurant, categoriesCommunes, distanceKm })
+    candidats.push({ restaurant, categoriesCommunes, distanceKm, score })
   }
 
   candidats.sort((a, b) => {

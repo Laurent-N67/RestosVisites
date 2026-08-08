@@ -4,6 +4,7 @@ import type { Restaurant } from '../api/types.ts'
 import { useFavoris } from '../contexts/FavorisContext.tsx'
 import { errorMessage } from '../utils/errors.ts'
 import CoverPhoto from './CoverPhoto.tsx'
+import { HeartIcon } from './icons/Icons.tsx'
 import RestaurantSearch from './RestaurantSearch.tsx'
 
 /**
@@ -84,7 +85,7 @@ function FavorisSlots({ restaurants }: FavorisSlotsProps) {
                 aria-label={`Retirer ${restaurant.nom} des favoris`}
                 onClick={() => void handleRemove(restaurant.id)}
               >
-                ×
+                <HeartIcon fill="currentColor" />
               </button>
               <Link to={`/restaurants/${restaurant.id}`} className="favoris-slot-link">
                 <CoverPhoto url={photoPrincipale?.url} alt={restaurant.nom} />

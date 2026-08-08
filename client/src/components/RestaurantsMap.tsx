@@ -10,15 +10,18 @@ import type { Restaurant, UtilisateurAvecFavoris, Visite } from '../api/types.ts
 import RestaurantMarker from './RestaurantMarker.tsx'
 import type { VisitesState } from './RestaurantMarker.tsx'
 import RestaurantDetailPanel from './RestaurantDetailPanel.tsx'
+import MapDetailEmptyState from './MapDetailEmptyState.tsx'
 import type { Theme } from '../hooks/useTheme.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
+import { useFavoris } from '../contexts/FavorisContext.tsx'
 import { useRecommandations } from '../hooks/useRecommandations.ts'
 import { averageNote, buildJournal } from '../utils/visites.ts'
 import type { JournalEntry } from '../utils/visites.ts'
-import { formatNoteMoyenne, stars } from '../utils/format.ts'
+import { formatDate, formatNoteMoyenne, stars } from '../utils/format.ts'
 import CategoryBadges from './CategoryBadges.tsx'
 import CoverPhoto from './CoverPhoto.tsx'
 import FavorisSlots from './FavorisSlots.tsx'
+import { HeartIcon } from './icons/Icons.tsx'
 import RecommendationCard from './RecommendationCard.tsx'
 
 const RECENT_VISITS_LIMIT = 6
@@ -192,6 +195,7 @@ function RestaurantsMap({
   > | null>(null)
 
   const { user } = useAuth()
+  const { favoriIds, toggle: toggleFavori, isPending: isFavoriPending } = useFavoris()
 
   const noteSummaries = useMemo(() => computeNoteSummaries(visites), [visites])
 
@@ -238,6 +242,16 @@ function RestaurantsMap({
     setSelectedRestaurantId(restaurantId)
     handleOpen(restaurantId)
     setSidebarOpen(false)
+  }
+
+  async function handleToggleFavori(restaurantId: string) {
+    try {
+      await toggleFavori(restaurantId)
+    } catch {
+      // Échec silencieux (ex. plafond de 6 favoris atteint, 422) : pas
+      // d'affichage d'erreur dédié ici, cf. FavorisSlots pour le retour
+      // visible dans la section Favoris de la même page.
+    }
   }
 
   const loadVisites = useCallback((restaurantId: string) => {
@@ -307,44 +321,66 @@ function RestaurantsMap({
               const photoPrincipale =
                 restaurant.photos.find((photo) => photo.estPrincipale) ??
                 restaurant.photos[0]
+              const isFavori = favoriIds.has(restaurant.id)
               return (
                 <li key={restaurant.id}>
-                  <button
-                    type="button"
+                  <div
                     className={
                       selected
                         ? 'map-sidebar-item card card--interactive map-sidebar-item--selected'
                         : 'map-sidebar-item card card--interactive'
                     }
-                    onClick={() => handleSelectRestaurant(restaurant.id)}
                   >
-                    <div className="map-sidebar-item-thumb">
-                      <CoverPhoto url={photoPrincipale?.url} alt={restaurant.nom} />
-                    </div>
-                    <div className="map-sidebar-item-body">
-                      <h3>{restaurant.nom}</h3>
-                      <p className="popup-adresse">{restaurant.adresse}</p>
-                      {summary && (
-                        <p className="list-card-rating">
-                          <span className="list-card-rating-value">
-                            {formatNoteMoyenne(summary.average)}
-                          </span>
-                          <span
-                            className="popup-stars"
-                            aria-label={`Note moyenne ${formatNoteMoyenne(summary.average)} sur 5`}
-                          >
-                            {stars(Math.round(summary.average))}
-                          </span>
-                          <span className="list-card-rating-count">
-                            ({summary.count} {summary.count > 1 ? 'visites' : 'visite'})
-                          </span>
-                        </p>
-                      )}
-                      {restaurant.categories.length > 0 && (
-                        <CategoryBadges categories={restaurant.categories} />
-                      )}
-                    </div>
-                  </button>
+                    <button
+                      type="button"
+                      className="map-sidebar-item-select"
+                      onClick={() => handleSelectRestaurant(restaurant.id)}
+                    >
+                      <div className="map-sidebar-item-thumb">
+                        <CoverPhoto url={photoPrincipale?.url} alt={restaurant.nom} />
+                      </div>
+                      <div className="map-sidebar-item-body">
+                        <h3>{restaurant.nom}</h3>
+                        <p className="popup-adresse">{restaurant.adresse}</p>
+                        {summary && (
+                          <p className="list-card-rating">
+                            <span className="list-card-rating-value">
+                              {formatNoteMoyenne(summary.average)}
+                            </span>
+                            <span
+                              className="popup-stars"
+                              aria-label={`Note moyenne ${formatNoteMoyenne(summary.average)} sur 5`}
+                            >
+                              {stars(Math.round(summary.average))}
+                            </span>
+                            <span className="list-card-rating-count">
+                              ({summary.count} {summary.count > 1 ? 'visites' : 'visite'})
+                            </span>
+                          </p>
+                        )}
+                        {restaurant.categories.length > 0 && (
+                          <CategoryBadges categories={restaurant.categories} />
+                        )}
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      className={
+                        isFavori
+                          ? 'map-sidebar-item-favori map-sidebar-item-favori--active'
+                          : 'map-sidebar-item-favori'
+                      }
+                      disabled={isFavoriPending(restaurant.id)}
+                      aria-label={
+                        isFavori
+                          ? `Retirer ${restaurant.nom} des favoris`
+                          : `Ajouter ${restaurant.nom} aux favoris`
+                      }
+                      onClick={() => void handleToggleFavori(restaurant.id)}
+                    >
+                      <HeartIcon fill={isFavori ? 'currentColor' : 'none'} />
+                    </button>
+                  </div>
                 </li>
               )
             })}
@@ -384,21 +420,25 @@ function RestaurantsMap({
           </MarkerClusterGroup>
         </MapContainer>
 
-        {selectedRestaurant && (
-          <RestaurantDetailPanel
-            key={selectedRestaurant.id}
-            restaurant={selectedRestaurant}
-            visitesState={visitesByRestaurant[selectedRestaurant.id] ?? { status: 'idle' }}
-            utilisateursAvecFavoris={utilisateursAvecFavoris}
-            onClose={() => setSelectedRestaurantId(null)}
-            onEditRestaurant={onEditRestaurant}
-            onRestaurantDeleted={onRestaurantDeleted}
-            onEditVisite={onEditVisite}
-            onVisitesRefresh={loadVisites}
-            onVisiteDeleted={onVisiteDeleted}
-            onAddVisite={onAddVisite}
-          />
-        )}
+        <div className="map-detail-column">
+          {selectedRestaurant ? (
+            <RestaurantDetailPanel
+              key={selectedRestaurant.id}
+              restaurant={selectedRestaurant}
+              visitesState={visitesByRestaurant[selectedRestaurant.id] ?? { status: 'idle' }}
+              utilisateursAvecFavoris={utilisateursAvecFavoris}
+              onClose={() => setSelectedRestaurantId(null)}
+              onEditRestaurant={onEditRestaurant}
+              onRestaurantDeleted={onRestaurantDeleted}
+              onEditVisite={onEditVisite}
+              onVisitesRefresh={loadVisites}
+              onVisiteDeleted={onVisiteDeleted}
+              onAddVisite={onAddVisite}
+            />
+          ) : (
+            <MapDetailEmptyState />
+          )}
+        </div>
       </div>
 
       <div className="map-page-sections">
@@ -417,25 +457,22 @@ function RestaurantsMap({
                 <Link
                   key={entry.visite.id}
                   to={`/restaurants/${entry.restaurant.id}`}
-                  className="map-recent-visit-row"
+                  className="map-recent-visit-card card card--interactive"
                 >
-                  <div className="map-recent-visit-thumb">
-                    <CoverPhoto
-                      url={recentVisitCoverUrl(entry)}
-                      alt={entry.restaurant.nom}
-                    />
-                  </div>
-                  <div className="map-recent-visit-body">
-                    <span className="map-recent-visit-name">
-                      {entry.restaurant.nom}
-                    </span>
-                    <span
-                      className="popup-stars map-recent-visit-rating"
-                      aria-label={`Note ${entry.visite.note} sur 5`}
-                    >
-                      {stars(entry.visite.note)}
-                    </span>
-                  </div>
+                  <CoverPhoto
+                    url={recentVisitCoverUrl(entry)}
+                    alt={entry.restaurant.nom}
+                  />
+                  <h4>{entry.restaurant.nom}</h4>
+                  <p
+                    className="popup-stars map-recent-visit-rating"
+                    aria-label={`Note ${entry.visite.note} sur 5`}
+                  >
+                    {stars(entry.visite.note)}
+                  </p>
+                  <p className="map-recent-visit-date">
+                    {formatDate(entry.visite.date)}
+                  </p>
                 </Link>
               ))}
             </div>
@@ -443,13 +480,18 @@ function RestaurantsMap({
         )}
 
         <section className="map-section map-section--favoris">
-          <h3>Favoris</h3>
+          <h3>Mes favoris (6 max)</h3>
           <FavorisSlots restaurants={restaurants} />
         </section>
 
         {recommandationsSection.length > 0 && (
           <section className="map-section">
-            <h3>Recommandés pour vous</h3>
+            <div className="map-section-header">
+              <h3>Recommandés pour vous</h3>
+              <Link to="/favoris" className="map-section-link">
+                Voir tout
+              </Link>
+            </div>
             <div className="map-recommendations-row">
               {recommandationsSection.map((recommandation) => (
                 <RecommendationCard
