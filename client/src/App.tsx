@@ -303,143 +303,145 @@ function App() {
         </div>
       </header>
 
-      <main className="app-main">
-        <Routes>
-          <Route path="/login" element={<AuthPage />} />
-          <Route path="/register" element={<Navigate to="/login" replace />} />
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <RestaurantsMap
-                  theme={theme}
-                  restaurants={restaurants}
-                  visites={visites}
-                  utilisateursAvecFavoris={utilisateursAvecFavoris}
-                  visiteMutation={visiteMutation}
-                  onEditRestaurant={handleEditRestaurant}
-                  onEditVisite={handleEditVisite}
-                  onRestaurantDeleted={handleRestaurantDeleted}
-                  onVisiteDeleted={() => void loadAllVisites()}
-                  onAddVisite={handleAddVisiteForRestaurant}
-                />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/liste"
-            element={
-              <ProtectedRoute>
-                <RestaurantsList
-                  restaurants={restaurants}
-                  visites={visites}
-                  onEditRestaurant={handleEditRestaurant}
-                  onRestaurantDeleted={handleRestaurantDeleted}
-                />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/visites"
-            element={
-              <ProtectedRoute>
-                <VisitesJournalPage
-                  restaurants={restaurants}
-                  visites={visites}
-                  onEditVisite={handleEditVisite}
-                  onVisiteDeleted={() => void loadAllVisites()}
-                />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/restaurants/:id"
-            element={
-              <ProtectedRoute>
-                <RestaurantDetailPage
-                  restaurants={restaurants}
-                  visites={visites}
-                  utilisateursAvecFavoris={utilisateursAvecFavoris}
-                  onEditRestaurant={handleEditRestaurant}
-                  onEditVisite={handleEditVisite}
-                  onRestaurantDeleted={handleRestaurantDeleted}
-                  onVisiteDeleted={() => void loadAllVisites()}
-                />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/favoris"
-            element={
-              <ProtectedRoute>
-                <FavorisPage restaurants={restaurants} visites={visites} />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/utilisateurs"
-            element={
-              <ProtectedRoute>
-                <UtilisateursPage visites={visites} />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/mon-compte" element={<Navigate to="/profil" replace />} />
-          <Route
-            path="/profil"
-            element={
-              <ProtectedRoute>
-                <ProfilPage visites={visites} />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/stats"
-            element={
-              <ProtectedRoute requireAdmin>
-                <StatsPage
-                  restaurants={restaurants}
-                  visites={visites}
-                  categories={categories}
-                  utilisateursAvecFavoris={utilisateursAvecFavoris}
-                  theme={theme}
-                />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-        {loadError && <p className="map-error-banner">{loadError}</p>}
-      </main>
+      <div className="app-body">
+        <main className="app-main">
+          <Routes>
+            <Route path="/login" element={<AuthPage />} />
+            <Route path="/register" element={<Navigate to="/login" replace />} />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <RestaurantsMap
+                    theme={theme}
+                    restaurants={restaurants}
+                    visites={visites}
+                    utilisateursAvecFavoris={utilisateursAvecFavoris}
+                    visiteMutation={visiteMutation}
+                    onEditRestaurant={handleEditRestaurant}
+                    onEditVisite={handleEditVisite}
+                    onRestaurantDeleted={handleRestaurantDeleted}
+                    onVisiteDeleted={() => void loadAllVisites()}
+                    onAddVisite={handleAddVisiteForRestaurant}
+                  />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/liste"
+              element={
+                <ProtectedRoute>
+                  <RestaurantsList
+                    restaurants={restaurants}
+                    visites={visites}
+                    onEditRestaurant={handleEditRestaurant}
+                    onRestaurantDeleted={handleRestaurantDeleted}
+                  />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/visites"
+              element={
+                <ProtectedRoute>
+                  <VisitesJournalPage
+                    restaurants={restaurants}
+                    visites={visites}
+                    onEditVisite={handleEditVisite}
+                    onVisiteDeleted={() => void loadAllVisites()}
+                  />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/restaurants/:id"
+              element={
+                <ProtectedRoute>
+                  <RestaurantDetailPage
+                    restaurants={restaurants}
+                    visites={visites}
+                    utilisateursAvecFavoris={utilisateursAvecFavoris}
+                    onEditRestaurant={handleEditRestaurant}
+                    onEditVisite={handleEditVisite}
+                    onRestaurantDeleted={handleRestaurantDeleted}
+                    onVisiteDeleted={() => void loadAllVisites()}
+                  />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/favoris"
+              element={
+                <ProtectedRoute>
+                  <FavorisPage restaurants={restaurants} visites={visites} />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/utilisateurs"
+              element={
+                <ProtectedRoute>
+                  <UtilisateursPage visites={visites} />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/mon-compte" element={<Navigate to="/profil" replace />} />
+            <Route
+              path="/profil"
+              element={
+                <ProtectedRoute>
+                  <ProfilPage visites={visites} />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/stats"
+              element={
+                <ProtectedRoute requireAdmin>
+                  <StatsPage
+                    restaurants={restaurants}
+                    visites={visites}
+                    categories={categories}
+                    utilisateursAvecFavoris={utilisateursAvecFavoris}
+                    theme={theme}
+                  />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+          {loadError && <p className="map-error-banner">{loadError}</p>}
+        </main>
 
-      {activePanel !== 'none' && (
-        <aside className="side-panel">
-          <button
-            type="button"
-            className="side-panel-close"
-            aria-label="Fermer"
-            onClick={closePanel}
-          >
-            ×
-          </button>
-          {activePanel === 'restaurant' && (
-            <AddRestaurantForm
-              key={editingRestaurant?.id ?? 'new'}
-              restaurant={editingRestaurant ?? undefined}
-              categories={categories}
-              onSaved={handleRestaurantSaved}
-            />
-          )}
-          {activePanel === 'visite' && (
-            <AddVisitForm
-              key={editingVisite?.id ?? preselectedRestaurantId ?? 'new'}
-              restaurants={restaurants}
-              visite={editingVisite ?? undefined}
-              initialRestaurantId={preselectedRestaurantId ?? undefined}
-              onSaved={handleVisiteSaved}
-            />
-          )}
-        </aside>
-      )}
+        {activePanel !== 'none' && (
+          <aside className="side-panel">
+            <button
+              type="button"
+              className="side-panel-close"
+              aria-label="Fermer"
+              onClick={closePanel}
+            >
+              ×
+            </button>
+            {activePanel === 'restaurant' && (
+              <AddRestaurantForm
+                key={editingRestaurant?.id ?? 'new'}
+                restaurant={editingRestaurant ?? undefined}
+                categories={categories}
+                onSaved={handleRestaurantSaved}
+              />
+            )}
+            {activePanel === 'visite' && (
+              <AddVisitForm
+                key={editingVisite?.id ?? preselectedRestaurantId ?? 'new'}
+                restaurants={restaurants}
+                visite={editingVisite ?? undefined}
+                initialRestaurantId={preselectedRestaurantId ?? undefined}
+                onSaved={handleVisiteSaved}
+              />
+            )}
+          </aside>
+        )}
+      </div>
     </div>
   )
 }
