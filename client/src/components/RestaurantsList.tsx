@@ -214,6 +214,24 @@ function RestaurantsList({ restaurants, visites }: RestaurantsListProps) {
     [allCategoriesGrouped],
   )
 
+  const categoriesSansPrixById = useMemo(() => {
+    const map = new Map<string, Categorie>()
+    for (const [, list] of categoriesGroupedSansPrix) {
+      for (const categorie of list) {
+        map.set(categorie.id, categorie)
+      }
+    }
+    return map
+  }, [categoriesGroupedSansPrix])
+
+  const selectedNonPrixCategories = useMemo(
+    () =>
+      Array.from(selectedCategories)
+        .map((id) => categoriesSansPrixById.get(id))
+        .filter((categorie): categorie is Categorie => categorie !== undefined),
+    [selectedCategories, categoriesSansPrixById],
+  )
+
   const categorieGroupeById = useMemo(() => {
     const map = new Map<string, string>()
     for (const [groupe, categoriesDuGroupe] of allCategoriesGrouped) {
@@ -383,6 +401,24 @@ function RestaurantsList({ restaurants, visites }: RestaurantsListProps) {
           </select>
         </label>
       </div>
+
+      {selectedNonPrixCategories.length > 0 && (
+        <ul className="category-filter-selected chips">
+          {selectedNonPrixCategories.map((categorie) => (
+            <li key={categorie.id}>
+              <button
+                type="button"
+                className={`chip-filter chip-filter--${groupColorKey(categorie.groupe)} chip-filter--active chip-filter--removable`}
+                onClick={() => toggleCategory(categorie.id)}
+                aria-label={`Retirer le filtre ${categorie.nom}`}
+              >
+                {categorie.nom}
+                <span aria-hidden="true">×</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
 
       {restaurants.length === 0 && (
         <p className="list-empty">Aucun restaurant enregistré.</p>

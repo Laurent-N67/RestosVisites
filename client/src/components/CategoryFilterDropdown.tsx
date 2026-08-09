@@ -18,16 +18,6 @@ function CategoryFilterDropdown({
   const [query, setQuery] = useState('')
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const categoriesById = useMemo(() => {
-    const map = new Map<string, Categorie>()
-    for (const [, list] of categoriesGrouped) {
-      for (const categorie of list) {
-        map.set(categorie.id, categorie)
-      }
-    }
-    return map
-  }, [categoriesGrouped])
-
   const filteredGrouped = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase()
     if (normalizedQuery.length === 0) {
@@ -162,30 +152,6 @@ function CategoryFilterDropdown({
             ))}
           </div>
         </div>
-      )}
-
-      {!open && selectedIds.size > 0 && (
-        <ul className="category-filter-selected chips">
-          {Array.from(selectedIds).map((id) => {
-            const categorie = categoriesById.get(id)
-            if (!categorie) {
-              return null
-            }
-            return (
-              <li key={id}>
-                <button
-                  type="button"
-                  className="chip-filter chip-filter--active chip-filter--removable"
-                  onClick={() => onToggle(id)}
-                  aria-label={`Retirer le filtre ${categorie.nom}`}
-                >
-                  {categorie.nom}
-                  <span aria-hidden="true">×</span>
-                </button>
-              </li>
-            )
-          })}
-        </ul>
       )}
     </div>
   )
