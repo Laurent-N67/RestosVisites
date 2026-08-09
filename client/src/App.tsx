@@ -22,6 +22,7 @@ import ProfilPage from './components/ProfilPage.tsx'
 import ProtectedRoute from './components/ProtectedRoute.tsx'
 import RestaurantSearch from './components/RestaurantSearch.tsx'
 import UserMenu from './components/UserMenu.tsx'
+import BottomNav from './components/BottomNav.tsx'
 import { BellIcon, ChecklistIcon, HeartIcon, MapIcon, PinIcon, UsersIcon } from './components/icons/Icons.tsx'
 import { useAuth } from './contexts/AuthContext.tsx'
 import { useTheme } from './hooks/useTheme.ts'
@@ -259,9 +260,13 @@ function App() {
                 type="button"
                 className="header-add-trigger"
                 aria-expanded={addMenuOpen}
+                aria-label="Ajouter un restaurant ou une visite"
                 onClick={() => setAddMenuOpen((value) => !value)}
               >
-                + Ajouter
+                <span className="header-add-trigger-text">+ Ajouter</span>
+                <span className="header-add-trigger-icon" aria-hidden="true">
+                  +
+                </span>
               </button>
               {addMenuOpen && (
                 <div className="header-add-dropdown">
@@ -298,9 +303,18 @@ function App() {
               <BellIcon aria-hidden="true" />
             </button>
           )}
-          {user && <UserMenu user={user} onLogout={() => void handleLogout()} />}
+          {user && (
+            <UserMenu
+              user={user}
+              theme={theme}
+              onSetTheme={setTheme}
+              onLogout={() => void handleLogout()}
+            />
+          )}
         </div>
       </header>
+
+      {user && <BottomNav />}
 
       <div className="app-body">
         <main className="app-main">

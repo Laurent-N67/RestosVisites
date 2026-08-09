@@ -62,6 +62,15 @@ export function EyeOffIcon(props: SVGProps<SVGSVGElement>) {
   )
 }
 
+export function HomeIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg {...props}>
+      <path d="M4 11.5 12 4l8 7.5" />
+      <path d="M6 10.2V19a1 1 0 0 0 1 1h3v-5.5h4V20h3a1 1 0 0 0 1-1v-8.8" />
+    </Svg>
+  )
+}
+
 export function MapIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <Svg {...props}>

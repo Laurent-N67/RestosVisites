@@ -23,6 +23,7 @@ import CoverPhoto from './CoverPhoto.tsx'
 import FavorisSlots from './FavorisSlots.tsx'
 import { HeartIcon } from './icons/Icons.tsx'
 import RecommendationCard from './RecommendationCard.tsx'
+import MobileRestaurantSheet from './MobileRestaurantSheet.tsx'
 
 const RECENT_VISITS_LIMIT = 4
 const RECOMMANDATIONS_SECTION_LIMIT = 2
@@ -453,6 +454,24 @@ function RestaurantsMap({
           </MarkerClusterGroup>
         </MapContainer>
 
+        {/* Mobile-only (≤900px) : remplace le panneau de détail plein écran
+            desktop (colonne ci-dessous) par une feuille compacte ancrée en
+            bas — toujours montée, filtrée par CSS + par son propre "return
+            null" tant qu'aucun restaurant n'est sélectionné. */}
+        <MobileRestaurantSheet
+          restaurant={selectedRestaurant}
+          noteSummary={
+            selectedRestaurant ? (noteSummaries.get(selectedRestaurant.id) ?? null) : null
+          }
+          personalSummary={
+            selectedRestaurant
+              ? (personalVisitSummaries.get(selectedRestaurant.id) ?? null)
+              : null
+          }
+          onClose={() => setSelectedRestaurantId(null)}
+          onAddVisite={onAddVisite}
+        />
+
         <div className="map-detail-column">
           {selectedRestaurant ? (
             <RestaurantDetailPanel
@@ -519,7 +538,12 @@ function RestaurantsMap({
         )}
 
         <section className="map-section map-section--favoris">
-          <h3>Mes favoris (6 max)</h3>
+          <div className="map-section-header">
+            <h3>Mes favoris (6 max)</h3>
+            <Link to="/favoris" className="map-section-link">
+              Voir tout
+            </Link>
+          </div>
           <FavorisSlots restaurants={restaurants} visites={visites} />
         </section>
 

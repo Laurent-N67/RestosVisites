@@ -90,6 +90,169 @@
   border-bottom-color: var(--accent);
 }
 
+/* En-tête mobile-app (≤900px) : deux rangées plutôt que la rangée unique
+   desktop — rangée 1 = logo + avatar (UserMenu), rangée 2 = recherche pleine
+   largeur + bouton "+ Ajouter" compact. `.app-nav` disparaît (remplacée par
+   `BottomNav`, cf. plus bas), la bascule de thème et la cloche disparaissent
+   du chrome visible (thème replié dans `UserMenu`, cloche pas encore
+   fonctionnelle). `display: contents` sur `.app-actions` neutralise sa
+   propre boîte flex desktop pour que ses enfants (recherche, thème, +
+   Ajouter, cloche, UserMenu) deviennent des items directs de la grille de
+   `.app-header`, replaçables individuellement via grid-column/grid-row. */
+@media (max-width: 900px) {
+  .app-header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    height: auto;
+    min-height: 64px;
+    row-gap: 10px;
+    column-gap: 12px;
+    padding: 10px 16px;
+  }
+
+  .app-header h1 {
+    grid-column: 1;
+    grid-row: 1;
+    font-size: 17px;
+  }
+
+  .app-nav {
+    display: none;
+  }
+
+  .app-actions {
+    display: contents;
+  }
+
+  /* `.app-header` prefix nécessaire : `.header-bell` a une règle de base
+     (plus bas, hors media query) qui fixe `display: flex` — même
+     spécificité qu'un simple `.header-bell` ici, elle gagnerait à égalité
+     par ordre de source (elle vient après). Même chose pour
+     `.header-add-trigger`/`.header-add-trigger-icon` ci-dessous. */
+  .app-header .header-bell {
+    display: none;
+  }
+
+  /* La bascule de thème ne disparaît du chrome visible que si `UserMenu`
+     est là pour la reprendre dans son menu déroulant (cf. `.user-menu-theme`
+     plus bas) — sur la page de connexion (pas d'utilisateur, donc pas de
+     `UserMenu`), elle reste le seul contrôle de thème disponible et doit
+     rester visible. */
+  .app-header:has(.user-menu) .theme-toggle {
+    display: none;
+  }
+
+  .user-menu {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  .restaurant-search {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  /* Spécificité `.app-header .restaurant-search` volontaire : la règle de
+     base `.restaurant-search { width: 320px }` (plus bas dans ce fichier,
+     hors media query) a la même spécificité qu'un simple `.restaurant-search`
+     ici et la battrait à égalité de spécificité par ordre de source (elle
+     vient après). Un sélecteur à deux classes est nécessaire pour gagner. */
+  .app-header .restaurant-search {
+    width: 100%;
+  }
+
+  .header-add {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end;
+  }
+
+  .app-header .header-add-trigger {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-full);
+  }
+
+  .header-add-trigger-text {
+    display: none;
+  }
+
+  .app-header .header-add-trigger-icon {
+    display: block;
+    font-size: 22px;
+    line-height: 1;
+  }
+
+  .header-add-dropdown {
+    right: 0;
+  }
+}
+
+/* Navigation basse mobile-only (BottomNav.tsx) : remplace `.app-nav` sur
+   petits écrans — 3 raccourcis seulement (Accueil, Restaurants, Favoris),
+   pas "Utilisateurs" (reste dans UserMenu) ni "Visites" (rattachées à
+   chaque restaurant). Masquée par défaut, réactivée ≤900px ci-dessous. */
+.bottom-nav {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .bottom-nav {
+    display: flex;
+    align-items: stretch;
+    justify-content: space-around;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1150;
+    height: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+    backdrop-filter: blur(8px);
+    border-top: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .bottom-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    min-height: 44px;
+    color: var(--text);
+    font-size: 11px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color var(--transition-base);
+  }
+
+  .bottom-nav-item svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .bottom-nav-item--active {
+    color: var(--accent);
+  }
+
+  /* Espace réservé en bas du contenu défilable de chaque page (home compris,
+     cf. `.map-page` plus bas) pour que la nav basse fixe ne recouvre jamais
+     le dernier élément — `.app-main` porte cette réserve une seule fois
+     plutôt que chaque page individuellement. */
+  .app-main {
+    padding-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 .app-body {
   display: flex;
   flex-direction: row;
@@ -316,34 +479,19 @@
   .map-view {
     position: relative;
     /* Plus de partage flex avec les sections basses ici : hauteur fixe en
-       vh, comme le reste de la page redevient défilable normalement. */
+       vh (~40-50% du viewport, redesign app mobile), comme le reste de la
+       page redevient défilable normalement. */
     flex: none;
-    height: 60vh;
-    min-height: 320px;
+    height: 45vh;
+    min-height: 260px;
   }
 
-  .map-sidebar-toggle {
-    display: block;
-  }
-
+  /* Le tiroir "Voir la liste" fait doublon avec la page /liste dédiée sur
+     mobile (redesign app mobile) : masqué entièrement, bouton compris,
+     plutôt que gardé en tiroir plein écran comme avant. */
+  .map-sidebar-toggle,
   .map-sidebar {
-    /* fixed plutôt qu'absolute : `.map-view` (son ancêtre positionné) a
-       désormais une hauteur bornée (60vh, Phase 7c) pour laisser place aux
-       sections sous la carte — un positionnement absolu se limiterait donc
-       à cette zone au lieu de couvrir tout l'écran comme avant. fixed
-       ancre le tiroir au viewport, indépendamment de la hauteur de
-       `.map-view`. */
-    position: fixed;
-    inset: 0 15% 0 0;
-    z-index: 900;
-    width: auto;
-    box-shadow: var(--shadow-lg);
-    transform: translateX(-100%);
-    transition: transform var(--transition-base);
-  }
-
-  .map-sidebar--open {
-    transform: translateX(0);
+    display: none;
   }
 }
 
@@ -487,30 +635,195 @@
    .map-sidebar, où un override mobile placé avant sa règle de base perdait
    silencieusement. */
 @media (max-width: 900px) {
-  /* Le wrapper ne doit plus imposer sa largeur fixe desktop sur mobile, sinon
-     il contraint `.restaurant-detail-panel` qui a besoin de `width: auto`
-     pour son affichage plein écran ci-dessous. */
+  /* Sur mobile (redesign app mobile), plus de 3e "colonne" du tout, ni en
+     état vide ni en panneau plein écran : la sélection d'un restaurant est
+     désormais montrée par `MobileRestaurantSheet` (feuille ancrée en bas,
+     cf. plus bas), pas par ce panneau desktop. */
   .map-detail-column {
-    width: auto;
-  }
-
-  /* Sur mobile, pas de place pour une 3e "colonne" permanente : l'état vide
-     ne doit s'afficher que sur desktop (Phase 8) — masquer entièrement la
-     colonne quand elle ne contient que l'état vide restaure le comportement
-     d'avant sur mobile (rien tant qu'aucun restaurant n'est sélectionné). */
-  .map-detail-column:has(.map-detail-empty) {
     display: none;
   }
+}
 
-  .restaurant-detail-panel {
-    /* fixed (comme .map-sidebar ci-dessus, Phase 7c) : couvre tout l'écran
-       en feuille plein écran indépendamment de la hauteur bornée de
-       `.map-view`. */
+/* Feuille compacte mobile-only (MobileRestaurantSheet.tsx, ≤900px) :
+   remplace, sur mobile, le panneau plein écran ci-dessus quand un
+   restaurant est sélectionné sur la carte. Toujours montée dans le DOM
+   (même convention CSS-only que `.map-sidebar-toggle`) : masquée par
+   défaut, réactivée ≤900px ci-dessous — le composant lui-même ne rend rien
+   tant qu'aucun restaurant n'est sélectionné, indépendamment du viewport. */
+.mobile-sheet-backdrop,
+.mobile-sheet {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .mobile-sheet-backdrop {
+    display: block;
     position: fixed;
     inset: 0;
-    z-index: 1050;
-    width: auto;
+    z-index: 1160;
+    background: rgba(0, 0, 0, 0.45);
+    animation: fade-in var(--transition-fast);
+  }
+
+  .mobile-sheet {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px));
+    z-index: 1170;
+    max-height: 38vh;
+    padding: 6px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    background: var(--bg-card);
     box-shadow: var(--shadow-lg);
+    animation: sheet-slide-up var(--transition-base) ease-out;
+  }
+
+  .mobile-sheet-handle {
+    align-self: center;
+    flex-shrink: 0;
+    width: 40px;
+    height: 5px;
+    margin: 6px 0 8px;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-full);
+    background: var(--border);
+  }
+
+  .mobile-sheet-close {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: none;
+    font-size: 20px;
+    line-height: 1;
+    color: var(--text);
+  }
+
+  .mobile-sheet-content {
+    display: flex;
+    gap: 12px;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .mobile-sheet-thumb {
+    flex-shrink: 0;
+    width: 84px;
+    height: 84px;
+  }
+
+  .mobile-sheet-thumb .cover-photo {
+    width: 84px;
+    height: 84px;
+    aspect-ratio: 1 / 1;
+    border-radius: var(--radius-sm);
+    margin: 0;
+  }
+
+  .mobile-sheet-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .mobile-sheet-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .mobile-sheet-title-row h3 {
+    margin: 0;
+    font-size: 16px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mobile-sheet-favori {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 50%;
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  .mobile-sheet-favori--active {
+    color: var(--accent);
+  }
+
+  .mobile-sheet-rating,
+  .mobile-sheet-meta,
+  .mobile-sheet-visits {
+    margin: 0;
+    font-size: 12px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mobile-sheet-rating .popup-stars {
+    margin-right: 4px;
+    font-size: 12px;
+  }
+
+  .mobile-sheet-actions {
+    display: flex;
+    flex-shrink: 0;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .mobile-sheet-actions .restaurant-card-cta {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 0;
+    min-height: 44px;
+  }
+
+  .mobile-sheet-cta-secondary {
+    flex: 1;
+    min-height: 44px;
+    padding: 0 14px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: var(--accent);
+    color: #fff;
+    font-weight: 700;
+    font-size: 13px;
+  }
+
+  .mobile-sheet-cta-secondary:hover {
+    background: var(--accent-hover);
+  }
+}
+
+@keyframes sheet-slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
   }
 }
 
@@ -911,17 +1224,19 @@
 /* Cette règle DOIT rester après les définitions de base ci-dessus (source
    order + spécificité égale) — voir le bug récurrent déjà rencontré avec
    .map-sidebar, où un override mobile placé avant sa règle de base perdait
-   silencieusement. Sur mobile, la bande basse compacte redevient un
-   empilement plein-largeur classique (comme la Phase 7c d'origine) : la
-   contrainte "zéro scroll" est un parti pris desktop (cf. `.map-page`
-   ci-dessus), pas réaliste à imposer à 3 colonnes sur un écran de téléphone. */
+   silencieusement. Sur mobile (redesign app mobile), la bande basse
+   compacte redevient un empilement plein-largeur classique : la contrainte
+   "zéro scroll" est un parti pris desktop (cf. `.map-page` ci-dessus), pas
+   réaliste à imposer à 3 sections sur un écran de téléphone — chaque
+   section garde en revanche son propre défilement horizontal/vertical
+   compact façon app mobile (pas de simple wrap en grille comme avant). */
 @media (max-width: 900px) {
   .map-page-sections {
     flex: none;
     flex-direction: column;
     min-height: 0;
-    gap: 32px;
-    padding: 24px 20px 40px;
+    gap: 28px;
+    padding: 20px 16px 8px;
     overflow: visible;
   }
 
@@ -929,42 +1244,79 @@
     overflow: visible;
   }
 
-  .map-recent-visits-list,
-  .map-section--favoris .favoris-slots {
+  .map-section h3 {
+    font-size: 16px;
+  }
+
+  /* Visites récentes : lignes tactiles façon carte (fond, coins arrondis,
+     zone de tap généreuse) plutôt que de simples lignes de texte denses. */
+  .map-recent-visits-list {
     flex: none;
     overflow-y: visible;
     max-height: none;
+    gap: 8px;
   }
 
-  .map-recommendations-row {
+  .map-recent-visit-row {
+    min-height: 64px;
+    padding: 10px;
+    background: var(--bg-card);
+    box-shadow: var(--shadow-sm);
+    border-radius: var(--radius-lg);
+  }
+
+  .map-recent-visit-thumb,
+  .map-recent-visit-thumb .cover-photo {
+    width: 52px;
+    height: 52px;
+  }
+
+  /* Favoris : rangée qui défile horizontalement (6 emplacements fixes,
+     FavorisSlots.tsx) plutôt que la grille pleine largeur desktop — environ
+     3 emplacements pleinement visibles avec le suivant qui dépasse, sur un
+     écran de téléphone. */
+  .map-section--favoris .favoris-slots {
     flex: none;
-    overflow-x: visible;
-    flex-wrap: wrap;
-  }
-
-  .restaurant-card--compact {
-    flex: 0 1 140px;
+    overflow-y: visible;
   }
 
   .map-section--favoris .favoris-slots-grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 12px;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 10px;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    padding-bottom: 4px;
   }
 
   .map-section--favoris .favoris-slot {
-    min-height: 150px;
+    flex: 0 0 108px;
+    width: 108px;
+    min-height: 132px;
+    scroll-snap-align: start;
   }
 
   .map-section--favoris .favoris-slot--filled {
-    padding: var(--space-3);
+    padding: var(--space-2);
   }
 
   .map-section--favoris .favoris-slot--filled h4 {
-    font-size: 13px;
+    font-size: 12px;
   }
 
   .map-section--favoris .favoris-slot--empty {
-    font-size: 26px;
+    font-size: 22px;
+  }
+
+  /* Recommandations : la rangée horizontale desktop (cf. règles de base
+     ci-dessus) est déjà la mise en page voulue sur mobile — pas de wrap en
+     grille ici, juste un défilement au doigt avec ancrage par carte. */
+  .map-recommendations-row {
+    scroll-snap-type: x proximity;
+  }
+
+  .restaurant-card--compact {
+    scroll-snap-align: start;
   }
 }
 
@@ -2342,19 +2694,9 @@
     z-index: 1100;
   }
 
-  .app-header {
-    flex-wrap: wrap;
-    gap: 10px;
-    height: auto;
-    min-height: 72px;
-    padding: 10px 20px;
-  }
-
-  .app-actions {
-    flex-wrap: wrap;
-    justify-content: flex-end;
-  }
-
+  /* `.app-header`/`.app-actions` : plus d'override ici, la mise en page
+     mobile complète (grille 2 rangées) est déjà gérée par le bloc
+     ≤900px dédié plus haut dans ce fichier. */
   .user-menu-name {
     display: none;
   }
@@ -3292,10 +3634,10 @@
 }
 
 @media (max-width: 640px) {
-  .restaurant-search {
-    width: 160px;
-  }
-
+  /* Plus de largeur fixe ici : sur mobile (≤900px), `.restaurant-search`
+     est déjà pleine largeur sur sa propre rangée (cf. grille de l'en-tête
+     ≤900px plus haut) — un `width: 160px` ici la rétrécirait à nouveau en
+     dessous de 640px. */
   .restaurant-search-kbd {
     display: none;
   }
@@ -3322,6 +3664,13 @@
 
 .header-add-trigger:hover {
   background: var(--accent-hover);
+}
+
+/* Icône seule ("+") affichée à la place du texte "+ Ajouter" en dessous de
+   900px (bouton circulaire compact, cf. media query dans la section
+   en-tête) — masquée par défaut sur desktop où le texte suffit. */
+.header-add-trigger-icon {
+  display: none;
 }
 
 .header-add-dropdown {
@@ -3437,6 +3786,41 @@
 .user-menu-dropdown button:hover {
   background: var(--accent-bg);
   color: var(--accent);
+}
+
+/* "Utilisateurs" et la bascule de thème n'ont leur place dans ce menu que
+   sur mobile (≤900px) : sur desktop, "Utilisateurs" est déjà dans
+   `.app-nav` et le thème a son propre contrôle dans l'en-tête (cf. plus
+   haut) — les dupliquer ici serait redondant. */
+.user-menu-mobile-only {
+  display: none;
+}
+
+.user-menu-theme {
+  gap: 4px;
+  padding: 4px;
+}
+
+.user-menu-theme button {
+  padding: 6px 10px;
+  font-size: 13px;
+  opacity: 0.6;
+}
+
+.user-menu-theme button.active {
+  opacity: 1;
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+@media (max-width: 900px) {
+  a.user-menu-mobile-only {
+    display: block;
+  }
+
+  div.user-menu-mobile-only.user-menu-theme {
+    display: flex;
+  }
 }
 
 /* Page Profil */

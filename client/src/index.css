@@ -46,6 +46,12 @@
   --transition-fast: 120ms ease;
   --transition-base: 200ms ease;
 
+  /* Hauteur de la navigation basse mobile-only (BottomNav.tsx, ≤900px,
+     cf. App.css) — jeton partagé pour que la nav elle-même, la feuille de
+     détail restaurant (MobileRestaurantSheet.tsx) et le padding bas du
+     contenu défilable s'accordent sans dupliquer la valeur. */
+  --bottom-nav-h: 58px;
+
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
 
   font: 16px/145% var(--sans);
