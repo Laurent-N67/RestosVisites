@@ -18,6 +18,7 @@ import { useRecommandations } from '../hooks/useRecommandations.ts'
 import { averageNote, buildJournal } from '../utils/visites.ts'
 import type { JournalEntry } from '../utils/visites.ts'
 import { formatDate, formatNoteMoyenne, stars, villeFromAdresse } from '../utils/format.ts'
+import { cuisineType, photoPrincipale } from '../utils/restaurants.ts'
 import CoverPhoto from './CoverPhoto.tsx'
 import FavorisSlots from './FavorisSlots.tsx'
 import { HeartIcon } from './icons/Icons.tsx'
@@ -94,20 +95,7 @@ function computeNoteSummaries(visites: Visite[]): Map<string, NoteSummary> {
  * modifier/supprimer, etc.) de `JournalCard`.
  */
 function recentVisitCoverUrl(entry: JournalEntry): string | undefined {
-  return (
-    entry.visite.urlsPhotos[0] ??
-    entry.restaurant.photos.find((photo) => photo.estPrincipale)?.url ??
-    entry.restaurant.photos[0]?.url
-  )
-}
-
-/**
- * Type de cuisine d'un restaurant (catégorie du groupe "Type de cuisine"),
- * affiché sur la ligne "Visites récentes" à côté de la date — un restaurant
- * peut ne pas en avoir (catégorie non renseignée).
- */
-function cuisineType(restaurant: Restaurant): string | undefined {
-  return restaurant.categories.find((c) => c.groupe === 'Type de cuisine')?.nom
+  return entry.visite.urlsPhotos[0] ?? photoPrincipale(entry.restaurant)?.url
 }
 
 function FitBounds({ restaurants }: { restaurants: Restaurant[] }) {
@@ -353,9 +341,7 @@ function RestaurantsMap({
               const summary = noteSummaries.get(restaurant.id) ?? null
               const personal = personalVisitSummaries.get(restaurant.id) ?? null
               const selected = restaurant.id === selectedRestaurantId
-              const photoPrincipale =
-                restaurant.photos.find((photo) => photo.estPrincipale) ??
-                restaurant.photos[0]
+              const cover = photoPrincipale(restaurant)
               const isFavori = favoriIds.has(restaurant.id)
               const cuisine = cuisineType(restaurant)
               const ville = villeFromAdresse(restaurant.adresse)
@@ -375,7 +361,7 @@ function RestaurantsMap({
                       onClick={() => handleSelectRestaurant(restaurant.id)}
                     >
                       <div className="map-sidebar-item-thumb">
-                        <CoverPhoto url={photoPrincipale?.url} alt={restaurant.nom} />
+                        <CoverPhoto url={cover?.url} alt={restaurant.nom} />
                       </div>
                       <div className="map-sidebar-item-body">
                         <h3>{restaurant.nom}</h3>
@@ -494,7 +480,7 @@ function RestaurantsMap({
             <div className="map-section-header">
               <h3>Visites récentes</h3>
               {journalEntries.length > RECENT_VISITS_LIMIT && (
-                <Link to="/visites" className="map-section-link">
+                <Link to="/liste" className="map-section-link">
                   Voir tout
                 </Link>
               )}
@@ -503,7 +489,11 @@ function RestaurantsMap({
               {recentJournalEntries.map((entry) => {
                 const cuisine = cuisineType(entry.restaurant)
                 return (
-                  <Link key={entry.visite.id} to="/visites" className="map-recent-visit-row">
+                  <Link
+                    key={entry.visite.id}
+                    to={`/restaurants/${entry.restaurant.id}`}
+                    className="map-recent-visit-row"
+                  >
                     <div className="map-recent-visit-thumb">
                       <CoverPhoto url={recentVisitCoverUrl(entry)} alt={entry.restaurant.nom} />
                     </div>

@@ -447,12 +447,18 @@ describe('RestaurantsMap', () => {
       expect(await screen.findByText('Visites récentes')).toBeInTheDocument()
       const rows = document.querySelectorAll('.map-recent-visit-row')
       expect(rows.length).toBe(4)
-      for (const row of rows) {
-        expect(row).toHaveAttribute('href', '/visites')
-      }
+      const expectedHrefs = [
+        `/restaurants/${restaurantA.id}`,
+        `/restaurants/${restaurantB.id}`,
+        `/restaurants/${restaurantA.id}`,
+        `/restaurants/${restaurantB.id}`,
+      ]
+      rows.forEach((row, index) => {
+        expect(row).toHaveAttribute('href', expectedHrefs[index])
+      })
       expect(screen.getAllByRole('link', { name: 'Voir tout' })[0]).toHaveAttribute(
         'href',
-        '/visites',
+        '/liste',
       )
     })
 

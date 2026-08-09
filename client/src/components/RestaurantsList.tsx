@@ -1,30 +1,32 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { Categorie, Restaurant, Visite } from '../api/types.ts'
-import { Role } from '../api/types.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import {
   groupCategories,
   groupSelectedIdsByGroupe,
   matchesCategoryFilters,
 } from '../utils/categories.ts'
+import { groupColorKey } from '../utils/categoryColors.ts'
 import { averageNote, hasVisiteByUser, meetsRatingThreshold } from '../utils/visites.ts'
-import { useDeleteRestaurant } from '../hooks/useDeleteRestaurant.ts'
+import { photoPrincipale } from '../utils/restaurants.ts'
 import { useFavoriToggle } from '../hooks/useFavoriToggle.ts'
 import { formatNoteMoyenne, stars } from '../utils/format.ts'
 import CategoryFilterDropdown from './CategoryFilterDropdown.tsx'
 import CategoryBadges from './CategoryBadges.tsx'
 import CoverPhoto from './CoverPhoto.tsx'
+import { HeartIcon } from './icons/Icons.tsx'
 
 interface RestaurantsListProps {
   restaurants: Restaurant[]
   visites: Visite[]
-  onEditRestaurant: (restaurant: Restaurant) => void
-  onRestaurantDeleted: () => void
 }
 
 type SortOption = 'nom' | 'derniereVisite' | 'nombreVisites'
 type VisitedFilter = 'tous' | 'visite' | 'nonVisite'
+
+const PAGE_SIZE = 12
+const GROUPE_PRIX = 'Gamme de prix'
 
 interface RestaurantAggregate {
   restaurant: Restaurant
@@ -101,19 +103,10 @@ function sortAggregates(
 
 interface RestaurantCardProps {
   aggregate: RestaurantAggregate
-  onEditRestaurant: (restaurant: Restaurant) => void
-  onRestaurantDeleted: () => void
 }
 
-function RestaurantCard({
-  aggregate: item,
-  onEditRestaurant,
-  onRestaurantDeleted,
-}: RestaurantCardProps) {
+function RestaurantCard({ aggregate: item }: RestaurantCardProps) {
   const { user } = useAuth()
-  const isAdmin = user?.role === Role.Admin
-  const { deleting, error, handleDelete } =
-    useDeleteRestaurant(onRestaurantDeleted)
   const {
     isFavori,
     loading: favoriLoading,
@@ -121,11 +114,33 @@ function RestaurantCard({
     error: favoriError,
     toggle: toggleFavori,
   } = useFavoriToggle(item.restaurant.id)
-  const { restaurant, count, lastVisite, categories, averageNote: average } = item
+  const { restaurant, count, categories, averageNote: average } = item
+  const cover = photoPrincipale(restaurant)
 
   return (
     <article className="restaurant-card card card--interactive">
-      <CoverPhoto url={lastVisite?.urlsPhotos[0]} alt={restaurant.nom} />
+      <div className="restaurant-card-thumb">
+        <CoverPhoto url={cover?.url} alt={restaurant.nom} />
+        {user && (
+          <button
+            type="button"
+            className={
+              isFavori
+                ? 'restaurant-card-favori restaurant-card-favori--active'
+                : 'restaurant-card-favori'
+            }
+            disabled={favoriLoading || favoriPending}
+            aria-label={
+              isFavori
+                ? `Retirer ${restaurant.nom} des favoris`
+                : `Ajouter ${restaurant.nom} aux favoris`
+            }
+            onClick={() => void toggleFavori()}
+          >
+            <HeartIcon fill={isFavori ? 'currentColor' : 'none'} />
+          </button>
+        )}
+      </div>
 
       <div className="popup-header">
         <h3>{restaurant.nom}</h3>
@@ -133,38 +148,6 @@ function RestaurantCard({
 
       <p className="popup-adresse">{restaurant.adresse}</p>
 
-      {user && (
-        <div className="popup-actions">
-          <button
-            type="button"
-            className={isFavori ? 'popup-btn popup-btn-favori-active' : 'popup-btn'}
-            disabled={favoriLoading || favoriPending}
-            onClick={() => void toggleFavori()}
-          >
-            {isFavori ? '★ Retirer des favoris' : '☆ Ajouter aux favoris'}
-          </button>
-          {isAdmin && (
-            <>
-              <button
-                type="button"
-                className="popup-btn"
-                onClick={() => onEditRestaurant(restaurant)}
-              >
-                Modifier
-              </button>
-              <button
-                type="button"
-                className="popup-btn popup-btn-danger"
-                disabled={deleting}
-                onClick={() => void handleDelete(restaurant)}
-              >
-                {deleting ? 'Suppression…' : 'Supprimer'}
-              </button>
-            </>
-          )}
-        </div>
-      )}
-      {error && <p className="popup-status popup-error">{error}</p>}
       {favoriError && <p className="popup-status popup-error">{favoriError}</p>}
 
       {count > 0 && average !== null ? (
@@ -188,24 +171,14 @@ function RestaurantCard({
 
       {categories.length > 0 && <CategoryBadges categories={categories} />}
 
-      {count > 0 && (
-        <Link
-          className="popup-directions"
-          to={`/restaurants/${restaurant.id}`}
-        >
-          Voir toutes les visites
-        </Link>
-      )}
+      <Link className="popup-directions" to={`/restaurants/${restaurant.id}`}>
+        Voir la fiche
+      </Link>
     </article>
   )
 }
 
-function RestaurantsList({
-  restaurants,
-  visites,
-  onEditRestaurant,
-  onRestaurantDeleted,
-}: RestaurantsListProps) {
+function RestaurantsList({ restaurants, visites }: RestaurantsListProps) {
   const { user } = useAuth()
   const [search, setSearch] = useState('')
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(
@@ -214,6 +187,7 @@ function RestaurantsList({
   const [sortOption, setSortOption] = useState<SortOption>('nom')
   const [visitedFilter, setVisitedFilter] = useState<VisitedFilter>('tous')
   const [minNote, setMinNote] = useState(0)
+  const [page, setPage] = useState(1)
 
   const aggregates = useMemo(
     () => aggregate(restaurants, visites),
@@ -229,6 +203,16 @@ function RestaurantsList({
     }
     return groupCategories(Array.from(byId.values()))
   }, [restaurants])
+
+  const categoriesGroupedSansPrix = useMemo(
+    () => allCategoriesGrouped.filter(([groupe]) => groupe !== GROUPE_PRIX),
+    [allCategoriesGrouped],
+  )
+
+  const categoriesPrix = useMemo(
+    () => allCategoriesGrouped.find(([groupe]) => groupe === GROUPE_PRIX)?.[1] ?? [],
+    [allCategoriesGrouped],
+  )
 
   const categorieGroupeById = useMemo(() => {
     const map = new Map<string, string>()
@@ -288,8 +272,27 @@ function RestaurantsList({
     [filtered, sortOption],
   )
 
+  useEffect(() => {
+    setPage(1)
+  }, [search, selectedCategories, visitedFilter, minNote, sortOption])
+
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE))
+  const currentPage = Math.min(page, totalPages)
+  const paginated = sorted.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
+  )
+
   return (
     <div className="restaurants-list-view">
+      <div className="restaurants-list-header">
+        <h1>Tous les restaurants</h1>
+        <p>
+          {sorted.length} résultat{sorted.length > 1 ? 's' : ''} trouvé
+          {sorted.length > 1 ? 's' : ''}
+        </p>
+      </div>
+
       <div className="list-controls">
         <input
           type="search"
@@ -300,11 +303,32 @@ function RestaurantsList({
         />
 
         <CategoryFilterDropdown
-          categoriesGrouped={allCategoriesGrouped}
+          categoriesGrouped={categoriesGroupedSansPrix}
           selectedIds={selectedCategories}
           onToggle={toggleCategory}
           onClear={clearCategories}
         />
+
+        {categoriesPrix.length > 0 && (
+          <ul className="chips list-category-filters-group">
+            {categoriesPrix.map((categorie) => (
+              <li key={categorie.id}>
+                <button
+                  type="button"
+                  className={
+                    selectedCategories.has(categorie.id)
+                      ? `chip-filter chip-filter--${groupColorKey(GROUPE_PRIX)} chip-filter--active`
+                      : `chip-filter chip-filter--${groupColorKey(GROUPE_PRIX)}`
+                  }
+                  aria-pressed={selectedCategories.has(categorie.id)}
+                  onClick={() => toggleCategory(categorie.id)}
+                >
+                  {categorie.nom}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
 
         {user && (
           <div className="list-visited-switch">
@@ -369,16 +393,33 @@ function RestaurantsList({
         </p>
       )}
 
-      {sorted.length > 0 && (
+      {paginated.length > 0 && (
         <div className="restaurant-cards">
-          {sorted.map((item) => (
-            <RestaurantCard
-              key={item.restaurant.id}
-              aggregate={item}
-              onEditRestaurant={onEditRestaurant}
-              onRestaurantDeleted={onRestaurantDeleted}
-            />
+          {paginated.map((item) => (
+            <RestaurantCard key={item.restaurant.id} aggregate={item} />
           ))}
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="list-pagination">
+          <button
+            type="button"
+            disabled={currentPage === 1}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+          >
+            ← Précédent
+          </button>
+          <span>
+            Page {currentPage} / {totalPages}
+          </span>
+          <button
+            type="button"
+            disabled={currentPage === totalPages}
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+          >
+            Suivant →
+          </button>
         </div>
       )}
     </div>

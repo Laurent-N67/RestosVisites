@@ -2164,14 +2164,7 @@
   gap: 14px;
 }
 
-/* Journal des visites (/visites) */
-
-.visites-journal-page {
-  height: 100%;
-  overflow-y: auto;
-}
-
-.visites-journal-header {
+.restaurants-list-header {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
@@ -2180,44 +2173,66 @@
   margin-bottom: var(--space-4);
 }
 
-.visites-journal-liste-link {
+.restaurants-list-header p {
+  margin: 0;
   font-size: 13px;
-  font-weight: 600;
-  color: var(--accent);
-}
-
-.journal-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 14px;
-}
-
-.journal-card {
-  padding: var(--space-4);
-}
-
-.journal-card h3 {
-  margin: 0 0 6px;
-  font-size: 16px;
-}
-
-.journal-card-restaurant-link {
-  color: inherit;
-  text-decoration: none;
-}
-
-.journal-card-restaurant-link:hover {
-  color: var(--accent);
-  text-decoration: underline;
-}
-
-.journal-card-chip {
-  display: inline-block;
-  margin: 6px 0;
+  color: var(--text);
 }
 
 .restaurant-card {
   padding: var(--space-4);
+}
+
+.restaurant-card-thumb {
+  position: relative;
+}
+
+.restaurant-card-favori {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--bg-card) 70%, transparent);
+  color: var(--text);
+  backdrop-filter: blur(4px);
+}
+
+.restaurant-card-favori--active {
+  color: var(--accent);
+}
+
+.list-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: var(--space-5);
+}
+
+.list-pagination button {
+  padding: 6px 14px;
+  border: 1px solid var(--accent-border);
+  background: var(--accent-bg);
+  color: var(--accent);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.list-pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.list-pagination span {
+  font-size: 13px;
+  color: var(--text);
 }
 
 .restaurant-card h3 {

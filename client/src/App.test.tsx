@@ -135,13 +135,6 @@ describe('App - protection des routes', () => {
       })
     })
 
-    it("affiche le journal des visites sur '/visites' sans redirection", async () => {
-      renderAppAt('/visites')
-
-      expect(await screen.findByRole('heading', { name: 'Mes visites' })).toBeInTheDocument()
-      expect(screen.queryByRole('heading', { name: 'Bienvenue !' })).not.toBeInTheDocument()
-    })
-
     it("affiche la liste des restaurants sur '/liste' sans redirection", async () => {
       renderAppAt('/liste')
 

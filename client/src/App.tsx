@@ -12,7 +12,6 @@ import RestaurantsMap from './components/RestaurantsMap.tsx'
 import type { VisiteMutation } from './components/RestaurantsMap.tsx'
 import RestaurantsList from './components/RestaurantsList.tsx'
 import RestaurantDetailPage from './components/RestaurantDetailPage.tsx'
-import VisitesJournalPage from './components/VisitesJournalPage.tsx'
 import AddRestaurantForm from './components/AddRestaurantForm.tsx'
 import AddVisitForm from './components/AddVisitForm.tsx'
 import AuthPage from './components/AuthPage.tsx'
@@ -32,7 +31,7 @@ type Panel = 'none' | 'restaurant' | 'visite'
 
 const NAV_ITEMS = [
   { to: '/', label: 'Carte', icon: MapIcon, match: (path: string) => path === '/' },
-  { to: '/visites', label: 'Visites', icon: ChecklistIcon, match: (path: string) => path === '/visites' },
+  { to: '/liste', label: 'Restaurants', icon: ChecklistIcon, match: (path: string) => path === '/liste' },
   { to: '/favoris', label: 'Favoris', icon: HeartIcon, match: (path: string) => path.startsWith('/favoris') },
   { to: '/utilisateurs', label: 'Utilisateurs', icon: UsersIcon, match: (path: string) => path.startsWith('/utilisateurs') },
 ] as const
@@ -331,25 +330,7 @@ function App() {
               path="/liste"
               element={
                 <ProtectedRoute>
-                  <RestaurantsList
-                    restaurants={restaurants}
-                    visites={visites}
-                    onEditRestaurant={handleEditRestaurant}
-                    onRestaurantDeleted={handleRestaurantDeleted}
-                  />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/visites"
-              element={
-                <ProtectedRoute>
-                  <VisitesJournalPage
-                    restaurants={restaurants}
-                    visites={visites}
-                    onEditVisite={handleEditVisite}
-                    onVisiteDeleted={() => void loadAllVisites()}
-                  />
+                  <RestaurantsList restaurants={restaurants} visites={visites} />
                 </ProtectedRoute>
               }
             />
