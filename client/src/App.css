@@ -1725,6 +1725,28 @@
   color: var(--accent);
 }
 
+.restaurant-card-cta {
+  display: block;
+  margin-top: 10px;
+  padding: 8px 14px;
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-sm);
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 13px;
+  text-align: center;
+  text-decoration: none;
+  transition:
+    background var(--transition-base),
+    color var(--transition-base);
+}
+
+.restaurant-card-cta:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
 .popup-actions,
 .popup-visite-actions {
   display: flex;

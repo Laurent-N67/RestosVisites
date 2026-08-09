@@ -2,11 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { Categorie, Restaurant, Visite } from '../api/types.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
-import {
-  groupCategories,
-  groupSelectedIdsByGroupe,
-  matchesCategoryFilters,
-} from '../utils/categories.ts'
+import { groupCategories, matchesCategoryFilters } from '../utils/categories.ts'
 import { groupColorKey } from '../utils/categoryColors.ts'
 import { averageNote, hasVisiteByUser, meetsRatingThreshold } from '../utils/visites.ts'
 import { photoPrincipale } from '../utils/restaurants.ts'
@@ -171,7 +167,7 @@ function RestaurantCard({ aggregate: item }: RestaurantCardProps) {
 
       {categories.length > 0 && <CategoryBadges categories={categories} />}
 
-      <Link className="popup-directions" to={`/restaurants/${restaurant.id}`}>
+      <Link className="restaurant-card-cta" to={`/restaurants/${restaurant.id}`}>
         Voir la fiche
       </Link>
     </article>
@@ -232,21 +228,6 @@ function RestaurantsList({ restaurants, visites }: RestaurantsListProps) {
     [selectedCategories, categoriesSansPrixById],
   )
 
-  const categorieGroupeById = useMemo(() => {
-    const map = new Map<string, string>()
-    for (const [groupe, categoriesDuGroupe] of allCategoriesGrouped) {
-      for (const categorie of categoriesDuGroupe) {
-        map.set(categorie.id, groupe)
-      }
-    }
-    return map
-  }, [allCategoriesGrouped])
-
-  const selectedIdsByGroupe = useMemo(
-    () => groupSelectedIdsByGroupe(selectedCategories, categorieGroupeById),
-    [selectedCategories, categorieGroupeById],
-  )
-
   function toggleCategory(categorieId: string) {
     setSelectedCategories((prev) => {
       const next = new Set(prev)
@@ -272,7 +253,7 @@ function RestaurantsList({ restaurants, visites }: RestaurantsListProps) {
       const itemCategoryIds = new Set(item.categories.map((c) => c.id))
       const matchesCategory = matchesCategoryFilters(
         itemCategoryIds,
-        selectedIdsByGroupe,
+        selectedCategories,
       )
       const matchesVisited =
         visitedFilter === 'tous' || !user
@@ -283,7 +264,7 @@ function RestaurantsList({ restaurants, visites }: RestaurantsListProps) {
       const matchesNote = meetsRatingThreshold(item.averageNote, minNote)
       return matchesSearch && matchesCategory && matchesVisited && matchesNote
     })
-  }, [aggregates, search, selectedIdsByGroupe, visitedFilter, minNote, user])
+  }, [aggregates, search, selectedCategories, visitedFilter, minNote, user])
 
   const sorted = useMemo(
     () => sortAggregates(filtered, sortOption),

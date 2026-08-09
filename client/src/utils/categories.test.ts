@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Categorie } from '../api/types.ts'
-import {
-  groupCategories,
-  groupSelectedIdsByGroupe,
-  matchesCategoryFilters,
-} from './categories.ts'
+import { groupCategories, matchesCategoryFilters } from './categories.ts'
 
 function categorie(id: string, nom: string, groupe: string): Categorie {
   return { id, nom, groupe }
@@ -66,91 +62,34 @@ describe('groupCategories', () => {
   })
 })
 
-describe('groupSelectedIdsByGroupe', () => {
-  it('regroupe les ids sélectionnés par groupe', () => {
-    const categorieGroupeById = new Map([
-      ['prix-1', 'Gamme de prix'],
-      ['cuisine-1', 'Type de cuisine'],
-      ['cuisine-2', 'Type de cuisine'],
-    ])
-
-    const result = groupSelectedIdsByGroupe(
-      new Set(['prix-1', 'cuisine-1', 'cuisine-2']),
-      categorieGroupeById,
-    )
-
-    expect(result.get('Gamme de prix')).toEqual(new Set(['prix-1']))
-    expect(result.get('Type de cuisine')).toEqual(
-      new Set(['cuisine-1', 'cuisine-2']),
-    )
-  })
-
-  it('ignore les ids sans groupe connu', () => {
-    const result = groupSelectedIdsByGroupe(
-      new Set(['inconnu']),
-      new Map(),
-    )
-
-    expect(result.size).toBe(0)
-  })
-})
-
 describe('matchesCategoryFilters', () => {
   it("correspond à tout quand aucun filtre n'est sélectionné", () => {
     const itemCategoryIds = new Set(['cuisine-italienne'])
-    expect(matchesCategoryFilters(itemCategoryIds, new Map())).toBe(true)
+    expect(matchesCategoryFilters(itemCategoryIds, new Set())).toBe(true)
   })
 
-  it('applique un OU entre catégories du même groupe', () => {
-    const selectedIdsByGroupe = new Map([
-      ['Type de cuisine', new Set(['italien', 'japonais'])],
-    ])
+  it('exige la présence de toutes les catégories sélectionnées (ET strict)', () => {
+    const selectedIds = new Set(['eur-eur', 'italien'])
 
     expect(
-      matchesCategoryFilters(new Set(['italien']), selectedIdsByGroupe),
+      matchesCategoryFilters(new Set(['eur-eur', 'italien']), selectedIds),
     ).toBe(true)
-    expect(
-      matchesCategoryFilters(new Set(['japonais']), selectedIdsByGroupe),
-    ).toBe(true)
-    expect(
-      matchesCategoryFilters(new Set(['coreen']), selectedIdsByGroupe),
-    ).toBe(false)
+    expect(matchesCategoryFilters(new Set(['italien']), selectedIds)).toBe(
+      false,
+    )
+    expect(matchesCategoryFilters(new Set(['eur-eur']), selectedIds)).toBe(
+      false,
+    )
   })
 
-  it('applique un ET entre groupes différents', () => {
-    const selectedIdsByGroupe = new Map([
-      ['Gamme de prix', new Set(['eur-eur'])],
-      ['Type de cuisine', new Set(['italien', 'japonais'])],
-    ])
+  it("applique un ET même entre deux catégories du même groupe (ex. deux cuisines)", () => {
+    const selectedIds = new Set(['italien', 'japonais'])
 
+    expect(matchesCategoryFilters(new Set(['italien']), selectedIds)).toBe(
+      false,
+    )
     expect(
-      matchesCategoryFilters(
-        new Set(['eur-eur', 'italien']),
-        selectedIdsByGroupe,
-      ),
+      matchesCategoryFilters(new Set(['italien', 'japonais']), selectedIds),
     ).toBe(true)
-    expect(
-      matchesCategoryFilters(new Set(['italien']), selectedIdsByGroupe),
-    ).toBe(false)
-    expect(
-      matchesCategoryFilters(new Set(['eur-eur']), selectedIdsByGroupe),
-    ).toBe(false)
-  })
-
-  it('combine ET entre groupes et OU au sein d\'un groupe', () => {
-    const selectedIdsByGroupe = new Map([
-      ['Gamme de prix', new Set(['eur-eur', 'eur'])],
-      ['Type de cuisine', new Set(['italien', 'japonais'])],
-    ])
-
-    expect(
-      matchesCategoryFilters(
-        new Set(['eur', 'japonais']),
-        selectedIdsByGroupe,
-      ),
-    ).toBe(true)
-    expect(
-      matchesCategoryFilters(new Set(['eur']), selectedIdsByGroupe),
-    ).toBe(false)
   })
 })
