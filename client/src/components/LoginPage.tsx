@@ -71,6 +71,15 @@ function LoginPage() {
         </button>
       </div>
 
+      <button
+        type="button"
+        className="auth-forgot-link"
+        disabled
+        title="Fonctionnalité à venir"
+      >
+        Mot de passe oublié ?
+      </button>
+
       {error && <p className="form-error">{error}</p>}
 
       <button type="submit" disabled={submitting}>

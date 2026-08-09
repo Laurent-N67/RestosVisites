@@ -2700,21 +2700,6 @@
   .user-menu-name {
     display: none;
   }
-
-  .auth-page {
-    flex-direction: column;
-    height: auto;
-    overflow: visible;
-  }
-
-  .auth-panels-card {
-    flex-direction: column;
-  }
-
-  .auth-panel + .auth-panel {
-    border-left: none;
-    border-top: 1px solid var(--border);
-  }
 }
 
 /* Chrome Leaflet natif en mode sombre : sans ces overrides, les popups,
@@ -3234,6 +3219,18 @@
   color: var(--text-h);
 }
 
+.auth-forgot-link {
+  align-self: flex-end;
+  margin: -4px 0 0;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 12px;
+  color: var(--text);
+  opacity: 0.8;
+  cursor: not-allowed;
+}
+
 .password-rules {
   margin: 4px 0 0;
   padding-left: 18px;
@@ -3241,29 +3238,216 @@
   color: var(--danger);
 }
 
-@media (max-width: 640px) {
-  .auth-panels {
-    align-items: flex-start;
+/* Bloc marque + bascules /login <-> /register : mobile-only (≤900px,
+   cf. media query ci-dessous), masqués par défaut sur desktop où le layout
+   deux panneaux existant reste inchangé. */
+.auth-hero-brand,
+.auth-switcher,
+.auth-mobile-trust {
+  display: none;
+}
+
+/* ≤900px (même seuil que BottomNav.tsx/MobileRestaurantSheet.tsx) : l'écran
+   Authentification passe d'un layout desktop deux-panneaux côte à côte à un
+   écran mobile plein écran (100dvh, scrollable) façon bottom-sheet — un seul
+   formulaire visible à la fois (login OU register, cf. `.auth-page--login` /
+   `.auth-page--register` posés sur la racine par AuthPage.tsx), la carte
+   flottant par-dessus le bas du hero. Toujours monté (LoginPage ET
+   RegisterPage), convention CSS-only du projet : seul l'affichage change. */
+@media (max-width: 900px) {
+  .auth-page {
+    flex-direction: column;
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
   }
 
   .auth-hero {
     flex: none;
-    min-height: 220px;
+    min-height: 48vh;
   }
 
   .auth-hero-content {
-    padding: 28px 24px;
-    gap: 12px;
-  }
-
-  .auth-hero-content h2 {
-    font-size: 24px;
-  }
-
-  .auth-hero-features,
-  .auth-hero-trust,
-  .auth-hero-content > p {
     display: none;
+  }
+
+  .auth-hero-brand {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    width: 100%;
+    padding: var(--space-6) var(--space-5);
+    text-align: center;
+  }
+
+  .auth-hero-brand-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border-radius: var(--radius-full);
+    background: rgba(255, 122, 69, 0.2);
+    color: var(--accent);
+  }
+
+  .auth-hero-brand-icon svg {
+    width: 30px;
+    height: 30px;
+  }
+
+  .auth-hero-brand h1 {
+    margin: 0;
+    font-size: 26px;
+    font-weight: 800;
+    color: #fff;
+  }
+
+  .auth-hero-brand p {
+    margin: 0;
+    max-width: 320px;
+    font-size: 14px;
+    line-height: 1.4;
+    color: rgba(255, 255, 255, 0.75);
+  }
+
+  .auth-panels {
+    flex: none;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    overflow-y: visible;
+    padding: 0 var(--space-4) var(--space-5);
+    margin-top: -32px;
+  }
+
+  .auth-panels-card {
+    position: relative;
+    z-index: 1;
+    flex-direction: column;
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 28px var(--space-5) var(--space-4);
+    border: 1px solid var(--border);
+    border-radius: 24px 24px var(--radius-lg) var(--radius-lg);
+    background: color-mix(in srgb, var(--bg-card) 90%, transparent);
+    backdrop-filter: blur(16px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .auth-panels-card::before {
+    content: '';
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    width: 40px;
+    height: 5px;
+    border-radius: var(--radius-full);
+    background: var(--border);
+    transform: translateX(-50%);
+  }
+
+  .auth-panel {
+    display: none;
+    justify-content: stretch;
+  }
+
+  .auth-panel--login,
+  .auth-panel--register {
+    flex: none;
+  }
+
+  .auth-page--login .auth-panel--login,
+  .auth-page--register .auth-panel--register {
+    display: flex;
+  }
+
+  .auth-panel + .auth-panel {
+    border-left: none;
+  }
+
+  .auth-form {
+    width: 100%;
+    padding: 0;
+  }
+
+  .auth-switcher {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-3);
+    max-width: 480px;
+    margin: var(--space-4) auto 0;
+  }
+
+  .auth-page--login .auth-switcher--login,
+  .auth-page--register .auth-switcher--register {
+    display: flex;
+  }
+
+  .auth-switcher-divider {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    width: 100%;
+    font-size: 12px;
+    color: var(--text);
+  }
+
+  .auth-switcher-divider::before,
+  .auth-switcher-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .auth-switcher-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 44px;
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-sm);
+    background: var(--accent-bg);
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 14px;
+    text-decoration: none;
+    transition: background var(--transition-base), color var(--transition-base);
+  }
+
+  .auth-switcher-btn:hover {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .auth-switcher-link {
+    font-size: 13px;
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .auth-switcher-link strong {
+    color: var(--accent);
+  }
+
+  .auth-mobile-trust {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    max-width: 480px;
+    margin: var(--space-4) auto 0;
+    font-size: 12px;
+    color: var(--text);
+    text-align: center;
   }
 }
 
