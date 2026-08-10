@@ -11,7 +11,7 @@ import { formatDate, formatNoteMoyenne, stars, villeFromAdresse } from '../utils
 import CategoryFilterDropdown from './CategoryFilterDropdown.tsx'
 import CategoryBadges from './CategoryBadges.tsx'
 import CoverPhoto from './CoverPhoto.tsx'
-import { HeartIcon, PinIcon, SearchIcon } from './icons/Icons.tsx'
+import { ChevronDownIcon, HeartIcon, PinIcon, SearchIcon } from './icons/Icons.tsx'
 
 interface RestaurantsListProps {
   restaurants: Restaurant[]
@@ -393,6 +393,7 @@ function RestaurantsList({ restaurants, visites }: RestaurantsListProps) {
               <option value={4}>4 étoiles et plus</option>
               <option value={5}>5 étoiles</option>
             </select>
+            <ChevronDownIcon className="list-sort-chevron" aria-hidden="true" />
           </label>
 
           <label className="list-sort-label list-sort-label--sort">
@@ -405,6 +406,7 @@ function RestaurantsList({ restaurants, visites }: RestaurantsListProps) {
               <option value="derniereVisite">Dernière visite (récente d'abord)</option>
               <option value="nombreVisites">Nombre de visites</option>
             </select>
+            <ChevronDownIcon className="list-sort-chevron" aria-hidden="true" />
           </label>
         </div>
       </div>

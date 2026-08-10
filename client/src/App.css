@@ -2597,10 +2597,25 @@
 }
 
 .list-sort-label select {
+  /* Sans ça, Chromium/Edge dessine son propre chrome natif (cadre, fond)
+     par-dessus la pilule du label malgré `border: none` / `background:
+     transparent` ci-dessous — d'où l'effet "pilule dans la pilule" sans
+     `appearance: none`. La flèche native disparaît avec, remplacée par
+     `.list-sort-chevron` (ChevronDownIcon) dans le JSX. */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
   border: none;
   background: transparent;
   padding: 2px 0 2px 2px;
   font-weight: 600;
+  color: inherit;
+}
+
+.list-sort-chevron {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
   color: inherit;
 }
 
