@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Categorie } from '../api/types.ts'
+import { groupColorKey } from '../utils/categoryColors.ts'
 
 interface CategoryFilterDropdownProps {
   categoriesGrouped: [string, Categorie[]][]
@@ -91,67 +92,77 @@ function CategoryFilterDropdown({
       </button>
 
       {open && (
-        <div className="category-filter-panel">
-          <div className="category-filter-panel-header">
-            <input
-              type="search"
-              className="category-filter-search"
-              placeholder="Rechercher une catégorie…"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              autoFocus
-            />
-            <button
-              type="button"
-              className="category-filter-close"
-              aria-label="Fermer le filtre de catégories"
-              onClick={() => setOpen(false)}
-            >
-              ×
-            </button>
-          </div>
+        <>
+          <div
+            className="category-filter-backdrop"
+            aria-hidden="true"
+            onClick={() => setOpen(false)}
+          />
+          <div className="category-filter-panel">
+            <div className="category-filter-panel-header">
+              <input
+                type="search"
+                className="category-filter-search"
+                placeholder="Rechercher une catégorie…"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                autoFocus
+              />
+              <button
+                type="button"
+                className="category-filter-close"
+                aria-label="Fermer le filtre de catégories"
+                onClick={() => setOpen(false)}
+              >
+                ×
+              </button>
+            </div>
 
-          {selectedIds.size > 0 && (
-            <button
-              type="button"
-              className="category-filter-reset"
-              onClick={onClear}
-            >
-              Réinitialiser
-            </button>
-          )}
-
-          <div className="category-filter-groups">
-            {filteredGrouped.length === 0 && (
-              <p className="category-filter-empty">
-                Aucune catégorie ne correspond à la recherche.
-              </p>
+            {selectedIds.size > 0 && (
+              <button
+                type="button"
+                className="category-filter-reset"
+                onClick={onClear}
+              >
+                Réinitialiser
+              </button>
             )}
-            {filteredGrouped.map(([groupe, groupCategoriesList]) => (
-              <div key={groupe} className="category-filter-group">
-                <p className="category-filter-group-title">{groupe}</p>
-                <ul className="chips list-category-filters-group">
-                  {groupCategoriesList.map((categorie) => (
-                    <li key={categorie.id}>
-                      <button
-                        type="button"
-                        className={
-                          selectedIds.has(categorie.id)
-                            ? 'chip-filter chip-filter--active'
-                            : 'chip-filter'
-                        }
-                        aria-pressed={selectedIds.has(categorie.id)}
-                        onClick={() => onToggle(categorie.id)}
-                      >
-                        {categorie.nom}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+
+            <div className="category-filter-groups">
+              {filteredGrouped.length === 0 && (
+                <p className="category-filter-empty">
+                  Aucune catégorie ne correspond à la recherche.
+                </p>
+              )}
+              {filteredGrouped.map(([groupe, groupCategoriesList]) => {
+                const colorKey = groupColorKey(groupe)
+                return (
+                  <div key={groupe} className="category-filter-group">
+                    <p className="category-filter-group-title">{groupe}</p>
+                    <ul className="chips list-category-filters-group">
+                      {groupCategoriesList.map((categorie) => (
+                        <li key={categorie.id}>
+                          <button
+                            type="button"
+                            className={
+                              selectedIds.has(categorie.id)
+                                ? `chip-filter chip-filter--${colorKey} chip-filter--active`
+                                : `chip-filter chip-filter--${colorKey}`
+                            }
+                            aria-pressed={selectedIds.has(categorie.id)}
+                            onClick={() => onToggle(categorie.id)}
+                          >
+                            {categorie.nom}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )
+              })}
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   )

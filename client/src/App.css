@@ -2267,6 +2267,18 @@
 }
 
 .chip-filter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* `white-space: nowrap` évite qu'un libellé long ("Buffet à volonté")
+     passe sur 2 lignes et rende cette seule pastille plus haute que ses
+     voisines dans la même ligne (le flex-wrap du conteneur `.chips` gère
+     déjà le retour à la ligne au niveau des pastilles, pas du texte à
+     l'intérieur) — elle s'élargit plutôt que de grandir en hauteur.
+     `min-width` évite à l'inverse qu'un libellé très court ("Café") ait
+     l'air d'un timbre-poste à côté des autres. */
+  white-space: nowrap;
+  min-width: 64px;
   border: 1px solid var(--accent-border);
   background: var(--accent-bg);
   color: var(--accent);
@@ -2477,7 +2489,26 @@
   margin: 0 0 16px;
 }
 
+/* Trame derrière le panneau catégories plein écran mobile (cf. media query
+   ci-dessous) : sans elle, le panneau (fond `--bg-card` à peine plus clair
+   que `--bg`) ne se détachait pas clairement du reste de la page en thème
+   sombre et donnait l'impression d'être "collé" au contenu plutôt qu'une
+   vraie fenêtre modale. Masquée par défaut (desktop = simple dropdown
+   ancré, pas de trame plein écran) ; réactivée avec le bottom-sheet ≤480px. */
+.category-filter-backdrop {
+  display: none;
+}
+
 @media (max-width: 480px) {
+  .category-filter-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 29;
+    background: rgba(0, 0, 0, 0.55);
+    animation: fade-in var(--transition-fast) ease-out;
+  }
+
   .category-filter-panel {
     position: fixed;
     top: auto;
@@ -2486,6 +2517,9 @@
     right: 16px;
     width: auto;
     max-height: min(70vh, 480px);
+    border-radius: var(--radius-lg);
+    border-color: var(--border);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
   }
 
   /* Les 4 dropdowns de catégories du formulaire Restaurant (Prix/Cuisine/
