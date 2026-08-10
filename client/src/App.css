@@ -2107,13 +2107,13 @@
 .restaurant-card-cta {
   display: block;
   margin-top: 10px;
-  padding: 8px 14px;
+  padding: 12px 14px;
   border: 1px solid var(--accent-border);
   border-radius: var(--radius-sm);
   background: var(--accent-bg);
   color: var(--accent);
   font-weight: 700;
-  font-size: 13px;
+  font-size: 14px;
   text-align: center;
   text-decoration: none;
   transition:
@@ -2224,14 +2224,42 @@
   margin-bottom: 16px;
 }
 
+.list-search-wrap {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.list-search-icon {
+  position: absolute;
+  left: 12px;
+  width: 16px;
+  height: 16px;
+  color: var(--text);
+  pointer-events: none;
+}
+
 .list-search {
-  padding: 8px 12px;
+  width: 100%;
+  padding: 8px 12px 8px 34px;
   border: 1px solid var(--border);
   border-radius: 6px;
   min-width: 220px;
-  flex-shrink: 0;
   background: var(--field-bg);
   color: var(--text-h);
+}
+
+/* Regroupe tous les contrôles de filtre/tri (hors recherche) : sur desktop
+   c'est un simple flex-wrap identique au comportement historique de
+   `.list-controls` ; sur mobile (cf. media query plus bas) ce wrapper devient
+   la bande de chips défilable horizontalement, séparée de la barre de
+   recherche qui reste pleine largeur au-dessus. */
+.list-controls-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
 }
 
 .list-category-filters-group {
@@ -2549,23 +2577,31 @@
   color: var(--group-autres);
 }
 
+/* Même gabarit visuel que les autres chips de filtre (`.chip-filter`) :
+   pilule avec libellé accentué, le `<select>` natif s'y intègre sans son
+   propre cadre pour ne pas casser l'alignement en une seule ligne de la
+   bande de filtres mobile. */
 .list-sort-label {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
+  padding: 4px 10px 4px 12px;
+  border: 1px solid var(--accent-border);
+  border-radius: 999px;
+  background: var(--accent-bg);
   font-size: 13px;
   font-weight: 600;
-  color: var(--text-h);
+  color: var(--accent);
   flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .list-sort-label select {
-  padding: 6px 10px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font-weight: 400;
-  background: var(--field-bg);
-  color: var(--text-h);
+  border: none;
+  background: transparent;
+  padding: 2px 0 2px 2px;
+  font-weight: 600;
+  color: inherit;
 }
 
 .list-empty {
@@ -2595,6 +2631,7 @@
 @media (max-width: 480px) {
   .restaurant-cards {
     grid-template-columns: repeat(1, 1fr);
+    gap: 16px;
   }
 }
 
@@ -2645,6 +2682,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-wrap: wrap;
   gap: 16px;
   margin-top: var(--space-5);
 }
@@ -2669,25 +2707,92 @@
   color: var(--text);
 }
 
-.restaurant-card h3 {
+/* Cibles tactiles agrandies sur mobile — doit rester APRÈS les règles de
+   base `.restaurant-card-favori` / `.list-pagination button` ci-dessus :
+   même spécificité (une classe), donc c'est l'ordre de source qui décide,
+   et cette surcharge doit gagner. */
+@media (max-width: 480px) {
+  .restaurant-card-favori {
+    width: 40px;
+    height: 40px;
+  }
+
+  .restaurant-card-favori svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .list-pagination button {
+    padding: 10px 18px;
+    font-size: 14px;
+  }
+}
+
+.restaurant-card-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.restaurant-card-title {
   margin: 0 0 4px;
-  font-size: 16px;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-h);
+  line-height: 1.25;
 }
 
 .list-card-rating {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin: 8px 0 4px;
+  margin: 0 0 6px;
+}
+
+.list-card-rating .popup-stars {
+  font-size: 13px;
+  letter-spacing: -1px;
 }
 
 .list-card-rating-value {
   font-weight: 700;
   color: var(--text-h);
-  font-size: 15px;
+  font-size: 14px;
 }
 
 .list-card-rating-count {
+  font-size: 12px;
+  color: var(--text);
+}
+
+.restaurant-card-ville {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 0 4px;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.restaurant-card-ville svg {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  color: var(--text);
+}
+
+.restaurant-card-meta {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.restaurant-card-body .category-badges {
+  margin: 0 0 8px;
+}
+
+.restaurant-card-last-visite {
+  margin: 0 0 4px;
   font-size: 12px;
   color: var(--text);
 }
@@ -3055,6 +3160,100 @@
 .list-visited-switch button:hover {
   background: var(--accent);
   color: #fff;
+}
+
+/* Vue Liste mobile (≤900px) : recherche pleine largeur au-dessus d'une bande
+   de filtres/tri qui défile horizontalement au doigt, plutôt que de tout
+   empiler en hauteur comme le flex-wrap desktop le ferait. Placé ici (après
+   `.list-search`, `.list-controls-filters` et `.list-visited-switch`
+   ci-dessus) volontairement : mêmes sélecteurs, même spécificité (une
+   classe) que les règles de base, donc c'est l'ordre de source qui décide
+   la priorité — cette surcharge doit rester après elles pour s'appliquer. */
+@media (max-width: 900px) {
+  .restaurants-list-view {
+    padding: 14px 16px 24px;
+  }
+
+  /* Titre principal ("Tous les restaurants") + compteur discret juste en
+     dessous, plutôt que côte à côte comme sur desktop — hiérarchie typique
+     d'un écran de liste mobile, sans grand espace vide avant les filtres. */
+  .restaurants-list-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    margin-bottom: 12px;
+  }
+
+  .restaurants-list-header h1 {
+    font-size: 22px;
+  }
+
+  .restaurants-list-header p {
+    font-size: 12px;
+  }
+
+  .list-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .list-search-wrap {
+    width: 100%;
+  }
+
+  .list-search-icon {
+    left: 14px;
+  }
+
+  .list-search {
+    width: 100%;
+    min-width: 0;
+    height: 46px;
+    padding: 0 14px 0 40px;
+    font-size: 15px;
+    border-radius: 12px;
+  }
+
+  .list-controls-filters {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    /* `align-items: stretch` seul ne suffit pas à contraindre la largeur de
+       ce conteneur à celle de `.list-controls` : avec des enfants
+       non-shrinkables (flex-shrink:0 ci-dessous) il grandit jusqu'à sa
+       largeur de contenu au lieu de rester à la largeur du parent. `width:
+       100%` force la largeur réelle ; `min-width: 0` l'autorise à descendre
+       sous cette largeur de contenu pour que le surplus scrolle en interne
+       (`overflow-x: auto`) plutôt que de déborder de l'écran. */
+    width: 100%;
+    min-width: 0;
+    padding-bottom: 2px;
+  }
+
+  .list-controls-filters::-webkit-scrollbar {
+    display: none;
+  }
+
+  .list-controls-filters > * {
+    flex-shrink: 0;
+  }
+
+  .list-controls-filters .list-category-filters-group {
+    flex-wrap: nowrap;
+  }
+
+  .list-visited-switch button {
+    min-height: 36px;
+    padding: 6px 14px;
+  }
+
+  .list-sort-label--note,
+  .list-sort-label--sort {
+    white-space: nowrap;
+  }
 }
 
 .popup-visite-auteur {

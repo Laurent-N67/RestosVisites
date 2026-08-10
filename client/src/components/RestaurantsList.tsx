@@ -7,11 +7,11 @@ import { groupColorKey } from '../utils/categoryColors.ts'
 import { averageNote, hasVisiteByUser, meetsRatingThreshold } from '../utils/visites.ts'
 import { photoPrincipale } from '../utils/restaurants.ts'
 import { useFavoriToggle } from '../hooks/useFavoriToggle.ts'
-import { formatNoteMoyenne, stars } from '../utils/format.ts'
+import { formatDate, formatNoteMoyenne, stars, villeFromAdresse } from '../utils/format.ts'
 import CategoryFilterDropdown from './CategoryFilterDropdown.tsx'
 import CategoryBadges from './CategoryBadges.tsx'
 import CoverPhoto from './CoverPhoto.tsx'
-import { HeartIcon } from './icons/Icons.tsx'
+import { HeartIcon, PinIcon, SearchIcon } from './icons/Icons.tsx'
 
 interface RestaurantsListProps {
   restaurants: Restaurant[]
@@ -23,6 +23,7 @@ type VisitedFilter = 'tous' | 'visite' | 'nonVisite'
 
 const PAGE_SIZE = 12
 const GROUPE_PRIX = 'Gamme de prix'
+const GROUPE_CUISINE = 'Type de cuisine'
 
 interface RestaurantAggregate {
   restaurant: Restaurant
@@ -110,8 +111,15 @@ function RestaurantCard({ aggregate: item }: RestaurantCardProps) {
     error: favoriError,
     toggle: toggleFavori,
   } = useFavoriToggle(item.restaurant.id)
-  const { restaurant, count, categories, averageNote: average } = item
+  const { restaurant, count, categories, averageNote: average, lastVisite } = item
   const cover = photoPrincipale(restaurant)
+
+  const cuisineNom = categories.find((c) => c.groupe === GROUPE_CUISINE)?.nom
+  const prixNom = categories.find((c) => c.groupe === GROUPE_PRIX)?.nom
+  const meta = [cuisineNom, prixNom].filter((v): v is string => Boolean(v)).join(' · ')
+  const badgeCategories = categories.filter(
+    (c) => c.groupe !== GROUPE_CUISINE && c.groupe !== GROUPE_PRIX,
+  )
 
   return (
     <article className="restaurant-card card card--interactive">
@@ -138,38 +146,51 @@ function RestaurantCard({ aggregate: item }: RestaurantCardProps) {
         )}
       </div>
 
-      <div className="popup-header">
-        <h3>{restaurant.nom}</h3>
+      <div className="restaurant-card-body">
+        <h3 className="restaurant-card-title">{restaurant.nom}</h3>
+
+        {favoriError && <p className="popup-status popup-error">{favoriError}</p>}
+
+        {count > 0 && average !== null ? (
+          <div className="list-card-rating">
+            <span
+              className="popup-stars"
+              aria-label={`Note moyenne ${formatNoteMoyenne(average)} sur 5`}
+            >
+              {stars(Math.round(average))}
+            </span>
+            <span className="list-card-rating-value">
+              {formatNoteMoyenne(average)}
+            </span>
+            <span className="list-card-rating-count">
+              ({count})
+            </span>
+          </div>
+        ) : (
+          <p className="popup-status">Aucune visite enregistrée.</p>
+        )}
+
+        <p className="restaurant-card-ville">
+          <PinIcon aria-hidden="true" />
+          {villeFromAdresse(restaurant.adresse)}
+        </p>
+
+        {meta && <p className="restaurant-card-meta">{meta}</p>}
+
+        {badgeCategories.length > 0 && (
+          <CategoryBadges categories={badgeCategories} max={2} />
+        )}
+
+        {lastVisite && (
+          <p className="restaurant-card-last-visite">
+            Dernière visite : {formatDate(lastVisite.date)}
+          </p>
+        )}
+
+        <Link className="restaurant-card-cta" to={`/restaurants/${restaurant.id}`}>
+          Voir la fiche
+        </Link>
       </div>
-
-      <p className="popup-adresse">{restaurant.adresse}</p>
-
-      {favoriError && <p className="popup-status popup-error">{favoriError}</p>}
-
-      {count > 0 && average !== null ? (
-        <div className="list-card-rating">
-          <span className="list-card-rating-value">
-            {formatNoteMoyenne(average)}
-          </span>
-          <span
-            className="popup-stars"
-            aria-label={`Note moyenne ${formatNoteMoyenne(average)} sur 5`}
-          >
-            {stars(Math.round(average))}
-          </span>
-          <span className="list-card-rating-count">
-            ({count} {count > 1 ? 'visites' : 'visite'})
-          </span>
-        </div>
-      ) : (
-        <p className="popup-status">Aucune visite enregistrée.</p>
-      )}
-
-      {categories.length > 0 && <CategoryBadges categories={categories} />}
-
-      <Link className="restaurant-card-cta" to={`/restaurants/${restaurant.id}`}>
-        Voir la fiche
-      </Link>
     </article>
   )
 }
@@ -293,94 +314,99 @@ function RestaurantsList({ restaurants, visites }: RestaurantsListProps) {
       </div>
 
       <div className="list-controls">
-        <input
-          type="search"
-          className="list-search"
-          placeholder="Rechercher un restaurant…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        <div className="list-search-wrap">
+          <SearchIcon className="list-search-icon" aria-hidden="true" />
+          <input
+            type="search"
+            className="list-search"
+            placeholder="Rechercher un restaurant…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
 
-        <CategoryFilterDropdown
-          categoriesGrouped={categoriesGroupedSansPrix}
-          selectedIds={selectedCategories}
-          onToggle={toggleCategory}
-          onClear={clearCategories}
-        />
+        <div className="list-controls-filters">
+          <CategoryFilterDropdown
+            categoriesGrouped={categoriesGroupedSansPrix}
+            selectedIds={selectedCategories}
+            onToggle={toggleCategory}
+            onClear={clearCategories}
+          />
 
-        {categoriesPrix.length > 0 && (
-          <ul className="chips list-category-filters-group">
-            {categoriesPrix.map((categorie) => (
-              <li key={categorie.id}>
-                <button
-                  type="button"
-                  className={
-                    selectedCategories.has(categorie.id)
-                      ? `chip-filter chip-filter--${groupColorKey(GROUPE_PRIX)} chip-filter--active`
-                      : `chip-filter chip-filter--${groupColorKey(GROUPE_PRIX)}`
-                  }
-                  aria-pressed={selectedCategories.has(categorie.id)}
-                  onClick={() => toggleCategory(categorie.id)}
-                >
-                  {categorie.nom}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+          {categoriesPrix.length > 0 && (
+            <ul className="chips list-category-filters-group">
+              {categoriesPrix.map((categorie) => (
+                <li key={categorie.id}>
+                  <button
+                    type="button"
+                    className={
+                      selectedCategories.has(categorie.id)
+                        ? `chip-filter chip-filter--${groupColorKey(GROUPE_PRIX)} chip-filter--active`
+                        : `chip-filter chip-filter--${groupColorKey(GROUPE_PRIX)}`
+                    }
+                    aria-pressed={selectedCategories.has(categorie.id)}
+                    onClick={() => toggleCategory(categorie.id)}
+                  >
+                    {categorie.nom}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
 
-        {user && (
-          <div className="list-visited-switch">
-            <button
-              type="button"
-              className={visitedFilter === 'tous' ? 'active' : ''}
-              onClick={() => setVisitedFilter('tous')}
+          {user && (
+            <div className="list-visited-switch">
+              <button
+                type="button"
+                className={visitedFilter === 'tous' ? 'active' : ''}
+                onClick={() => setVisitedFilter('tous')}
+              >
+                Tous
+              </button>
+              <button
+                type="button"
+                className={visitedFilter === 'visite' ? 'active' : ''}
+                onClick={() => setVisitedFilter('visite')}
+              >
+                Déjà visité
+              </button>
+              <button
+                type="button"
+                className={visitedFilter === 'nonVisite' ? 'active' : ''}
+                onClick={() => setVisitedFilter('nonVisite')}
+              >
+                Pas encore visité
+              </button>
+            </div>
+          )}
+
+          <label className="list-sort-label list-sort-label--note">
+            Note
+            <select
+              value={minNote}
+              onChange={(e) => setMinNote(Number(e.target.value))}
             >
-              Tous
-            </button>
-            <button
-              type="button"
-              className={visitedFilter === 'visite' ? 'active' : ''}
-              onClick={() => setVisitedFilter('visite')}
-            >
-              Déjà visité
-            </button>
-            <button
-              type="button"
-              className={visitedFilter === 'nonVisite' ? 'active' : ''}
-              onClick={() => setVisitedFilter('nonVisite')}
-            >
-              Pas encore visité
-            </button>
-          </div>
-        )}
+              <option value={0}>Toutes notes</option>
+              <option value={1}>1 étoile et plus</option>
+              <option value={2}>2 étoiles et plus</option>
+              <option value={3}>3 étoiles et plus</option>
+              <option value={4}>4 étoiles et plus</option>
+              <option value={5}>5 étoiles</option>
+            </select>
+          </label>
 
-        <label className="list-sort-label">
-          Note minimale
-          <select
-            value={minNote}
-            onChange={(e) => setMinNote(Number(e.target.value))}
-          >
-            <option value={0}>Toutes notes</option>
-            <option value={1}>1 étoile et plus</option>
-            <option value={2}>2 étoiles et plus</option>
-            <option value={3}>3 étoiles et plus</option>
-            <option value={4}>4 étoiles et plus</option>
-            <option value={5}>5 étoiles</option>
-          </select>
-        </label>
-
-        <label className="list-sort-label">
-          Trier par
-          <select
-            value={sortOption}
-            onChange={(e) => setSortOption(e.target.value as SortOption)}
-          >
-            <option value="nom">Nom (A → Z)</option>
-            <option value="derniereVisite">Dernière visite (récente d'abord)</option>
-            <option value="nombreVisites">Nombre de visites</option>
-          </select>
-        </label>
+          <label className="list-sort-label list-sort-label--sort">
+            Trier
+            <select
+              value={sortOption}
+              onChange={(e) => setSortOption(e.target.value as SortOption)}
+            >
+              <option value="nom">Nom (A → Z)</option>
+              <option value="derniereVisite">Dernière visite (récente d'abord)</option>
+              <option value="nombreVisites">Nombre de visites</option>
+            </select>
+          </label>
+        </div>
       </div>
 
       {selectedNonPrixCategories.length > 0 && (
