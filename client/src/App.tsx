@@ -142,6 +142,13 @@ function App() {
     }
   }, [visiteMutation, loadAllVisites])
 
+  useEffect(() => {
+    setActivePanel('none')
+    setEditingRestaurant(null)
+    setEditingVisite(null)
+    setPreselectedRestaurantId(null)
+  }, [location.pathname])
+
   function closePanel() {
     setActivePanel('none')
     setEditingRestaurant(null)

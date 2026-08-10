@@ -1427,6 +1427,7 @@
 .panel-form input[type='date'],
 .panel-form input[type='url'],
 .panel-form input[type='number'],
+.panel-form input[type='tel'],
 .panel-form select,
 .panel-form textarea {
   padding: 8px 10px;
@@ -2432,6 +2433,21 @@
     width: auto;
     max-height: min(70vh, 480px);
   }
+
+  /* Les 4 dropdowns de catégories du formulaire Restaurant (Prix/Cuisine/
+     Style/Autres, `CategoryGroupDropdown`) doivent rester ancrés sous leur
+     déclencheur comme sur desktop, contrairement au filtre plein écran de
+     la page Liste (`CategoryFilterDropdown`) qui partage ces mêmes classes
+     CSS — sans ce correctif le panneau se plaquait en bas de l'écran,
+     collé au bas de la side-panel mobile. */
+  .category-group-grid .category-filter-panel {
+    position: absolute;
+    top: calc(100% + 6px);
+    bottom: auto;
+    left: 0;
+    right: auto;
+    width: min(320px, calc(100vw - 72px));
+  }
 }
 
 /* Dropdown de catégories scopé à un seul groupe (formulaires) */
@@ -2691,7 +2707,17 @@
     top: 0;
     right: 0;
     width: 100%;
-    z-index: 1100;
+    /* Doit dominer .app-header et .bottom-nav (tous deux à 1150) : sinon
+       le haut du panneau — et donc le bouton de fermeture — se retrouve
+       masqué sous le header sticky, rendant le formulaire impossible à
+       fermer sur mobile. */
+    z-index: 1200;
+  }
+
+  .side-panel-close {
+    top: 8px;
+    right: 8px;
+    padding: 10px;
   }
 
   /* `.app-header`/`.app-actions` : plus d'override ici, la mise en page
