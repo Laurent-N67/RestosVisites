@@ -1109,14 +1109,27 @@
   top: 6px;
   right: 6px;
   z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 22px;
   height: 22px;
+  padding: 0;
   border: none;
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.55);
+  /* Sur les photos déjà sombres (cas fréquent), le cercle translucide se
+     fond quasiment dans l'image et devient impossible à distinguer — cet
+     anneau ajoute un contour toujours visible, quelle que soit la photo. */
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4);
   color: #fff;
   font-size: 15px;
   line-height: 1;
+}
+
+.favoris-slot-remove svg {
+  width: 13px;
+  height: 13px;
 }
 
 .favoris-slot-remove:disabled {
