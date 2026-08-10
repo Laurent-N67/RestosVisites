@@ -3381,6 +3381,7 @@
     flex-direction: column;
     align-items: center;
     gap: var(--space-3);
+    width: 100%;
     max-width: 480px;
     margin: var(--space-4) auto 0;
   }
@@ -3412,13 +3413,14 @@
     align-items: center;
     justify-content: center;
     width: 100%;
-    min-height: 44px;
+    padding: 10px;
     border: 1px solid var(--accent-border);
     border-radius: var(--radius-sm);
     background: var(--accent-bg);
     color: var(--accent);
     font-weight: 700;
     font-size: 14px;
+    line-height: normal;
     text-decoration: none;
     transition: background var(--transition-base), color var(--transition-base);
   }
