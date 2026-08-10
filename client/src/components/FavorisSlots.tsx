@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { Restaurant, Visite } from '../api/types.ts'
 import { useFavoris } from '../contexts/FavorisContext.tsx'
@@ -37,6 +37,7 @@ function FavorisSlots({ restaurants, visites }: FavorisSlotsProps) {
   const { favoriIds, toggle, isPending } = useFavoris()
   const [searchOpen, setSearchOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const gridRef = useRef<HTMLDivElement>(null)
 
   // .slice() en filet de sécurité : le backend bloque déjà tout ajout au-delà
   // de MAX_FAVORIS (422), mais une donnée incohérente ne doit jamais faire
@@ -48,6 +49,20 @@ function FavorisSlots({ restaurants, visites }: FavorisSlotsProps) {
     (restaurant) => !favoriIds.has(restaurant.id),
   )
   const emptySlotsCount = Math.max(0, MAX_FAVORIS - favoriRestaurants.length)
+
+  // Filet de sécurité pour la rangée mobile (défilement horizontal, cf.
+  // App.css) : les emplacements passent de "vide" à "rempli" de façon
+  // asynchrone quand `restaurants`/`favoriIds` arrivent après le premier
+  // rendu, ce qui peut faire dériver le scroll natif du navigateur vers la
+  // fin de la rangée au lieu de rester au début. `overflow-anchor: none`
+  // (App.css) traite la cause ; ce reset explicite garantit le résultat
+  // même si un navigateur/appareil dérive quand même.
+  const hasFavoris = favoriRestaurants.length > 0
+  useEffect(() => {
+    if (hasFavoris && gridRef.current) {
+      gridRef.current.scrollLeft = 0
+    }
+  }, [hasFavoris])
 
   async function handleRemove(restaurantId: string) {
     setError(null)
@@ -71,7 +86,7 @@ function FavorisSlots({ restaurants, visites }: FavorisSlotsProps) {
   return (
     <div className="favoris-slots">
       {error && <p className="popup-status popup-error">{error}</p>}
-      <div className="favoris-slots-grid">
+      <div className="favoris-slots-grid" ref={gridRef}>
         {favoriRestaurants.map((restaurant) => {
           const photoPrincipale =
             restaurant.photos.find((photo) => photo.estPrincipale) ??

@@ -711,6 +711,12 @@
     gap: 12px;
     min-height: 0;
     overflow-y: auto;
+    /* Sans cette marge, le bouton favori de `.mobile-sheet-title-row` (en
+       haut à droite du contenu) chevauche physiquement `.mobile-sheet-close`
+       (en haut à droite de la feuille) — les deux zones tactiles se
+       recoupaient de ~11px, ce qui faisait activer l'un ou l'autre au
+       hasard selon l'endroit exact du tap. */
+    margin-top: 24px;
   }
 
   .mobile-sheet-thumb {
@@ -1287,6 +1293,13 @@
     overflow-x: auto;
     scroll-snap-type: x proximity;
     padding-bottom: 4px;
+    /* Sans ça, le "scroll anchoring" natif du navigateur peut recaler
+       scrollLeft vers la fin de la rangée quand son contenu change de forme
+       de façon asynchrone (restaurants/favoris chargés après le premier
+       rendu, cases vides -> cartes remplies) : au premier affichage, la
+       rangée s'ouvrait parfois déjà défilée sur les derniers emplacements
+       au lieu du début. */
+    overflow-anchor: none;
   }
 
   .map-section--favoris .favoris-slot {
