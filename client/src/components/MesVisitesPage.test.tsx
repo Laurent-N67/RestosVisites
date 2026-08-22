@@ -135,7 +135,7 @@ describe('MesVisitesPage', () => {
     renderPage()
 
     await user.type(
-      screen.getByPlaceholderText('Rechercher un restaurant…'),
+      screen.getByPlaceholderText('Rechercher un restaurant, une ville, une cuisine…'),
       'Bon Coin',
     )
 

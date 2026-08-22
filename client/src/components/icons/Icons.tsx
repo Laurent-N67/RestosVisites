@@ -162,6 +162,33 @@ export function CalendarIcon(props: SVGProps<SVGSVGElement>) {
   )
 }
 
+export function ClockIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg {...props}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 7.5V12l3 2" />
+    </Svg>
+  )
+}
+
+export function SortIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg {...props}>
+      <path d="M7 4v16M7 4l-3 3M7 4l3 3" />
+      <path d="M17 20V4M17 20l-3-3M17 20l3-3" />
+    </Svg>
+  )
+}
+
+export function EuroIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg {...props}>
+      <path d="M17.5 6.5A6.8 6.8 0 0 0 13 5c-3.6 0-6.5 3.1-6.5 7s2.9 7 6.5 7a6.8 6.8 0 0 0 4.5-1.5" />
+      <path d="M4.5 10h9M4.5 14h9" />
+    </Svg>
+  )
+}
+
 export function ChevronDownIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <Svg {...props}>

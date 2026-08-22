@@ -11,7 +11,16 @@ import CategoryBadges from './CategoryBadges.tsx'
 import DateRangeFilter from './DateRangeFilter.tsx'
 import type { DateRange } from './DateRangeFilter.tsx'
 import VisitePhotoCarousel from './VisitePhotoCarousel.tsx'
-import { ChevronDownIcon, SearchIcon } from './icons/Icons.tsx'
+import {
+  CalendarIcon,
+  ChevronDownIcon,
+  ClockIcon,
+  EuroIcon,
+  SearchIcon,
+  SortIcon,
+  StarIcon,
+  UsersIcon,
+} from './icons/Icons.tsx'
 
 interface MesVisitesPageProps {
   restaurants: Restaurant[]
@@ -196,6 +205,15 @@ function VisiteCard({ entry, stats, onEditVisite, deleting, onDelete }: VisiteCa
     <article className="visites-card card">
       <div className="visites-card-photos">
         <VisitePhotoCarousel photos={visite.urlsPhotos} alt={restaurant.nom} />
+        {stats.count > 0 && stats.average !== null && (
+          <div
+            className="visites-card-rating-badge"
+            aria-label={`Note moyenne ${formatNoteMoyenne(stats.average)} sur 5`}
+          >
+            <StarIcon aria-hidden="true" />
+            {formatNoteMoyenne(stats.average)}
+          </div>
+        )}
       </div>
 
       <div className="visites-card-body">
@@ -228,24 +246,33 @@ function VisiteCard({ entry, stats, onEditVisite, deleting, onDelete }: VisiteCa
           <CategoryBadges categories={restaurant.categories} max={3} />
         )}
 
-        <dl className="visites-card-facts">
-          <div className="visites-card-fact">
-            <dt>Date de visite</dt>
-            <dd>{formatDate(visite.date)}</dd>
-          </div>
-          <div className="visites-card-fact">
-            <dt>Temps d'attente</dt>
-            <dd>{visite.tempsAttente !== null ? `${visite.tempsAttente} min` : '—'}</dd>
-          </div>
-          <div className="visites-card-fact">
-            <dt>Type de visite</dt>
-            <dd>{visite.avecQui !== null ? compagnieLabels[visite.avecQui] : '—'}</dd>
-          </div>
-          <div className="visites-card-fact">
-            <dt>Budget dépensé</dt>
-            <dd>{visite.budget !== null ? `${visite.budget} €` : '—'}</dd>
-          </div>
-        </dl>
+        <div className="visites-card-facts">
+          <span className="visites-card-fact" aria-label={`Date de visite : ${formatDate(visite.date)}`}>
+            <CalendarIcon aria-hidden="true" />
+            {formatDate(visite.date)}
+          </span>
+          <span
+            className="visites-card-fact"
+            aria-label={`Temps d'attente : ${visite.tempsAttente !== null ? `${visite.tempsAttente} min` : 'non renseigné'}`}
+          >
+            <ClockIcon className="visites-filter-icon" aria-hidden="true" />
+            {visite.tempsAttente !== null ? `${visite.tempsAttente} min` : '—'}
+          </span>
+          <span
+            className="visites-card-fact"
+            aria-label={`Type de visite : ${visite.avecQui !== null ? compagnieLabels[visite.avecQui] : 'non renseigné'}`}
+          >
+            <UsersIcon aria-hidden="true" />
+            {visite.avecQui !== null ? compagnieLabels[visite.avecQui] : '—'}
+          </span>
+          <span
+            className="visites-card-fact"
+            aria-label={`Budget dépensé : ${visite.budget !== null ? `${visite.budget} €` : 'non renseigné'}`}
+          >
+            <EuroIcon aria-hidden="true" />
+            {visite.budget !== null ? `${visite.budget} €` : '—'}
+          </span>
+        </div>
 
         {visite.commentaire && <p className="visites-card-note">{visite.commentaire}</p>}
 
@@ -337,7 +364,7 @@ function MesVisitesPage({
           <input
             type="search"
             className="list-search"
-            placeholder="Rechercher un restaurant…"
+            placeholder="Rechercher un restaurant, une ville, une cuisine…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -347,6 +374,7 @@ function MesVisitesPage({
           <DateRangeFilter value={dateRange} onChange={setDateRange} />
 
           <label className="visites-filter-number">
+            <ClockIcon className="visites-filter-icon" aria-hidden="true" />
             Attente min
             <input
               type="number"
@@ -357,6 +385,7 @@ function MesVisitesPage({
             />
           </label>
           <label className="visites-filter-number">
+            <ClockIcon className="visites-filter-icon" aria-hidden="true" />
             Attente max
             <input
               type="number"
@@ -368,6 +397,7 @@ function MesVisitesPage({
           </label>
 
           <label className="list-sort-label list-sort-label--note">
+            <StarIcon className="list-sort-icon" aria-hidden="true" />
             Note
             <select value={minNote} onChange={(e) => setMinNote(Number(e.target.value))}>
               <option value={0}>Toutes notes</option>
@@ -381,6 +411,7 @@ function MesVisitesPage({
           </label>
 
           <label className="list-sort-label list-sort-label--type">
+            <UsersIcon className="list-sort-icon" aria-hidden="true" />
             Type de visite
             <select
               value={compagnie}
@@ -398,6 +429,7 @@ function MesVisitesPage({
           </label>
 
           <label className="list-sort-label list-sort-label--sort">
+            <SortIcon className="list-sort-icon" aria-hidden="true" />
             Trier
             <select
               value={sortOption}
