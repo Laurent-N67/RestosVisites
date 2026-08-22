@@ -147,7 +147,8 @@ describe('MesVisitesPage', () => {
     const user = userEvent.setup()
     renderPage()
 
-    await user.selectOptions(screen.getByLabelText('Note'), '3')
+    await user.click(screen.getByRole('button', { name: /^Note/ }))
+    await user.click(screen.getByRole('option', { name: '3 étoiles et plus' }))
 
     // visite-2 (Chez Mario, note 2) est exclue, visite-1 (Le Bon Coin, note 4) reste.
     expect(cardTitles()).toEqual(['Le Bon Coin'])
@@ -157,7 +158,8 @@ describe('MesVisitesPage', () => {
     const user = userEvent.setup()
     renderPage()
 
-    await user.selectOptions(screen.getByLabelText('Trier'), 'ancien')
+    await user.click(screen.getByRole('button', { name: /^Trier/ }))
+    await user.click(screen.getByRole('option', { name: 'Plus anciennes' }))
 
     expect(cardTitles()).toEqual(['Le Bon Coin', 'Chez Mario'])
   })

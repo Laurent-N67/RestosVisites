@@ -8,12 +8,12 @@ import { formatDate, formatNoteMoyenne, toIsoDate } from '../utils/format.ts'
 import { averageNote, buildJournal } from '../utils/visites.ts'
 import type { JournalEntry } from '../utils/visites.ts'
 import CategoryBadges from './CategoryBadges.tsx'
+import CustomSelect from './CustomSelect.tsx'
 import DateRangeFilter from './DateRangeFilter.tsx'
 import type { DateRange } from './DateRangeFilter.tsx'
 import VisitePhotoCarousel from './VisitePhotoCarousel.tsx'
 import {
   CalendarIcon,
-  ChevronDownIcon,
   ClockIcon,
   EuroIcon,
   SearchIcon,
@@ -396,53 +396,51 @@ function MesVisitesPage({
             />
           </label>
 
-          <label className="list-sort-label list-sort-label--note">
-            <StarIcon className="list-sort-icon" aria-hidden="true" />
-            Note
-            <select value={minNote} onChange={(e) => setMinNote(Number(e.target.value))}>
-              <option value={0}>Toutes notes</option>
-              <option value={1}>1 étoile et plus</option>
-              <option value={2}>2 étoiles et plus</option>
-              <option value={3}>3 étoiles et plus</option>
-              <option value={4}>4 étoiles et plus</option>
-              <option value={5}>5 étoiles</option>
-            </select>
-            <ChevronDownIcon className="list-sort-chevron" aria-hidden="true" />
-          </label>
+          <CustomSelect
+            icon={StarIcon}
+            label="Note"
+            triggerClassName="list-sort-label--note"
+            value={minNote}
+            onChange={setMinNote}
+            options={[
+              { value: 0, label: 'Toutes notes' },
+              { value: 1, label: '1 étoile et plus' },
+              { value: 2, label: '2 étoiles et plus' },
+              { value: 3, label: '3 étoiles et plus' },
+              { value: 4, label: '4 étoiles et plus' },
+              { value: 5, label: '5 étoiles' },
+            ]}
+          />
 
-          <label className="list-sort-label list-sort-label--type">
-            <UsersIcon className="list-sort-icon" aria-hidden="true" />
-            Type de visite
-            <select
-              value={compagnie}
-              onChange={(e) =>
-                setCompagnie(e.target.value === '' ? '' : (Number(e.target.value) as Compagnie))
-              }
-            >
-              <option value="">Tous</option>
-              <option value={Compagnie.Seul}>Seul</option>
-              <option value={Compagnie.Couple}>Couple</option>
-              <option value={Compagnie.Amis}>Amis</option>
-              <option value={Compagnie.Famille}>Famille</option>
-            </select>
-            <ChevronDownIcon className="list-sort-chevron" aria-hidden="true" />
-          </label>
+          <CustomSelect
+            icon={UsersIcon}
+            label="Type de visite"
+            triggerClassName="list-sort-label--type"
+            value={compagnie}
+            onChange={setCompagnie}
+            options={[
+              { value: '', label: 'Tous' },
+              { value: Compagnie.Seul, label: 'Seul' },
+              { value: Compagnie.Couple, label: 'Couple' },
+              { value: Compagnie.Amis, label: 'Amis' },
+              { value: Compagnie.Famille, label: 'Famille' },
+            ]}
+          />
 
-          <label className="list-sort-label list-sort-label--sort">
-            <SortIcon className="list-sort-icon" aria-hidden="true" />
-            Trier
-            <select
-              value={sortOption}
-              onChange={(e) => setSortOption(e.target.value as SortOption)}
-            >
-              <option value="recent">Plus récentes</option>
-              <option value="ancien">Plus anciennes</option>
-              <option value="meilleureNote">Meilleure note</option>
-              <option value="tempsAttenteAsc">Temps d'attente croissant</option>
-              <option value="tempsAttenteDesc">Temps d'attente décroissant</option>
-            </select>
-            <ChevronDownIcon className="list-sort-chevron" aria-hidden="true" />
-          </label>
+          <CustomSelect
+            icon={SortIcon}
+            label="Trier"
+            triggerClassName="list-sort-label--sort"
+            value={sortOption}
+            onChange={setSortOption}
+            options={[
+              { value: 'recent', label: 'Plus récentes' },
+              { value: 'ancien', label: 'Plus anciennes' },
+              { value: 'meilleureNote', label: 'Meilleure note' },
+              { value: 'tempsAttenteAsc', label: "Temps d'attente croissant" },
+              { value: 'tempsAttenteDesc', label: "Temps d'attente décroissant" },
+            ]}
+          />
         </div>
       </div>
 

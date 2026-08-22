@@ -2664,6 +2664,68 @@
   color: inherit;
 }
 
+/* Dropdown custom (CustomSelect.tsx), remplace un `<select>` natif — le
+   déclencheur réutilise tel quel le gabarit `.list-sort-label` ci-dessus
+   (même pilule, même icône, même chevron), seul le menu d'options change de
+   mécanique. `.custom-select` est le seul élément positionné (`relative`) :
+   le déclencheur et le panneau sont deux enfants directs au même niveau, pas
+   le panneau imbriqué dans le bouton (imbriquer un menu de `<button>` dans
+   un `<button>` déclencheur serait invalide en HTML). */
+.custom-select {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.custom-select-value {
+  color: inherit;
+}
+
+.custom-select-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 30;
+  min-width: 100%;
+  width: max-content;
+  max-width: 240px;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-lg);
+  animation: dropdown-in var(--transition-fast) ease-out;
+}
+
+.custom-select-option {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-h);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.custom-select-option:hover {
+  background: var(--accent-bg);
+}
+
+.custom-select-option--active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.custom-select-option--active:hover {
+  background: var(--accent);
+}
+
 .list-empty {
   color: var(--text);
   font-size: 14px;
