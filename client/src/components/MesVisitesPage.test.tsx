@@ -124,8 +124,10 @@ describe('MesVisitesPage', () => {
     expect(cardTitles()).toEqual(['Chez Mario', 'Le Bon Coin'])
     // La visite de restaurant-1 par un autre utilisateur (visite-3) ne fait
     // pas partie du journal personnel, mais compte dans la moyenne du
-    // restaurant affichée sur la carte.
-    expect(screen.getByText('(2 avis)')).toBeInTheDocument()
+    // restaurant affichée en badge sur la photo de la carte.
+    expect(
+      screen.getByLabelText('Note moyenne 4.5 sur 5 (2 avis)'),
+    ).toBeInTheDocument()
   })
 
   it('filtre par recherche sur le nom du restaurant', async () => {

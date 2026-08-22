@@ -4,7 +4,7 @@ import { Compagnie } from '../api/types.ts'
 import type { Restaurant, Visite } from '../api/types.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { useDeleteVisite } from '../hooks/useDeleteVisite.ts'
-import { formatDate, formatNoteMoyenne, stars } from '../utils/format.ts'
+import { formatDate, formatNoteMoyenne } from '../utils/format.ts'
 import { averageNote, buildJournal } from '../utils/visites.ts'
 import type { JournalEntry } from '../utils/visites.ts'
 import CategoryBadges from './CategoryBadges.tsx'
@@ -194,6 +194,17 @@ function VisiteCard({ entry, stats, onEditVisite, deleting, onDelete }: VisiteCa
     <article className="visites-card card">
       <div className="visites-card-photos">
         <VisitePhotoCarousel photos={visite.urlsPhotos} alt={restaurant.nom} />
+        {stats.count > 0 && stats.average !== null && (
+          <div
+            className="visites-card-rating-badge"
+            aria-label={`Note moyenne ${formatNoteMoyenne(stats.average)} sur 5 (${stats.count} avis)`}
+          >
+            <span className="visites-card-rating-badge-star" aria-hidden="true">
+              ★
+            </span>
+            <span>{formatNoteMoyenne(stats.average)}</span>
+          </div>
+        )}
       </div>
 
       <div className="visites-card-body">
@@ -208,21 +219,6 @@ function VisiteCard({ entry, stats, onEditVisite, deleting, onDelete }: VisiteCa
         </div>
 
         <p className="visites-card-adresse">{restaurant.adresse}</p>
-
-        {stats.count > 0 && stats.average !== null && (
-          <div className="list-card-rating">
-            <span className="list-card-rating-value">
-              {formatNoteMoyenne(stats.average)}
-            </span>
-            <span
-              className="popup-stars"
-              aria-label={`Note moyenne ${formatNoteMoyenne(stats.average)} sur 5`}
-            >
-              {stars(Math.round(stats.average))}
-            </span>
-            <span className="list-card-rating-count">({stats.count} avis)</span>
-          </div>
-        )}
 
         {restaurant.categories.length > 0 && (
           <CategoryBadges categories={restaurant.categories} max={3} />
