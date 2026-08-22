@@ -194,22 +194,24 @@ function VisiteCard({ entry, stats, onEditVisite, deleting, onDelete }: VisiteCa
     <article className="visites-card card">
       <div className="visites-card-photos">
         <VisitePhotoCarousel photos={visite.urlsPhotos} alt={restaurant.nom} />
-        {stats.count > 0 && stats.average !== null && (
-          <div
-            className="visites-card-rating-badge"
-            aria-label={`Note moyenne ${formatNoteMoyenne(stats.average)} sur 5 (${stats.count} avis)`}
-          >
-            <span className="visites-card-rating-badge-star" aria-hidden="true">
-              ★
-            </span>
-            <span>{formatNoteMoyenne(stats.average)}</span>
-          </div>
-        )}
       </div>
 
       <div className="visites-card-body">
         <div className="visites-card-header">
-          <h3 className="visites-card-title">{restaurant.nom}</h3>
+          <div className="visites-card-heading">
+            <h3 className="visites-card-title">{restaurant.nom}</h3>
+            {stats.count > 0 && stats.average !== null && (
+              <span
+                className="visites-card-rating"
+                aria-label={`Note moyenne ${formatNoteMoyenne(stats.average)} sur 5 (${stats.count} avis)`}
+              >
+                <span className="visites-card-rating-star" aria-hidden="true">
+                  ★
+                </span>
+                {formatNoteMoyenne(stats.average)}
+              </span>
+            )}
+          </div>
           <VisiteActionsMenu
             restaurantNom={restaurant.nom}
             onEdit={() => onEditVisite(visite)}
