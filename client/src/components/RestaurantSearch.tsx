@@ -91,7 +91,6 @@ function RestaurantSearch({ restaurants, onSelect }: RestaurantSearchProps) {
         onKeyDown={handleKeyDown}
         aria-label="Rechercher un restaurant"
       />
-      {query.length === 0 && <kbd className="restaurant-search-kbd">⌘K</kbd>}
       {open && trimmed.length > 0 && (
         <ul className="restaurant-search-results">
           {results.length === 0 ? (
