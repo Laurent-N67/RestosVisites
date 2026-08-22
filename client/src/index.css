@@ -52,7 +52,7 @@
      contenu défilable s'accordent sans dupliquer la valeur. */
   --bottom-nav-h: 58px;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --sans: 'Manrope Variable', system-ui, 'Segoe UI', Roboto, sans-serif;
 
   font: 16px/145% var(--sans);
   color-scheme: light;

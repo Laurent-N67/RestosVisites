@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
+import '@fontsource-variable/manrope'
 import 'leaflet/dist/leaflet.css'
 import './leaflet-icon-fix.ts'
 import './index.css'
