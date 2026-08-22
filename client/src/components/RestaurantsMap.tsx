@@ -19,6 +19,8 @@ import { averageNote, buildJournal } from '../utils/visites.ts'
 import type { JournalEntry } from '../utils/visites.ts'
 import { formatDate, formatNoteMoyenne, stars, villeFromAdresse } from '../utils/format.ts'
 import { cuisineType, photoPrincipale } from '../utils/restaurants.ts'
+import { getSessionPosition } from '../utils/geolocation.ts'
+import type { SessionPosition } from '../utils/geolocation.ts'
 import CoverPhoto from './CoverPhoto.tsx'
 import FavorisSlots from './FavorisSlots.tsx'
 import { HeartIcon } from './icons/Icons.tsx'
@@ -99,10 +101,39 @@ function recentVisitCoverUrl(entry: JournalEntry): string | undefined {
   return entry.visite.urlsPhotos[0] ?? photoPrincipale(entry.restaurant)?.url
 }
 
-function FitBounds({ restaurants }: { restaurants: Restaurant[] }) {
+/**
+ * Cadrage initial de la carte, avec priorité à la position de l'utilisateur
+ * sur le fit "tous les restaurants" — sans ça, un seul restaurant lointain
+ * (ex. un souvenir de voyage à Tokyo) suffit à dézoomer toute la carte à
+ * l'échelle du globe au lieu de montrer le quartier de l'utilisateur.
+ */
+function FitBounds({
+  restaurants,
+  userPosition,
+}: {
+  restaurants: Restaurant[]
+  userPosition: SessionPosition | undefined | null
+}) {
   const map = useMap()
+  const hasCenteredOnUser = useRef(false)
 
   useEffect(() => {
+    // `null` = géolocalisation pas encore résolue (ni position, ni refus
+    // confirmé) : on attend plutôt que de cadrer sur les restaurants tout de
+    // suite, ce qui ferait un second saut visuel une fois la position connue.
+    if (userPosition === null) {
+      return
+    }
+
+    if (userPosition && !hasCenteredOnUser.current) {
+      hasCenteredOnUser.current = true
+      map.setView([userPosition.latitude, userPosition.longitude], 13)
+      return
+    }
+
+    // Pas de position connue (refusée/indisponible), ou déjà centré une fois
+    // dessus : comportement historique, cadrage sur les restaurants — y
+    // compris ré-appliqué à chaque changement de la liste (ajout/suppression).
     if (restaurants.length === 0) {
       return
     }
@@ -114,7 +145,7 @@ function FitBounds({ restaurants }: { restaurants: Restaurant[] }) {
       restaurants.map((r) => [r.latitude, r.longitude] as [number, number]),
     )
     map.fitBounds(bounds, { padding: [40, 40] })
-  }, [restaurants, map])
+  }, [restaurants, userPosition, map])
 
   return null
 }
@@ -187,10 +218,26 @@ function RestaurantsMap({
     string | null
   >(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  // `null` = résolution en cours, `undefined` = refusée/indisponible — cf.
+  // `FitBounds` plus haut, qui attend cette résolution pour son cadrage
+  // initial.
+  const [userPosition, setUserPosition] = useState<SessionPosition | undefined | null>(null)
   const markersRef = useRef<Map<string, L.Marker>>(new Map())
   const clusterGroupRef = useRef<React.ComponentRef<
     typeof MarkerClusterGroup
   > | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    void getSessionPosition().then((position) => {
+      if (!cancelled) {
+        setUserPosition(position)
+      }
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const { user } = useAuth()
   const { favoriIds, toggle: toggleFavori, isPending: isFavoriPending } = useFavoris()
@@ -433,7 +480,7 @@ function RestaurantsMap({
             maxZoom={20}
             detectRetina
           />
-          <FitBounds restaurants={restaurants} />
+          <FitBounds restaurants={restaurants} userPosition={userPosition} />
           <SelectedRestaurantEffect
             restaurants={restaurants}
             selectedRestaurantId={selectedRestaurantId}
