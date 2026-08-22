@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import type { TouchEvent } from 'react'
 import { resolvePhotoUrl } from '../api/client.ts'
 import CoverPhoto from './CoverPhoto.tsx'
+import PhotoLightbox from './PhotoLightbox.tsx'
 
 interface VisitePhotoCarouselProps {
   photos: string[]
@@ -19,10 +20,13 @@ const SWIPE_THRESHOLD = 40
  * visite : photo principale + navigation précédent/suivant en overlay, et
  * une bande de vignettes cliquables sous la photo (plafonnée à 4, avec une
  * tuile `+N` à partir de la 6e photo — la 5e s'affiche telle quelle plutôt
- * que sous une tuile `+1`, voir commentaire plus bas).
+ * que sous une tuile `+1`, voir commentaire plus bas). Cliquer la photo
+ * principale ouvre le même lightbox plein écran (`PhotoLightbox.tsx`) que
+ * sur la fiche restaurant.
  */
 function VisitePhotoCarousel({ photos, alt }: VisitePhotoCarouselProps) {
   const [index, setIndex] = useState(0)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
   const touchStartRef = useRef<{ x: number; y: number } | null>(null)
 
   if (photos.length === 0) {
@@ -86,7 +90,14 @@ function VisitePhotoCarousel({ photos, alt }: VisitePhotoCarouselProps) {
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        <img src={resolved[currentIndex]} alt={alt} loading="lazy" />
+        <button
+          type="button"
+          className="visite-carousel-zoom"
+          aria-label="Agrandir la photo"
+          onClick={() => setLightboxOpen(true)}
+        >
+          <img src={resolved[currentIndex]} alt={alt} loading="lazy" />
+        </button>
 
         {resolved.length > 1 && (
           <>
@@ -156,6 +167,14 @@ function VisitePhotoCarousel({ photos, alt }: VisitePhotoCarouselProps) {
             </button>
           )}
         </div>
+      )}
+
+      {lightboxOpen && (
+        <PhotoLightbox
+          photos={resolved}
+          startIndex={currentIndex}
+          onClose={() => setLightboxOpen(false)}
+        />
       )}
     </div>
   )
