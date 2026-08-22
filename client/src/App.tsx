@@ -367,6 +367,7 @@ function App() {
                     onEditVisite={handleEditVisite}
                     onRestaurantDeleted={handleRestaurantDeleted}
                     onVisiteDeleted={() => void loadAllVisites()}
+                    onAddVisite={handleAddVisiteForRestaurant}
                   />
                 </ProtectedRoute>
               }

@@ -104,6 +104,7 @@ function renderPage(
     onEditVisite: vi.fn(),
     onRestaurantDeleted: vi.fn(),
     onVisiteDeleted: vi.fn(),
+    onAddVisite: vi.fn(),
   }
   return render(
     <MemoryRouter initialEntries={[route]}>

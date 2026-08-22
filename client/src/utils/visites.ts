@@ -77,6 +77,20 @@ export function estFavoriDeUtilisateur(
   return utilisateur.favoris.some((favori) => favori.restaurantId === restaurantId)
 }
 
+/**
+ * Nombre d'utilisateurs ayant ce restaurant dans leurs favoris (tous
+ * utilisateurs confondus) — affiché comme statistique communautaire sur la
+ * fiche restaurant.
+ */
+export function favorisCountForRestaurant(
+  utilisateursAvecFavoris: UtilisateurAvecFavoris[],
+  restaurantId: string,
+): number {
+  return utilisateursAvecFavoris.filter((u) =>
+    u.favoris.some((favori) => favori.restaurantId === restaurantId),
+  ).length
+}
+
 export interface JournalEntry {
   visite: Visite
   restaurant: Restaurant

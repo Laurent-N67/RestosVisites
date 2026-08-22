@@ -3165,11 +3165,6 @@
   padding-top: 16px;
 }
 
-.detail-visites-list {
-  max-height: none;
-  overflow: visible;
-}
-
 .popup-links {
   display: flex;
   align-items: center;
@@ -3190,6 +3185,456 @@
   height: 56px;
   object-fit: cover;
   border-radius: 4px;
+}
+
+/* ==================================================
+   Fiche restaurant communautaire (RestaurantDetailPage.tsx)
+   ================================================== */
+
+/* Plafond de largeur élargi par rapport à `.detail-page` (720px, partagé
+   avec Profil/Stats/Utilisateurs) : cette fiche a maintenant une mise en
+   page 2 colonnes qui a besoin de bien plus d'espace. */
+.restaurant-detail-page {
+  max-width: 1180px;
+}
+
+/* --- Hero --- */
+
+.restaurant-hero {
+  position: relative;
+  height: 420px;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.restaurant-hero .cover-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border-radius: 0;
+}
+
+.restaurant-hero .cover-photo-placeholder {
+  font-size: 64px;
+}
+
+.restaurant-hero-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.78) 0%,
+    rgba(0, 0, 0, 0.35) 45%,
+    rgba(0, 0, 0, 0.05) 75%
+  );
+  pointer-events: none;
+}
+
+.restaurant-hero-content {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 28px 32px;
+}
+
+.restaurant-hero-title {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  color: #fff;
+  font-size: 38px;
+  font-weight: 800;
+  line-height: 1.15;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+}
+
+.restaurant-hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.restaurant-hero-favori {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  backdrop-filter: blur(4px);
+  transition: background var(--transition-base), color var(--transition-base);
+}
+
+.restaurant-hero-favori:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.restaurant-hero-favori--active {
+  color: var(--accent);
+  background: #fff;
+}
+
+.restaurant-hero-favori:disabled {
+  opacity: 0.6;
+}
+
+.restaurant-hero-add-visite {
+  padding: 12px 20px;
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  white-space: nowrap;
+  transition: background var(--transition-base);
+}
+
+.restaurant-hero-add-visite:hover {
+  background: var(--accent-hover);
+}
+
+/* --- Carte informations --- */
+
+.restaurant-info-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: var(--space-4);
+  padding: var(--space-4);
+}
+
+.restaurant-info-admin-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.restaurant-info-stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 24px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.restaurant-info-rating {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.restaurant-info-rating .popup-stars {
+  font-size: 18px;
+}
+
+.restaurant-info-rating-value {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-h);
+}
+
+.restaurant-info-stat-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px 28px;
+}
+
+.restaurant-info-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.restaurant-info-stat strong {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-h);
+  line-height: 1;
+}
+
+.restaurant-info-stat span {
+  font-size: 12px;
+  color: var(--text);
+}
+
+.restaurant-info-adresse {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--text-h);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.restaurant-info-adresse svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+/* --- Description --- */
+
+.restaurant-description-card {
+  margin-top: var(--space-4);
+  padding: var(--space-4);
+}
+
+.restaurant-description-card h2 {
+  margin: 0 0 10px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-h);
+}
+
+.restaurant-description-card .restaurant-detail-description {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.restaurant-description-empty {
+  margin: 0;
+  font-size: 14px;
+  font-style: italic;
+  color: var(--text);
+}
+
+/* --- Mise en page 2 colonnes --- */
+
+.restaurant-detail-columns {
+  display: grid;
+  grid-template-columns: 45fr 55fr;
+  gap: 28px;
+  align-items: start;
+  margin-top: var(--space-4);
+}
+
+.restaurant-visites-column,
+.restaurant-gallery-column {
+  min-width: 0;
+}
+
+/* --- Historique des visites communautaire --- */
+
+.community-visites-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 4px;
+}
+
+.community-visite-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-4);
+}
+
+.community-visite-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.community-visite-identity {
+  flex: 1;
+  min-width: 0;
+}
+
+.community-visite-auteur {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-h);
+}
+
+.community-visite-date {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--text);
+}
+
+.community-visite-stars {
+  flex-shrink: 0;
+  font-size: 14px;
+}
+
+.community-visite-commentaire {
+  margin: 0 0 10px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-h);
+}
+
+.community-visite-photos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.restaurant-visites-voir-plus {
+  display: block;
+  width: 100%;
+  margin-top: 14px;
+  padding: 10px;
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-sm);
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 13px;
+  text-align: center;
+  transition: background var(--transition-base), color var(--transition-base);
+}
+
+.restaurant-visites-voir-plus:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* --- Galerie photo communautaire --- */
+
+.restaurant-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.restaurant-gallery-item {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--bg-card-hover);
+  cursor: zoom-in;
+}
+
+.restaurant-gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform var(--transition-base);
+}
+
+.restaurant-gallery-item:hover img {
+  transform: scale(1.06);
+}
+
+/* --- Légende lightbox (auteur/date/note) --- */
+
+.lightbox-caption {
+  position: absolute;
+  z-index: 2001;
+  left: 50%;
+  bottom: 68px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(90vw, 420px);
+  padding: 10px 16px;
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, #000 65%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+.lightbox-caption-auteur {
+  margin: 0;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.lightbox-caption-meta {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 12px;
+}
+
+/* --- Responsive --- */
+
+/* Tablette : colonnes plus resserrées (mais toujours 2 colonnes) avant le
+   passage en empilé du seuil mobile ≤900px ci-dessous. */
+@media (max-width: 1200px) {
+  .restaurant-detail-columns {
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+}
+
+@media (max-width: 900px) {
+  .restaurant-hero {
+    height: 240px;
+  }
+
+  .restaurant-hero-content {
+    padding: 18px 16px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .restaurant-hero-title {
+    font-size: 24px;
+  }
+
+  .restaurant-hero-actions {
+    align-self: stretch;
+    justify-content: space-between;
+  }
+
+  .restaurant-hero-add-visite {
+    flex: 1;
+    text-align: center;
+  }
+
+  .restaurant-info-stats {
+    gap: 16px;
+  }
+
+  .restaurant-info-stat-grid {
+    gap: 14px 20px;
+  }
+
+  .restaurant-detail-columns {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .restaurant-gallery-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 /* Lightbox photo */
