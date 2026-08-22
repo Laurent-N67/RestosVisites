@@ -4,10 +4,12 @@ import { Compagnie } from '../api/types.ts'
 import type { Restaurant, Visite } from '../api/types.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { useDeleteVisite } from '../hooks/useDeleteVisite.ts'
-import { formatDate, formatNoteMoyenne } from '../utils/format.ts'
+import { formatDate, formatNoteMoyenne, toIsoDate } from '../utils/format.ts'
 import { averageNote, buildJournal } from '../utils/visites.ts'
 import type { JournalEntry } from '../utils/visites.ts'
 import CategoryBadges from './CategoryBadges.tsx'
+import DateRangeFilter from './DateRangeFilter.tsx'
+import type { DateRange } from './DateRangeFilter.tsx'
 import VisitePhotoCarousel from './VisitePhotoCarousel.tsx'
 import { ChevronDownIcon, SearchIcon } from './icons/Icons.tsx'
 
@@ -272,8 +274,7 @@ function MesVisitesPage({
 }: MesVisitesPageProps) {
   const { user } = useAuth()
   const [search, setSearch] = useState('')
-  const [dateStart, setDateStart] = useState('')
-  const [dateEnd, setDateEnd] = useState('')
+  const [dateRange, setDateRange] = useState<DateRange>({ start: null, end: null })
   const [waitMin, setWaitMin] = useState('')
   const [waitMax, setWaitMax] = useState('')
   const [minNote, setMinNote] = useState(0)
@@ -291,14 +292,16 @@ function MesVisitesPage({
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase()
+    const dateStartIso = dateRange.start ? toIsoDate(dateRange.start) : ''
+    const dateEndIso = dateRange.end ? toIsoDate(dateRange.end) : ''
     const hasWaitBound = waitMin !== '' || waitMax !== ''
     return journal.filter(({ visite, restaurant }) => {
       const matchesSearch =
         query.length === 0 ||
         restaurant.nom.toLowerCase().includes(query) ||
         restaurant.adresse.toLowerCase().includes(query)
-      const matchesDateStart = dateStart === '' || visite.date >= dateStart
-      const matchesDateEnd = dateEnd === '' || visite.date <= dateEnd
+      const matchesDateStart = dateStartIso === '' || visite.date >= dateStartIso
+      const matchesDateEnd = dateEndIso === '' || visite.date <= dateEndIso
       const matchesWait = !hasWaitBound
         ? true
         : visite.tempsAttente !== null &&
@@ -315,7 +318,7 @@ function MesVisitesPage({
         matchesCompagnie
       )
     })
-  }, [journal, search, dateStart, dateEnd, waitMin, waitMax, minNote, compagnie])
+  }, [journal, search, dateRange, waitMin, waitMax, minNote, compagnie])
 
   const sorted = useMemo(() => sortJournal(filtered, sortOption), [filtered, sortOption])
 
@@ -341,22 +344,7 @@ function MesVisitesPage({
         </div>
 
         <div className="list-controls-filters">
-          <label className="visites-filter-date">
-            Du
-            <input
-              type="date"
-              value={dateStart}
-              onChange={(e) => setDateStart(e.target.value)}
-            />
-          </label>
-          <label className="visites-filter-date">
-            Au
-            <input
-              type="date"
-              value={dateEnd}
-              onChange={(e) => setDateEnd(e.target.value)}
-            />
-          </label>
+          <DateRangeFilter value={dateRange} onChange={setDateRange} />
 
           <label className="visites-filter-number">
             Attente min

@@ -1,3 +1,15 @@
+/**
+ * Convertit un `Date` en chaîne ISO `yyyy-mm-dd` à partir de ses composants
+ * locaux plutôt que via `toISOString()` (basé sur UTC, qui peut faire
+ * basculer sur le jour précédent/suivant selon le fuseau de l'utilisateur).
+ */
+export function toIsoDate(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 export function formatDate(isoDate: string): string {
   const parsed = isoDate.includes('T') ? new Date(isoDate) : new Date(`${isoDate}T00:00:00`)
   if (Number.isNaN(parsed.getTime())) {
