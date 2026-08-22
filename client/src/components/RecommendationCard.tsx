@@ -13,16 +13,14 @@ interface RecommendationCardProps {
    * Variante dense (photo + nom + note + adresse, pas de badges de catégorie
    * ni de lien "Voir la fiche complète") utilisée dans la bande basse
    * compacte de la page Carte, où plusieurs cartes doivent tenir côte à côte
-   * sur une hauteur réduite. `false` par défaut : rend la carte complète
-   * telle qu'utilisée par `FavorisPage`.
+   * sur une hauteur réduite. `false` par défaut : rend la carte complète.
    */
   compact?: boolean
 }
 
 /**
- * Carte "Recommandé pour vous" — extraite de `FavorisPage` (Phase 7c) pour
- * être réutilisée telle quelle par la section Recommandations de la page
- * Carte, plutôt que dupliquée dans un second composant.
+ * Carte "Recommandé pour vous", utilisée par la section Recommandations de
+ * la page Carte.
  */
 function RecommendationCard({ recommandation, visites, compact = false }: RecommendationCardProps) {
   const { restaurant, categoriesCommunes, distanceKm, score } = recommandation

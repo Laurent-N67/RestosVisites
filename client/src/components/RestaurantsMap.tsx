@@ -540,9 +540,6 @@ function RestaurantsMap({
         <section className="map-section map-section--favoris">
           <div className="map-section-header">
             <h3>Mes favoris (6 max)</h3>
-            <Link to="/favoris" className="map-section-link">
-              Voir tout
-            </Link>
           </div>
           <FavorisSlots restaurants={restaurants} visites={visites} />
         </section>
@@ -551,9 +548,6 @@ function RestaurantsMap({
           <section className="map-section map-section--recommandations">
             <div className="map-section-header">
               <h3>Recommandés pour vous</h3>
-              <Link to="/favoris" className="map-section-link">
-                Voir tout
-              </Link>
             </div>
             <div className="map-recommendations-row">
               {recommandationsSection.map((recommandation) => (

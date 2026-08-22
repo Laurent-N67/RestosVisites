@@ -1185,8 +1185,9 @@
    c'est la colonne la plus large de la bande basse (`flex` ci-dessus), pour
    laisser le plus de place possible à cette rangée unique. Portée via
    `.map-section--favoris` plutôt qu'une réduction globale de `.favoris-slot` :
-   `FavorisSlots` est aussi utilisé pleine taille par `FavorisPage`, qui ne
-   doit pas hériter de ce resserrement. */
+   au cas où `FavorisSlots` serait un jour réutilisé ailleurs en pleine
+   taille, ce composant ne doit pas hériter de ce resserrement propre à la
+   page Carte. */
 .map-section--favoris {
   flex: 2.1 1 0;
   gap: 0;
@@ -3802,26 +3803,6 @@
   font-size: 15px;
 }
 
-/* Page Favoris */
-
-.favoris-count {
-  margin: 0 0 16px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-h);
-}
-
-.recommandations-section {
-  margin-bottom: 28px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--border);
-}
-
-.recommandations-section h3 {
-  margin: 0 0 12px;
-  font-size: 15px;
-}
-
 .recommandation-distance {
   margin: 8px 0 0;
   font-size: 13px;
@@ -4325,4 +4306,481 @@
 .profil-admin-link:hover {
   background: var(--accent);
   color: #fff;
+}
+
+/* Page "Mes visites" (journal personnel des visites, cf. MesVisitesPage.tsx)
+   — préfixe `visites-` sur toutes les classes propres à cette page pour ne
+   jamais entrer en collision avec les classes `.restaurant-*`/`.list-*`
+   partagées avec la vue Liste, dont certaines (`.list-controls`,
+   `.list-search*`, `.list-controls-filters`, `.list-sort-label*`,
+   `.list-card-rating*`, `.list-empty`) sont en revanche réutilisées telles
+   quelles ci-dessous : ce sont des utilitaires de contrôle de liste déjà
+   génériques, pas des classes spécifiques à `RestaurantsList`. */
+
+.mes-visites-page {
+  height: 100%;
+  overflow-y: auto;
+  padding: 16px 20px 32px;
+}
+
+.visites-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: var(--space-4);
+}
+
+.visites-header p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text);
+}
+
+/* Pilules de filtre "Période"/"Temps d'attente" : même gabarit visuel que
+   `.list-sort-label` (donc que `.chip-filter`, cf. commentaire à sa
+   définition), mais avec un `<input>` natif à la place d'un `<select>`. */
+.visites-filter-date,
+.visites-filter-number {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 12px;
+  border: 1px solid var(--accent-border);
+  border-radius: 999px;
+  background: var(--accent-bg);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.visites-filter-date input,
+.visites-filter-number input {
+  border: none;
+  background: transparent;
+  color: var(--text-h);
+  font-weight: 600;
+  font-size: 13px;
+  font-family: inherit;
+  padding: 0;
+}
+
+.visites-filter-date input {
+  width: 122px;
+}
+
+.visites-filter-number input {
+  width: 56px;
+}
+
+.visites-filter-date input:focus,
+.visites-filter-number input:focus {
+  outline: none;
+}
+
+.visites-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.visites-card {
+  display: flex;
+  overflow: hidden;
+  min-height: 320px;
+}
+
+.visites-card-photos {
+  position: relative;
+  flex: 0 0 40%;
+  min-width: 0;
+}
+
+/* Sélecteur descendant (2 classes) volontairement plus spécifique que
+   `.cover-photo` seul (1 classe) : gagne quel que soit l'ordre de source, ce
+   qui évite le piège classique de deux règles de même spécificité qui
+   s'annulent selon l'ordre d'écriture dans le fichier. */
+.visites-card-photos .cover-photo,
+.visite-carousel--empty .cover-photo {
+  aspect-ratio: auto;
+  height: 100%;
+  margin: 0;
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+}
+
+.visites-card-body {
+  flex: 1 1 60%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-4);
+}
+
+.visites-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.visites-card-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-h);
+  line-height: 1.25;
+}
+
+.visites-card-adresse {
+  margin: 4px 0 8px;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.visites-card-facts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 16px;
+  margin: 10px 0 0;
+}
+
+.visites-card-fact dt {
+  margin: 0 0 2px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--text);
+}
+
+.visites-card-fact dd {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.visites-card-note {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.5em;
+  /* `-webkit-line-clamp` tronque à 3 lignes dans les navigateurs qui le
+     supportent (tous les moteurs actuels) ; `max-height` sert de filet de
+     secours sinon, plutôt qu'un commentaire non tronqué qui gonfle la
+     hauteur de la carte. */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-height: 4.5em;
+}
+
+.visites-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 14px;
+}
+
+.visites-card-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 auto;
+  padding: 10px 14px;
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  text-align: center;
+  text-decoration: none;
+  transition: background var(--transition-base), color var(--transition-base);
+}
+
+.visites-card-cta:hover {
+  background: var(--accent-hover);
+}
+
+/* Compound (2 classes) volontairement, pour battre `.visites-card-cta` et
+   `.visites-card-cta:hover` ci-dessus sans dépendre de l'ordre de source. */
+.visites-card-cta.visites-card-cta--secondary {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.visites-card-cta.visites-card-cta--secondary:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* Menu "⋮" (Modifier/Supprimer) d'une carte de visite — même gabarit que
+   `.user-menu-dropdown`/`.header-add-dropdown`, dupliqué sous un nom propre
+   à cette page plutôt que généralisé, ces deux dropdowns existants restant
+   spécifiques à l'en-tête. */
+.visites-card-menu {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.visites-card-menu-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--bg-card);
+  color: var(--text);
+  font-size: 16px;
+  line-height: 1;
+}
+
+.visites-card-menu-trigger:hover {
+  background: var(--bg-card-hover);
+}
+
+.visites-card-menu-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 140px;
+  padding: 6px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-lg);
+  animation: scale-in var(--transition-fast) ease-out;
+}
+
+.visites-card-menu-dropdown button {
+  padding: 8px 10px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-h);
+  font-weight: 600;
+  text-align: left;
+  font-size: 13px;
+}
+
+.visites-card-menu-dropdown button:hover {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+/* Compound (2 classes + élément) volontairement plus spécifique que la règle
+   générique juste au-dessus, y compris son état `:hover` — même logique que
+   `.visites-card-cta.visites-card-cta--secondary` plus haut. */
+.visites-card-menu-dropdown button.visites-card-menu-danger {
+  color: var(--danger);
+}
+
+.visites-card-menu-dropdown button.visites-card-menu-danger:hover {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.visites-card-menu-dropdown button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Carrousel photo inline d'une carte de visite (VisitePhotoCarousel.tsx) */
+
+.visite-carousel {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.visite-carousel-main {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.visite-carousel-main img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.visite-carousel-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--bg-card) 70%, transparent);
+  color: var(--text-h);
+  font-size: 20px;
+  line-height: 1;
+  backdrop-filter: blur(4px);
+}
+
+.visite-carousel-nav--prev {
+  left: 8px;
+}
+
+.visite-carousel-nav--next {
+  right: 8px;
+}
+
+.visite-carousel-thumbs {
+  display: flex;
+  gap: 4px;
+  padding: 6px;
+  flex-shrink: 0;
+}
+
+.visite-carousel-thumb {
+  flex: 1 1 0;
+  height: 44px;
+  min-width: 0;
+  border: 2px solid transparent;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  padding: 0;
+  background: var(--bg-card-hover);
+  color: var(--text-h);
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.visite-carousel-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Compound (2 classes) pour battre `.visite-carousel-thumb` ci-dessus sans
+   dépendre de l'ordre de source. */
+.visite-carousel-thumb.visite-carousel-thumb--active {
+  border-color: var(--accent);
+}
+
+/* Indicateur de position (points) superposé à la photo principale — masqué
+   par défaut car les vignettes en dessous jouent déjà ce rôle sur desktop ;
+   réactivé en ≤900px ci-dessous, où les vignettes cèdent la place à un geste
+   de swipe (cf. VisitePhotoCarousel.tsx). */
+.visite-carousel-dots {
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: none;
+  gap: 5px;
+}
+
+.visite-carousel-dot {
+  width: 6px;
+  height: 6px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, #fff 55%, transparent);
+  transition: width var(--transition-fast), background var(--transition-fast);
+}
+
+.visite-carousel-dot--active {
+  width: 16px;
+  background: #fff;
+}
+
+/* Mobile (≤900px, même seuil que le reste du projet) : carte de visite en
+   colonne (carrousel pleine largeur en haut, infos en dessous) plutôt qu'en
+   ligne comme sur desktop ; `.list-controls-filters` bascule déjà en bande
+   défilante horizontale via sa propre règle mobile (cf. Vue Liste
+   ci-dessus), réutilisée telle quelle ici sans rien à ajouter. Placé après
+   les règles de base ci-dessus (même spécificité pour les sélecteurs
+   partagés) afin que ces surcharges gagnent bien à cette largeur, comme
+   ailleurs dans ce fichier. */
+@media (max-width: 900px) {
+  .mes-visites-page {
+    padding: 14px 16px 24px;
+  }
+
+  .visites-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    margin-bottom: 12px;
+  }
+
+  .visites-card {
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .visites-card-photos {
+    flex: 0 0 auto;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+  }
+
+  .visites-card-photos .cover-photo,
+  .visite-carousel--empty .cover-photo {
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+
+  .visites-card-body {
+    padding: 14px;
+  }
+
+  .visites-card-actions {
+    flex-direction: column;
+  }
+
+  .visites-card-cta {
+    width: 100%;
+  }
+
+  /* "Type de visite" et "Tri" sortent de la bande de filtres mobile : pas
+     assez prioritaires sur petit écran (le filtre restaurant est déjà
+     couvert par la recherche pleine largeur au-dessus). Restent disponibles
+     sur desktop — scopé à `.mes-visites-page` car `--sort`/`--note` sont
+     partagés avec la Vue Liste (Restaurants), qui garde son tri mobile. */
+  .mes-visites-page .list-sort-label--type,
+  .mes-visites-page .list-sort-label--sort {
+    display: none;
+  }
+
+  /* Cible tactile ≥40px pour les pastilles de filtre restantes (Dates,
+     Attente, Note) — le gabarit desktop (padding 4px) est trop compact au
+     doigt. */
+  .mes-visites-page .visites-filter-date,
+  .mes-visites-page .visites-filter-number,
+  .mes-visites-page .list-sort-label--note {
+    min-height: 40px;
+    padding: 6px 14px 6px 16px;
+  }
+
+  /* Le carrousel gagne le swipe tactile et des points de position
+     superposés à la photo sur mobile (cf. VisitePhotoCarousel.tsx), en plus
+     de la bande de vignettes déjà présente. */
+  .visite-carousel-dots {
+    display: flex;
+  }
 }

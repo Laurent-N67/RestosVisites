@@ -15,7 +15,7 @@ import RestaurantDetailPage from './components/RestaurantDetailPage.tsx'
 import AddRestaurantForm from './components/AddRestaurantForm.tsx'
 import AddVisitForm from './components/AddVisitForm.tsx'
 import AuthPage from './components/AuthPage.tsx'
-import FavorisPage from './components/FavorisPage.tsx'
+import MesVisitesPage from './components/MesVisitesPage.tsx'
 import UtilisateursPage from './components/UtilisateursPage.tsx'
 import StatsPage from './components/StatsPage.tsx'
 import ProfilPage from './components/ProfilPage.tsx'
@@ -23,7 +23,7 @@ import ProtectedRoute from './components/ProtectedRoute.tsx'
 import RestaurantSearch from './components/RestaurantSearch.tsx'
 import UserMenu from './components/UserMenu.tsx'
 import BottomNav from './components/BottomNav.tsx'
-import { BellIcon, ChecklistIcon, HeartIcon, MapIcon, PinIcon, UsersIcon } from './components/icons/Icons.tsx'
+import { BellIcon, ChecklistIcon, HistoryIcon, MapIcon, PinIcon, UsersIcon } from './components/icons/Icons.tsx'
 import { useAuth } from './contexts/AuthContext.tsx'
 import { useTheme } from './hooks/useTheme.ts'
 import './App.css'
@@ -33,7 +33,7 @@ type Panel = 'none' | 'restaurant' | 'visite'
 const NAV_ITEMS = [
   { to: '/', label: 'Carte', icon: MapIcon, match: (path: string) => path === '/' },
   { to: '/liste', label: 'Restaurants', icon: ChecklistIcon, match: (path: string) => path === '/liste' },
-  { to: '/favoris', label: 'Favoris', icon: HeartIcon, match: (path: string) => path.startsWith('/favoris') },
+  { to: '/visites', label: 'Visites', icon: HistoryIcon, match: (path: string) => path.startsWith('/visites') },
   { to: '/utilisateurs', label: 'Utilisateurs', icon: UsersIcon, match: (path: string) => path.startsWith('/utilisateurs') },
 ] as const
 
@@ -372,10 +372,15 @@ function App() {
               }
             />
             <Route
-              path="/favoris"
+              path="/visites"
               element={
                 <ProtectedRoute>
-                  <FavorisPage restaurants={restaurants} visites={visites} />
+                  <MesVisitesPage
+                    restaurants={restaurants}
+                    visites={visites}
+                    onEditVisite={handleEditVisite}
+                    onVisiteDeleted={() => void loadAllVisites()}
+                  />
                 </ProtectedRoute>
               }
             />

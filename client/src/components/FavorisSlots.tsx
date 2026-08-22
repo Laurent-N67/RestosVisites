@@ -11,8 +11,8 @@ import RestaurantSearch from './RestaurantSearch.tsx'
 
 /**
  * Plafond de favoris déjà appliqué côté backend (422 au-delà) — dupliqué ici
- * plutôt qu'importé de `FavorisPage.tsx` pour ne pas créer de dépendance
- * entre deux pages indépendantes ; garder la même valeur si l'une change.
+ * plutôt que recalculé ailleurs pour ne pas créer de dépendance entre pages
+ * indépendantes ; garder la même valeur si le plafond backend change.
  */
 export const MAX_FAVORIS = 6
 
@@ -24,10 +24,9 @@ interface FavorisSlotsProps {
 /**
  * Grille de favoris à emplacements fixes (`MAX_FAVORIS`), utilisée sur la
  * page Carte (Phase 7c). S'appuie sur le `FavorisContext` partagé (pas d'état
- * local indépendant façon `FavorisPage.tsx`, qui peut désynchroniser avec le
- * reste de l'app — cf. Phase 8 pour la correction de `FavorisPage` elle-même)
- * afin qu'un ajout/retrait ici se reflète immédiatement partout ailleurs
- * (cœur sur la fiche détail, liste, etc.) et inversement.
+ * local indépendant, qui peut désynchroniser avec le reste de l'app) afin
+ * qu'un ajout/retrait ici se reflète immédiatement partout ailleurs (cœur sur
+ * la fiche détail, liste, etc.) et inversement.
  *
  * Les emplacements vides affichent un bouton "+" qui ouvre une recherche
  * inline (réutilise `RestaurantSearch`) pour ajouter un restaurant sans

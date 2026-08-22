@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { ChecklistIcon, HeartIcon, HomeIcon } from './icons/Icons.tsx'
+import { ChecklistIcon, HistoryIcon, HomeIcon } from './icons/Icons.tsx'
 
 const BOTTOM_NAV_ITEMS = [
   { to: '/', label: 'Accueil', icon: HomeIcon, match: (path: string) => path === '/' },
@@ -10,21 +10,20 @@ const BOTTOM_NAV_ITEMS = [
     match: (path: string) => path === '/liste',
   },
   {
-    to: '/favoris',
-    label: 'Favoris',
-    icon: HeartIcon,
-    match: (path: string) => path.startsWith('/favoris'),
+    to: '/visites',
+    label: 'Visites',
+    icon: HistoryIcon,
+    match: (path: string) => path.startsWith('/visites'),
   },
 ] as const
 
 /**
  * Navigation basse mobile-only (≤900px, cf. App.css) : 3 raccourcis
- * seulement (Accueil/Carte, Restaurants, Favoris) — remplace `.app-nav` sur
+ * seulement (Accueil/Carte, Restaurants, Visites) — remplace `.app-nav` sur
  * mobile, qui reste cependant inchangé et utilisé tel quel sur desktop.
- * Volontairement sans "Utilisateurs" (reste accessible via UserMenu) ni
- * "Visites" (rattachées à chaque restaurant, pas d'onglet dédié). Rendue une
- * seule fois globalement par `App.tsx`, uniquement quand un utilisateur est
- * connecté.
+ * Volontairement sans "Utilisateurs" (reste accessible via UserMenu). Rendue
+ * une seule fois globalement par `App.tsx`, uniquement quand un utilisateur
+ * est connecté.
  */
 function BottomNav() {
   const location = useLocation()
