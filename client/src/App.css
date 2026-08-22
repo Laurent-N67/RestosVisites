@@ -2681,12 +2681,13 @@
   color: inherit;
 }
 
+/* `position: fixed` : `top`/`left`/`min-width` sont posés en style inline
+   (CustomSelect.tsx, calculés via `getBoundingClientRect()` du déclencheur)
+   plutôt qu'ancrés en CSS pur, pour échapper au clipping d'un ancestor
+   `overflow` (cf. commentaire sur `.list-controls-filters` plus haut). */
 .custom-select-panel {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  z-index: 30;
-  min-width: 100%;
+  position: fixed;
+  z-index: 1180;
   width: max-content;
   max-width: 240px;
   margin: 0;
@@ -4429,19 +4430,14 @@
 
 /* Les filtres tiennent sur une seule ligne desktop plutôt que de passer à la
    ligne (`.list-controls-filters` est en `flex-wrap: wrap` par défaut,
-   partagé avec la Vue Liste) ; un défilement horizontal sert de filet de
-   sécurité sur une fenêtre desktop étroite plutôt qu'un débordement. Même
-   valeurs que la bande de chips mobile (cf. règle partagée plus haut) : ceci
-   ne change donc rien au comportement mobile déjà correct, juste plus
-   spécifique pour aussi s'appliquer au-delà de 900px sur cette page. */
+   partagé avec la Vue Liste). Pas d'`overflow-x: auto` ici : `overflow-x`
+   sans `overflow-y` explicite force ce dernier à `auto` (règle du spec CSS
+   overflow), ce qui coupait tout menu flottant (filtre date, dropdowns
+   Note/Type/Tri) dépassant sous cette rangée — régression détectée après
+   coup, cf. CustomSelect.tsx/DateRangeFilter.tsx. Le conteneur fait 1680px
+   de large, largement assez pour les 6 pastilles de filtre sans repli. */
 .mes-visites-page .list-controls-filters {
   flex-wrap: nowrap;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.mes-visites-page .list-controls-filters::-webkit-scrollbar {
-  display: none;
 }
 
 .visites-header {

@@ -35,7 +35,26 @@ function CustomSelect<T extends string | number>({
   triggerClassName,
 }: CustomSelectProps<T>) {
   const [open, setOpen] = useState(false)
+  const [panelStyle, setPanelStyle] = useState<{ top: number; left: number; minWidth: number }>()
   const containerRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+
+  // `position: fixed` ancré via `getBoundingClientRect()` plutôt que
+  // `position: absolute` relatif au conteneur : ce filtre vit dans
+  // `.list-controls-filters`, dont l'`overflow-x` (bande de chips
+  // défilante sur mobile) force `overflow-y` à `auto` par la même occasion
+  // (règle du spec CSS overflow) — un panneau `absolute` y serait
+  // silencieusement coupé au lieu de s'afficher sous le déclencheur.
+  function handleToggle() {
+    setOpen((prev) => {
+      const next = !prev
+      if (next && triggerRef.current) {
+        const rect = triggerRef.current.getBoundingClientRect()
+        setPanelStyle({ top: rect.bottom + 6, left: rect.left, minWidth: rect.width })
+      }
+      return next
+    })
+  }
 
   useEffect(() => {
     if (!open) {
@@ -69,19 +88,25 @@ function CustomSelect<T extends string | number>({
   return (
     <div className="custom-select" ref={containerRef}>
       <button
+        ref={triggerRef}
         type="button"
         className={triggerClasses}
         aria-haspopup="listbox"
         aria-expanded={open}
-        onClick={() => setOpen((v) => !v)}
+        onClick={handleToggle}
       >
         <Icon className="list-sort-icon" aria-hidden="true" />
         {label} <span className="custom-select-value">{current?.label ?? ''}</span>
         <ChevronDownIcon className="list-sort-chevron" aria-hidden="true" />
       </button>
 
-      {open && (
-        <ul className="custom-select-panel" role="listbox" aria-label={label}>
+      {open && panelStyle && (
+        <ul
+          className="custom-select-panel"
+          role="listbox"
+          aria-label={label}
+          style={panelStyle}
+        >
           {options.map((option) => {
             const active = option.value === value
             return (
