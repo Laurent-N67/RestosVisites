@@ -4348,7 +4348,7 @@
 .mes-visites-page > .list-controls,
 .mes-visites-page > .list-empty,
 .mes-visites-page > .visites-cards {
-  max-width: 1152px;
+  max-width: 1680px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -4836,6 +4836,60 @@
 .visite-carousel-dot--active {
   width: 16px;
   background: #fff;
+}
+
+/* Desktop uniquement (≥901px, complémentaire du seuil mobile ≤900px du
+   reste du projet) : exploite mieux la largeur gagnée par le conteneur
+   élargi ci-dessus (1680px) — recherche plus grande, filtres plus aérés,
+   filtre date mis en avant, corps de carte moins tassé. Gaté par
+   `min-width` plutôt qu'ajouté aux règles de base, car plusieurs propriétés
+   ci-dessous (hauteur/police de la recherche, gabarit du filtre date)
+   entreraient sinon en conflit avec leurs équivalents mobiles déjà corrects
+   (`.list-search` à 46px, pastilles compactes) au lieu de simplement les
+   ignorer sous 900px. */
+@media (min-width: 901px) {
+  .mes-visites-page .list-search {
+    height: 52px;
+    padding-left: 40px;
+    font-size: 15px;
+  }
+
+  .mes-visites-page .list-search-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .mes-visites-page .list-controls-filters {
+    gap: 16px;
+  }
+
+  .mes-visites-page .visites-filter-number,
+  .mes-visites-page .list-sort-label {
+    padding: 8px 14px 8px 16px;
+  }
+
+  /* Filtre "Période de visite" mis en avant : c'est le filtre principal de
+     la page, il doit se repérer immédiatement dans la rangée. */
+  .mes-visites-page .date-range-trigger {
+    padding: 9px 18px;
+    border-width: 2px;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .mes-visites-page .date-range-trigger svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .mes-visites-page .visites-card-body {
+    padding: 16px 22px;
+    gap: 7px;
+  }
+
+  .mes-visites-page .visites-card-title {
+    font-size: 18px;
+  }
 }
 
 /* Mobile (≤900px, même seuil que le reste du projet) : carte de visite en
