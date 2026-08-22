@@ -3193,16 +3193,18 @@
 
 /* Plafond de largeur élargi par rapport à `.detail-page` (720px, partagé
    avec Profil/Stats/Utilisateurs) : cette fiche a maintenant une mise en
-   page 2 colonnes qui a besoin de bien plus d'espace. */
+   page 2 colonnes qui a besoin de bien plus d'espace — 92% de la largeur
+   dispo jusqu'à 1600px, pour bien exploiter les grands écrans. */
 .restaurant-detail-page {
-  max-width: 1180px;
+  width: 92%;
+  max-width: 1600px;
 }
 
 /* --- Hero --- */
 
 .restaurant-hero {
   position: relative;
-  height: 420px;
+  height: 500px;
   overflow: hidden;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
@@ -3227,11 +3229,24 @@
   z-index: 1;
   background: linear-gradient(
     to top,
-    rgba(0, 0, 0, 0.78) 0%,
+    rgba(0, 0, 0, 0.8) 0%,
     rgba(0, 0, 0, 0.35) 45%,
     rgba(0, 0, 0, 0.05) 75%
   );
   pointer-events: none;
+}
+
+/* Boutons flottants en haut à droite, superposés à la photo plutôt que dans
+   le bandeau de titre en bas — restent visibles sans jamais chevaucher le
+   nom du restaurant, quelle que soit sa longueur. */
+.restaurant-hero-floating-actions {
+  position: absolute;
+  z-index: 2;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .restaurant-hero-content {
@@ -3240,37 +3255,54 @@
   left: 0;
   right: 0;
   bottom: 0;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 28px 32px;
+  padding: 32px;
 }
 
 .restaurant-hero-title {
-  margin: 0;
-  flex: 1;
-  min-width: 0;
+  margin: 0 0 10px;
   color: #fff;
-  font-size: 38px;
+  font-size: 52px;
   font-weight: 800;
-  line-height: 1.15;
+  line-height: 1.1;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
 }
 
-.restaurant-hero-actions {
+.restaurant-hero-stats {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 10px;
-  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 15px;
+  font-weight: 600;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+}
+
+/* Séparateur "•" automatique entre les items, quel que soit celui qui se
+   trouve en premier (la note moyenne n'est affichée que si le restaurant a
+   déjà des visites) — évite un `map`/interleave en JS pour un simple point. */
+.restaurant-hero-stats > *:not(:first-child)::before {
+  content: '•';
+  margin-right: 10px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.restaurant-hero-stat-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.restaurant-hero-stat-rating .popup-stars {
+  font-size: 14px;
 }
 
 .restaurant-hero-favori {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 46px;
-  height: 46px;
+  width: 44px;
+  height: 44px;
   flex-shrink: 0;
   border: none;
   border-radius: var(--radius-full);
@@ -3294,7 +3326,7 @@
 }
 
 .restaurant-hero-add-visite {
-  padding: 12px 20px;
+  padding: 11px 18px;
   border: 1px solid var(--accent-border);
   border-radius: var(--radius-sm);
   background: var(--accent);
@@ -3302,6 +3334,7 @@
   font-weight: 700;
   font-size: 14px;
   white-space: nowrap;
+  box-shadow: var(--shadow-md);
   transition: background var(--transition-base);
 }
 
@@ -3309,14 +3342,14 @@
   background: var(--accent-hover);
 }
 
-/* --- Carte informations --- */
+/* --- Informations rapides --- */
 
-.restaurant-info-card {
+.restaurant-quickinfo-card {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  margin-top: var(--space-4);
-  padding: var(--space-4);
+  gap: 16px;
+  margin-top: var(--space-6);
+  padding: var(--space-5);
 }
 
 .restaurant-info-admin-actions {
@@ -3325,90 +3358,63 @@
   gap: 8px;
 }
 
-.restaurant-info-stats {
+.restaurant-quickinfo-grid {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 24px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid var(--border);
+  gap: 12px 28px;
 }
 
-.restaurant-info-rating {
+.restaurant-quickinfo-row {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.restaurant-info-rating .popup-stars {
-  font-size: 18px;
-}
-
-.restaurant-info-rating-value {
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--text-h);
-}
-
-.restaurant-info-stat-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 18px 28px;
-}
-
-.restaurant-info-stat {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.restaurant-info-stat strong {
-  font-size: 20px;
-  font-weight: 800;
-  color: var(--text-h);
-  line-height: 1;
-}
-
-.restaurant-info-stat span {
-  font-size: 12px;
-  color: var(--text);
-}
-
-.restaurant-info-adresse {
-  display: flex;
-  align-items: center;
-  gap: 6px;
   margin: 0;
   color: var(--text-h);
   font-size: 14px;
   font-weight: 600;
 }
 
-.restaurant-info-adresse svg {
+.restaurant-quickinfo-row svg {
   width: 16px;
   height: 16px;
   flex-shrink: 0;
   color: var(--accent);
 }
 
+.restaurant-quickinfo-row a {
+  color: var(--accent);
+}
+
+.restaurant-quickinfo-tags {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.restaurant-quickinfo-tags-label {
+  flex-shrink: 0;
+}
+
 /* --- Description --- */
 
 .restaurant-description-card {
-  margin-top: var(--space-4);
-  padding: var(--space-4);
+  margin-top: var(--space-6);
+  padding: var(--space-5);
 }
 
 .restaurant-description-card h2 {
-  margin: 0 0 10px;
-  font-size: 18px;
+  margin: 0 0 12px;
+  font-size: 19px;
   font-weight: 700;
   color: var(--text-h);
 }
 
 .restaurant-description-card .restaurant-detail-description {
   margin: 0;
-  font-size: 14px;
-  line-height: 1.6;
+  font-size: 16px;
+  line-height: 1.7;
   color: var(--text);
 }
 
@@ -3423,10 +3429,10 @@
 
 .restaurant-detail-columns {
   display: grid;
-  grid-template-columns: 45fr 55fr;
-  gap: 28px;
+  grid-template-columns: 40fr 60fr;
+  gap: 32px;
   align-items: start;
-  margin-top: var(--space-4);
+  margin-top: var(--space-6);
 }
 
 .restaurant-visites-column,
@@ -3434,13 +3440,40 @@
   min-width: 0;
 }
 
-/* --- Historique des visites communautaire --- */
+/* --- Historique des visites : timeline --- */
 
-.community-visites-list {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  margin-top: 4px;
+.visite-timeline {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+}
+
+.visite-timeline-item {
+  position: relative;
+  padding-left: 26px;
+  padding-bottom: 18px;
+}
+
+.visite-timeline-item::before {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 8px;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
+
+.visite-timeline-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 7px;
+  top: 20px;
+  bottom: 0;
+  width: 2px;
+  background: var(--border);
 }
 
 .community-visite-card {
@@ -3448,7 +3481,7 @@
   border-radius: var(--radius-lg);
   background: var(--bg-card);
   box-shadow: var(--shadow-md);
-  padding: var(--space-4);
+  padding: var(--space-5);
 }
 
 .community-visite-header {
@@ -3495,21 +3528,30 @@
 .community-visite-photos {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
   margin-top: 4px;
+}
+
+/* Vignettes 80x80 dans la timeline : plus grandes que le gabarit
+   `.detail-photo-thumb` par défaut (56px, encore utilisé tel quel par la
+   popup de la carte), scopé à ce contexte pour ne pas l'affecter. */
+.community-visite-photos .detail-photo-thumb img {
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-sm);
 }
 
 .restaurant-visites-voir-plus {
   display: block;
   width: 100%;
   margin-top: 14px;
-  padding: 10px;
+  padding: 12px;
   border: 1px solid var(--accent-border);
   border-radius: var(--radius-sm);
   background: var(--accent-bg);
   color: var(--accent);
   font-weight: 700;
-  font-size: 13px;
+  font-size: 14px;
   text-align: center;
   transition: background var(--transition-base), color var(--transition-base);
 }
@@ -3519,27 +3561,32 @@
   color: #fff;
 }
 
-/* --- Galerie photo communautaire --- */
+/* --- Galerie photo : bento façon Airbnb --- */
 
-.restaurant-gallery-grid {
+.restaurant-gallery-bento {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  grid-template-columns: 2fr 1fr;
   gap: 10px;
+  height: 460px;
   margin-top: 4px;
 }
 
-.restaurant-gallery-item {
+.restaurant-gallery-main,
+.restaurant-gallery-side-item {
   position: relative;
-  aspect-ratio: 1 / 1;
   padding: 0;
   border: none;
-  border-radius: var(--radius-sm);
   overflow: hidden;
   background: var(--bg-card-hover);
   cursor: zoom-in;
 }
 
-.restaurant-gallery-item img {
+.restaurant-gallery-main {
+  border-radius: var(--radius-lg);
+}
+
+.restaurant-gallery-main img,
+.restaurant-gallery-side-item img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -3547,8 +3594,32 @@
   transition: transform var(--transition-base);
 }
 
-.restaurant-gallery-item:hover img {
-  transform: scale(1.06);
+.restaurant-gallery-main:hover img,
+.restaurant-gallery-side-item:hover img {
+  transform: scale(1.05);
+}
+
+.restaurant-gallery-side {
+  display: grid;
+  grid-auto-rows: 1fr;
+  gap: 10px;
+  height: 100%;
+}
+
+.restaurant-gallery-side-item {
+  border-radius: var(--radius-sm);
+}
+
+.restaurant-gallery-overflow {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 800;
 }
 
 /* --- Légende lightbox (auteur/date/note) --- */
@@ -3594,37 +3665,38 @@
 }
 
 @media (max-width: 900px) {
+  .restaurant-detail-page {
+    width: 100%;
+  }
+
   .restaurant-hero {
-    height: 240px;
+    height: 300px;
+  }
+
+  .restaurant-hero-floating-actions {
+    top: 14px;
+    right: 14px;
   }
 
   .restaurant-hero-content {
     padding: 18px 16px;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
   }
 
   .restaurant-hero-title {
-    font-size: 24px;
+    font-size: 32px;
   }
 
-  .restaurant-hero-actions {
-    align-self: stretch;
-    justify-content: space-between;
+  .restaurant-hero-stats {
+    font-size: 13px;
+    gap: 8px;
   }
 
-  .restaurant-hero-add-visite {
-    flex: 1;
-    text-align: center;
+  .restaurant-hero-stats > *:not(:first-child)::before {
+    margin-right: 8px;
   }
 
-  .restaurant-info-stats {
-    gap: 16px;
-  }
-
-  .restaurant-info-stat-grid {
-    gap: 14px 20px;
+  .restaurant-quickinfo-grid {
+    gap: 10px 20px;
   }
 
   .restaurant-detail-columns {
@@ -3632,8 +3704,9 @@
     gap: 28px;
   }
 
-  .restaurant-gallery-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .restaurant-gallery-bento {
+    height: 260px;
+    grid-template-columns: 3fr 2fr;
   }
 }
 

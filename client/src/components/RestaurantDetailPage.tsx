@@ -8,17 +8,17 @@ import { useDeleteRestaurant } from '../hooks/useDeleteRestaurant.ts'
 import { useDeleteVisite } from '../hooks/useDeleteVisite.ts'
 import { useFavoriToggle } from '../hooks/useFavoriToggle.ts'
 import { formatDate, formatNoteMoyenne, stars } from '../utils/format.ts'
-import {
-  averageNote,
-  estFavoriDeUtilisateur,
-  favorisCountForRestaurant,
-} from '../utils/visites.ts'
+import { averageNote, estFavoriDeUtilisateur } from '../utils/visites.ts'
 import Avatar from './Avatar.tsx'
 import CategoryBadges from './CategoryBadges.tsx'
 import CoverPhoto from './CoverPhoto.tsx'
 import { HeartIcon, PinIcon } from './icons/Icons.tsx'
 import type { LightboxCaption } from './PhotoLightbox.tsx'
 import PhotoLightbox from './PhotoLightbox.tsx'
+
+const GROUPE_CUISINE = 'Type de cuisine'
+const GROUPE_PRIX = 'Gamme de prix'
+const GALLERY_PREVIEW_SIZE = 4
 
 interface RestaurantDetailPageProps {
   restaurants: Restaurant[]
@@ -43,8 +43,6 @@ interface GalleryPhoto {
   date: string | null
   note: number | null
 }
-
-const VISITS_PAGE_SIZE = 5
 
 /**
  * Fusionne les photos du restaurant et celles de toutes les visites en une
@@ -165,7 +163,7 @@ function RestaurantDetailPage({
   const navigate = useNavigate()
   const location = useLocation()
   const [lightbox, setLightbox] = useState<LightboxState | null>(null)
-  const [visibleVisitsCount, setVisibleVisitsCount] = useState(VISITS_PAGE_SIZE)
+  const [showAllVisites, setShowAllVisites] = useState(false)
   const { user } = useAuth()
   const isAdmin = user?.role === Role.Admin
 
@@ -230,11 +228,21 @@ function RestaurantDetailPage({
 
   const restaurantAverageNote = averageNote(restaurantVisites)
   const uniqueVisitorsCount = new Set(restaurantVisites.map((v) => v.utilisateurId)).size
-  const favorisCount = favorisCountForRestaurant(utilisateursAvecFavoris, restaurant.id)
   const photoPrincipale =
     restaurant.photos.find((photo) => photo.estPrincipale) ?? restaurant.photos[0]
   const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${restaurant.latitude},${restaurant.longitude}`
-  const visibleVisites = restaurantVisites.slice(0, visibleVisitsCount)
+
+  const cuisineNom = restaurant.categories.find((c) => c.groupe === GROUPE_CUISINE)?.nom
+  const prixNom = restaurant.categories.find((c) => c.groupe === GROUPE_PRIX)?.nom
+  const tagCategories = restaurant.categories.filter(
+    (c) => c.groupe !== GROUPE_CUISINE && c.groupe !== GROUPE_PRIX,
+  )
+
+  const visibleVisites = showAllVisites ? restaurantVisites : restaurantVisites.slice(0, 5)
+
+  const mainGalleryPhoto = galleryPhotos[0]
+  const sideGalleryPhotos = galleryPhotos.slice(1, GALLERY_PREVIEW_SIZE)
+  const galleryOverflowCount = galleryPhotos.length - GALLERY_PREVIEW_SIZE
 
   function openVisitePhoto(visite: Visite, index: number) {
     setLightbox({
@@ -269,36 +277,60 @@ function RestaurantDetailPage({
       <div className="restaurant-hero">
         <CoverPhoto url={photoPrincipale?.url} alt={restaurant.nom} />
         <div className="restaurant-hero-overlay" aria-hidden="true" />
+
+        <div className="restaurant-hero-floating-actions">
+          <button
+            type="button"
+            className={
+              isFavori
+                ? 'restaurant-hero-favori restaurant-hero-favori--active'
+                : 'restaurant-hero-favori'
+            }
+            disabled={favoriLoading || favoriPending}
+            aria-label={isFavori ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+            onClick={() => void toggleFavori()}
+          >
+            <HeartIcon fill={isFavori ? 'currentColor' : 'none'} />
+          </button>
+          <button
+            type="button"
+            className="restaurant-hero-add-visite"
+            onClick={() => onAddVisite(restaurant.id)}
+          >
+            + Ajouter une visite
+          </button>
+        </div>
+
         <div className="restaurant-hero-content">
           <h1 className="restaurant-hero-title">{restaurant.nom}</h1>
-          <div className="restaurant-hero-actions">
-            <button
-              type="button"
-              className={
-                isFavori
-                  ? 'restaurant-hero-favori restaurant-hero-favori--active'
-                  : 'restaurant-hero-favori'
-              }
-              disabled={favoriLoading || favoriPending}
-              aria-label={isFavori ? 'Retirer des favoris' : 'Ajouter aux favoris'}
-              onClick={() => void toggleFavori()}
-            >
-              <HeartIcon fill={isFavori ? 'currentColor' : 'none'} />
-            </button>
-            <button
-              type="button"
-              className="restaurant-hero-add-visite"
-              onClick={() => onAddVisite(restaurant.id)}
-            >
-              + Ajouter une visite
-            </button>
+          <div className="restaurant-hero-stats">
+            {restaurantVisites.length > 0 && restaurantAverageNote !== null && (
+              <span className="restaurant-hero-stat-rating">
+                <span
+                  className="popup-stars"
+                  aria-label={`Note moyenne ${formatNoteMoyenne(restaurantAverageNote)} sur 5`}
+                >
+                  {stars(Math.round(restaurantAverageNote))}
+                </span>
+                {formatNoteMoyenne(restaurantAverageNote)}
+              </span>
+            )}
+            <span>
+              {restaurantVisites.length} visite{restaurantVisites.length > 1 ? 's' : ''}
+            </span>
+            <span>
+              {galleryPhotos.length} photo{galleryPhotos.length > 1 ? 's' : ''}
+            </span>
+            <span>
+              {uniqueVisitorsCount} visiteur{uniqueVisitorsCount > 1 ? 's' : ''}
+            </span>
           </div>
         </div>
       </div>
 
       {favoriError && <p className="popup-status popup-error">{favoriError}</p>}
 
-      <div className="restaurant-info-card card">
+      <div className="restaurant-quickinfo-card card">
         {isAdmin && (
           <div className="restaurant-info-admin-actions">
             <button type="button" className="popup-btn" onClick={() => onEditRestaurant(restaurant)}>
@@ -316,79 +348,52 @@ function RestaurantDetailPage({
         )}
         {restaurantError && <p className="popup-status popup-error">{restaurantError}</p>}
 
-        <div className="restaurant-info-stats">
-          {restaurantVisites.length > 0 && restaurantAverageNote !== null ? (
-            <div className="restaurant-info-rating">
-              <span
-                className="popup-stars"
-                aria-label={`Note moyenne ${formatNoteMoyenne(restaurantAverageNote)} sur 5`}
-              >
-                {stars(Math.round(restaurantAverageNote))}
-              </span>
-              <span className="restaurant-info-rating-value">
-                {formatNoteMoyenne(restaurantAverageNote)}
-              </span>
-            </div>
-          ) : (
-            <p className="popup-status">Aucune visite enregistrée.</p>
+        <div className="restaurant-quickinfo-grid">
+          <p className="restaurant-quickinfo-row">
+            <PinIcon aria-hidden="true" />
+            <span>{restaurant.adresse}</span>
+          </p>
+          {cuisineNom && (
+            <p className="restaurant-quickinfo-row">
+              <span aria-hidden="true">🍽️</span>
+              <span>{cuisineNom}</span>
+            </p>
           )}
-
-          <div className="restaurant-info-stat-grid">
-            <div className="restaurant-info-stat">
-              <strong>{restaurantVisites.length}</strong>
-              <span>visite{restaurantVisites.length > 1 ? 's' : ''}</span>
-            </div>
-            <div className="restaurant-info-stat">
-              <strong>{uniqueVisitorsCount}</strong>
-              <span>visiteur{uniqueVisitorsCount > 1 ? 's' : ''}</span>
-            </div>
-            <div className="restaurant-info-stat">
-              <strong>{galleryPhotos.length}</strong>
-              <span>photo{galleryPhotos.length > 1 ? 's' : ''}</span>
-            </div>
-            <div className="restaurant-info-stat">
-              <strong>{favorisCount}</strong>
-              <span>favori{favorisCount > 1 ? 's' : ''}</span>
-            </div>
-          </div>
+          {prixNom && (
+            <p className="restaurant-quickinfo-row">
+              <span aria-hidden="true">💰</span>
+              <span>{prixNom}</span>
+            </p>
+          )}
+          {restaurant.telephone && (
+            <p className="restaurant-quickinfo-row">
+              <span aria-hidden="true">📞</span>
+              <a href={`tel:${restaurant.telephone}`}>{restaurant.telephone}</a>
+            </p>
+          )}
+          {restaurant.siteWeb && (
+            <p className="restaurant-quickinfo-row">
+              <span aria-hidden="true">🌐</span>
+              <a href={restaurant.siteWeb} target="_blank" rel="noopener noreferrer">
+                {restaurant.siteWeb}
+              </a>
+            </p>
+          )}
+          {restaurant.horaires && (
+            <p className="restaurant-quickinfo-row">
+              <span aria-hidden="true">🕐</span>
+              <span>{restaurant.horaires}</span>
+            </p>
+          )}
         </div>
 
-        <p className="restaurant-info-adresse">
-          <PinIcon aria-hidden="true" />
-          {restaurant.adresse}
-        </p>
-
-        {restaurant.categories.length > 0 && (
-          <CategoryBadges categories={restaurant.categories} max={restaurant.categories.length} />
-        )}
-
-        {(restaurant.telephone || restaurant.siteWeb || restaurant.horaires) && (
-          <dl className="restaurant-contact-info">
-            {restaurant.telephone && (
-              <div className="restaurant-contact-row">
-                <dt>Téléphone</dt>
-                <dd>
-                  <a href={`tel:${restaurant.telephone}`}>{restaurant.telephone}</a>
-                </dd>
-              </div>
-            )}
-            {restaurant.siteWeb && (
-              <div className="restaurant-contact-row">
-                <dt>Site web</dt>
-                <dd>
-                  <a href={restaurant.siteWeb} target="_blank" rel="noopener noreferrer">
-                    {restaurant.siteWeb}
-                  </a>
-                </dd>
-              </div>
-            )}
-            {restaurant.horaires && (
-              <div className="restaurant-contact-row">
-                <dt>Horaires</dt>
-                <dd>{restaurant.horaires}</dd>
-              </div>
-            )}
-          </dl>
+        {tagCategories.length > 0 && (
+          <div className="restaurant-quickinfo-tags">
+            <span className="restaurant-quickinfo-tags-label" aria-hidden="true">
+              🏷️
+            </span>
+            <CategoryBadges categories={tagCategories} max={tagCategories.length} />
+          </div>
         )}
 
         <a className="popup-directions" href={directionsUrl} target="_blank" rel="noopener noreferrer">
@@ -402,7 +407,7 @@ function RestaurantDetailPage({
           <p className="restaurant-detail-description">{restaurant.description}</p>
         ) : (
           <p className="restaurant-description-empty">
-            Aucune description pour ce restaurant pour le moment.
+            Aucune description disponible pour ce restaurant.
           </p>
         )}
       </div>
@@ -416,31 +421,32 @@ function RestaurantDetailPage({
             <p className="popup-status">Aucune visite enregistrée.</p>
           ) : (
             <>
-              <div className="community-visites-list">
+              <ol className="visite-timeline">
                 {visibleVisites.map((visite) => (
-                  <CommunityVisiteCard
-                    key={visite.id}
-                    visite={visite}
-                    isFavoriDeAuteur={estFavoriDeUtilisateur(
-                      utilisateursAvecFavoris,
-                      visite.utilisateurId,
-                      restaurant.id,
-                    )}
-                    canManage={isAdmin || user?.id === visite.utilisateurId}
-                    deleting={deletingVisiteId === visite.id}
-                    onEdit={() => onEditVisite(visite)}
-                    onDelete={() => void handleDeleteVisite(visite)}
-                    onOpenPhoto={(index) => openVisitePhoto(visite, index)}
-                  />
+                  <li key={visite.id} className="visite-timeline-item">
+                    <CommunityVisiteCard
+                      visite={visite}
+                      isFavoriDeAuteur={estFavoriDeUtilisateur(
+                        utilisateursAvecFavoris,
+                        visite.utilisateurId,
+                        restaurant.id,
+                      )}
+                      canManage={isAdmin || user?.id === visite.utilisateurId}
+                      deleting={deletingVisiteId === visite.id}
+                      onEdit={() => onEditVisite(visite)}
+                      onDelete={() => void handleDeleteVisite(visite)}
+                      onOpenPhoto={(index) => openVisitePhoto(visite, index)}
+                    />
+                  </li>
                 ))}
-              </div>
-              {visibleVisitsCount < restaurantVisites.length && (
+              </ol>
+              {!showAllVisites && restaurantVisites.length > visibleVisites.length && (
                 <button
                   type="button"
                   className="restaurant-visites-voir-plus"
-                  onClick={() => setVisibleVisitsCount((count) => count + VISITS_PAGE_SIZE)}
+                  onClick={() => setShowAllVisites(true)}
                 >
-                  Voir plus de visites
+                  Voir tout l'historique
                 </button>
               )}
             </>
@@ -452,17 +458,34 @@ function RestaurantDetailPage({
           {galleryPhotos.length === 0 ? (
             <p className="restaurant-description-empty">Aucune photo pour le moment.</p>
           ) : (
-            <div className="restaurant-gallery-grid">
-              {galleryPhotos.map((photo, index) => (
-                <button
-                  key={photo.url}
-                  type="button"
-                  className="restaurant-gallery-item"
-                  onClick={() => openGalleryPhoto(index)}
-                >
-                  <img src={resolvePhotoUrl(photo.url)} alt="" loading="lazy" />
-                </button>
-              ))}
+            <div className="restaurant-gallery-bento">
+              <button
+                type="button"
+                className="restaurant-gallery-main"
+                onClick={() => openGalleryPhoto(0)}
+              >
+                <img src={resolvePhotoUrl(mainGalleryPhoto.url)} alt="" loading="lazy" />
+              </button>
+              {sideGalleryPhotos.length > 0 && (
+                <div className="restaurant-gallery-side">
+                  {sideGalleryPhotos.map((photo, i) => {
+                    const isLast = i === sideGalleryPhotos.length - 1
+                    return (
+                      <button
+                        key={photo.url}
+                        type="button"
+                        className="restaurant-gallery-side-item"
+                        onClick={() => openGalleryPhoto(i + 1)}
+                      >
+                        <img src={resolvePhotoUrl(photo.url)} alt="" loading="lazy" />
+                        {isLast && galleryOverflowCount > 0 && (
+                          <span className="restaurant-gallery-overflow">+{galleryOverflowCount}</span>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
             </div>
           )}
         </section>
