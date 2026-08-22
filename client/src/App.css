@@ -2107,7 +2107,7 @@
 
 .restaurant-card-cta {
   display: block;
-  margin-top: 10px;
+  margin-top: auto;
   padding: 12px 14px;
   border: 1px solid var(--accent-border);
   border-radius: var(--radius-sm);
@@ -2773,12 +2773,22 @@
   color: var(--text);
 }
 
+/* Colonne flex plutôt qu'un bloc simple : `.restaurant-card-body` peut
+   grandir (`flex: 1`) pour occuper toute la hauteur restante une fois la
+   carte étirée à la hauteur de sa rangée de grille (`align-items: stretch`
+   par défaut), et `.restaurant-card-cta` s'y ancre en bas via
+   `margin-top: auto` au lieu de suivre directement le dernier bloc de
+   texte — sinon le bouton "Voir la fiche" flottait à une hauteur différente
+   selon la quantité de contenu (visite, badges…) de chaque carte. */
 .restaurant-card {
+  display: flex;
+  flex-direction: column;
   padding: var(--space-4);
 }
 
 .restaurant-card-thumb {
   position: relative;
+  flex-shrink: 0;
 }
 
 .restaurant-card-favori {
@@ -2854,6 +2864,7 @@
 .restaurant-card-body {
   display: flex;
   flex-direction: column;
+  flex: 1;
 }
 
 .restaurant-card-title {
