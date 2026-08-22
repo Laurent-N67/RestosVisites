@@ -18,7 +18,8 @@ const SWIPE_THRESHOLD = 40
  * Carrousel photo inline (pas de lightbox plein écran) pour une carte de
  * visite : photo principale + navigation précédent/suivant en overlay, et
  * une bande de vignettes cliquables sous la photo (plafonnée à 4, avec une
- * tuile `+N` pour la 5e photo et au-delà — voir commentaire plus bas).
+ * tuile `+N` à partir de la 6e photo — la 5e s'affiche telle quelle plutôt
+ * que sous une tuile `+1`, voir commentaire plus bas).
  */
 function VisitePhotoCarousel({ photos, alt }: VisitePhotoCarouselProps) {
   const [index, setIndex] = useState(0)
@@ -71,8 +72,12 @@ function VisitePhotoCarousel({ photos, alt }: VisitePhotoCarouselProps) {
     }
   }
 
-  const visibleThumbs = resolved.slice(0, MAX_THUMBS)
-  const overflowCount = resolved.length - MAX_THUMBS
+  // Avec exactement 5 photos, la tuile "+1" n'a pas d'intérêt : autant
+  // montrer la 5e vignette directement plutôt qu'un chiffre à cliquer pour
+  // une seule photo de plus.
+  const visibleCount = resolved.length === MAX_THUMBS + 1 ? resolved.length : MAX_THUMBS
+  const visibleThumbs = resolved.slice(0, visibleCount)
+  const overflowCount = resolved.length - visibleCount
 
   return (
     <div className="visite-carousel">
