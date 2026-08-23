@@ -3191,13 +3191,23 @@
    Fiche restaurant communautaire (RestaurantDetailPage.tsx)
    ================================================== */
 
-/* Plafond de largeur élargi par rapport à `.detail-page` (720px, partagé
-   avec Profil/Stats/Utilisateurs) : cette fiche a maintenant une mise en
-   page 2 colonnes qui a besoin de bien plus d'espace — 92% de la largeur
-   dispo jusqu'à 1600px, pour bien exploiter les grands écrans. */
+/* Pleine largeur pour le conteneur défilant lui-même (comme la Vue Liste et
+   Mes visites) plutôt qu'un `width: 92%` sur `.detail-page` : sinon la zone
+   qui écoute le scroll est plus étroite que l'écran et la molette ne
+   répond pas quand la souris est au-dessus des marges vides. Le plafond de
+   largeur (1600px) est reporté sur chaque section ci-dessous à la place. */
 .restaurant-detail-page {
-  width: 92%;
+  width: 100%;
+  max-width: none;
+}
+
+.restaurant-detail-page .restaurant-hero,
+.restaurant-detail-page .restaurant-quickinfo-card,
+.restaurant-detail-page .restaurant-description-card,
+.restaurant-detail-page .restaurant-detail-columns {
   max-width: 1600px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* --- Hero --- */
@@ -3285,16 +3295,6 @@
   content: '•';
   margin-right: 10px;
   color: rgba(255, 255, 255, 0.5);
-}
-
-.restaurant-hero-stat-rating {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.restaurant-hero-stat-rating .popup-stars {
-  font-size: 14px;
 }
 
 .restaurant-hero-favori {
@@ -3429,7 +3429,7 @@
 
 .restaurant-detail-columns {
   display: grid;
-  grid-template-columns: 40fr 60fr;
+  grid-template-columns: 55fr 45fr;
   gap: 32px;
   align-items: start;
   margin-top: var(--space-6);
@@ -3567,7 +3567,7 @@
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 10px;
-  height: 460px;
+  height: 360px;
   margin-top: 4px;
 }
 
@@ -3655,11 +3655,12 @@
 
 /* --- Responsive --- */
 
-/* Tablette : colonnes plus resserrées (mais toujours 2 colonnes) avant le
-   passage en empilé du seuil mobile ≤900px ci-dessous. */
+/* Tablette : colonnes plus resserrées (mais toujours 2 colonnes, historique
+   toujours dominant) avant le passage en empilé du seuil mobile ≤900px
+   ci-dessous. */
 @media (max-width: 1200px) {
   .restaurant-detail-columns {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 55fr 45fr;
     gap: 20px;
   }
 }

@@ -148,7 +148,11 @@ describe('RestaurantDetailPage', () => {
     expect(
       screen.getByRole('heading', { name: 'Le Bon Coin' }),
     ).toBeInTheDocument()
-    expect(screen.getByText('1 rue de Paris')).toBeInTheDocument()
+    // Apparaît à la fois dans la ligne compacte du hero (ville, via
+    // `villeFromAdresse` — sans virgule dans cette adresse de test, elle
+    // renvoie la chaîne complète) et dans la carte d'informations (adresse
+    // complète).
+    expect(screen.getAllByText('1 rue de Paris').length).toBeGreaterThan(0)
     expect(screen.getByText('Italien')).toBeInTheDocument()
 
     const dates = screen.getAllByText(/^\d{2}\/\d{2}\/2026$/)

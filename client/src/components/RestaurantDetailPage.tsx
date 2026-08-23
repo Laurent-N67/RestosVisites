@@ -7,8 +7,12 @@ import { useAuth } from '../contexts/AuthContext.tsx'
 import { useDeleteRestaurant } from '../hooks/useDeleteRestaurant.ts'
 import { useDeleteVisite } from '../hooks/useDeleteVisite.ts'
 import { useFavoriToggle } from '../hooks/useFavoriToggle.ts'
-import { formatDate, formatNoteMoyenne, stars } from '../utils/format.ts'
-import { averageNote, estFavoriDeUtilisateur } from '../utils/visites.ts'
+import { formatDate, formatNoteMoyenne, stars, villeFromAdresse } from '../utils/format.ts'
+import {
+  averageNote,
+  estFavoriDeUtilisateur,
+  favorisCountForRestaurant,
+} from '../utils/visites.ts'
 import Avatar from './Avatar.tsx'
 import CategoryBadges from './CategoryBadges.tsx'
 import CoverPhoto from './CoverPhoto.tsx'
@@ -228,6 +232,7 @@ function RestaurantDetailPage({
 
   const restaurantAverageNote = averageNote(restaurantVisites)
   const uniqueVisitorsCount = new Set(restaurantVisites.map((v) => v.utilisateurId)).size
+  const favorisCount = favorisCountForRestaurant(utilisateursAvecFavoris, restaurant.id)
   const photoPrincipale =
     restaurant.photos.find((photo) => photo.estPrincipale) ?? restaurant.photos[0]
   const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${restaurant.latitude},${restaurant.longitude}`
@@ -305,24 +310,31 @@ function RestaurantDetailPage({
           <h1 className="restaurant-hero-title">{restaurant.nom}</h1>
           <div className="restaurant-hero-stats">
             {restaurantVisites.length > 0 && restaurantAverageNote !== null && (
-              <span className="restaurant-hero-stat-rating">
-                <span
-                  className="popup-stars"
-                  aria-label={`Note moyenne ${formatNoteMoyenne(restaurantAverageNote)} sur 5`}
-                >
-                  {stars(Math.round(restaurantAverageNote))}
-                </span>
-                {formatNoteMoyenne(restaurantAverageNote)}
+              <span aria-label={`Note moyenne ${formatNoteMoyenne(restaurantAverageNote)} sur 5`}>
+                <span aria-hidden="true">⭐</span> {formatNoteMoyenne(restaurantAverageNote)}
               </span>
             )}
             <span>
-              {restaurantVisites.length} visite{restaurantVisites.length > 1 ? 's' : ''}
+              <span aria-hidden="true">📍</span> {villeFromAdresse(restaurant.adresse)}
             </span>
-            <span>
-              {galleryPhotos.length} photo{galleryPhotos.length > 1 ? 's' : ''}
+            {cuisineNom && (
+              <span>
+                <span aria-hidden="true">🍽</span> {cuisineNom}
+              </span>
+            )}
+            {prixNom && (
+              <span>
+                <span aria-hidden="true">💰</span> {prixNom}
+              </span>
+            )}
+            <span aria-label={`${uniqueVisitorsCount} visiteurs`}>
+              <span aria-hidden="true">👥</span> {uniqueVisitorsCount}
             </span>
-            <span>
-              {uniqueVisitorsCount} visiteur{uniqueVisitorsCount > 1 ? 's' : ''}
+            <span aria-label={`${galleryPhotos.length} photos`}>
+              <span aria-hidden="true">📷</span> {galleryPhotos.length}
+            </span>
+            <span aria-label={`${favorisCount} favoris`}>
+              <span aria-hidden="true">❤️</span> {favorisCount}
             </span>
           </div>
         </div>
@@ -353,18 +365,6 @@ function RestaurantDetailPage({
             <PinIcon aria-hidden="true" />
             <span>{restaurant.adresse}</span>
           </p>
-          {cuisineNom && (
-            <p className="restaurant-quickinfo-row">
-              <span aria-hidden="true">🍽️</span>
-              <span>{cuisineNom}</span>
-            </p>
-          )}
-          {prixNom && (
-            <p className="restaurant-quickinfo-row">
-              <span aria-hidden="true">💰</span>
-              <span>{prixNom}</span>
-            </p>
-          )}
           {restaurant.telephone && (
             <p className="restaurant-quickinfo-row">
               <span aria-hidden="true">📞</span>
