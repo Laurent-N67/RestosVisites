@@ -3429,7 +3429,7 @@
 
 .restaurant-detail-columns {
   display: grid;
-  grid-template-columns: 55fr 45fr;
+  grid-template-columns: 70fr 30fr;
   gap: 32px;
   align-items: start;
   margin-top: var(--space-6);
@@ -3451,7 +3451,7 @@
 .visite-timeline-item {
   position: relative;
   padding-left: 26px;
-  padding-bottom: 18px;
+  padding-bottom: 12px;
 }
 
 .visite-timeline-item::before {
@@ -3481,7 +3481,7 @@
   border-radius: var(--radius-lg);
   background: var(--bg-card);
   box-shadow: var(--shadow-md);
-  padding: var(--space-5);
+  padding: var(--space-4);
 }
 
 .community-visite-header {
@@ -3561,32 +3561,31 @@
   color: #fff;
 }
 
-/* --- Galerie photo : bento façon Airbnb --- */
+/* --- Galerie photo : grille compacte de miniatures carrées --- */
+/* Volontairement discrète (colonne 30% de large, cf. `.restaurant-detail-
+   columns` plus haut) : l'historique des visites reste le contenu
+   principal de la page, la galerie n'est qu'un complément — inspirée d'une
+   grille Google Maps/Instagram, pas d'un mur Pinterest dominant. */
 
-.restaurant-gallery-bento {
+.restaurant-gallery-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 10px;
-  height: 360px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
   margin-top: 4px;
 }
 
-.restaurant-gallery-main,
-.restaurant-gallery-side-item {
-  position: relative;
+.restaurant-gallery-thumb {
+  aspect-ratio: 1 / 1;
+  max-height: 250px;
   padding: 0;
   border: none;
+  border-radius: var(--radius-sm);
   overflow: hidden;
   background: var(--bg-card-hover);
   cursor: zoom-in;
 }
 
-.restaurant-gallery-main {
-  border-radius: var(--radius-lg);
-}
-
-.restaurant-gallery-main img,
-.restaurant-gallery-side-item img {
+.restaurant-gallery-thumb img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -3594,32 +3593,28 @@
   transition: transform var(--transition-base);
 }
 
-.restaurant-gallery-main:hover img,
-.restaurant-gallery-side-item:hover img {
-  transform: scale(1.05);
+.restaurant-gallery-thumb:hover img {
+  transform: scale(1.06);
 }
 
-.restaurant-gallery-side {
-  display: grid;
-  grid-auto-rows: 1fr;
-  gap: 10px;
-  height: 100%;
-}
-
-.restaurant-gallery-side-item {
+.restaurant-gallery-voir-tout {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px;
+  border: 1px solid var(--accent-border);
   border-radius: var(--radius-sm);
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 13px;
+  text-align: center;
+  transition: background var(--transition-base), color var(--transition-base);
 }
 
-.restaurant-gallery-overflow {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.55);
+.restaurant-gallery-voir-tout:hover {
+  background: var(--accent);
   color: #fff;
-  font-size: 22px;
-  font-weight: 800;
 }
 
 /* --- Légende lightbox (auteur/date/note) --- */
@@ -3660,7 +3655,7 @@
    ci-dessous. */
 @media (max-width: 1200px) {
   .restaurant-detail-columns {
-    grid-template-columns: 55fr 45fr;
+    grid-template-columns: 65fr 35fr;
     gap: 20px;
   }
 }
@@ -3703,11 +3698,6 @@
   .restaurant-detail-columns {
     grid-template-columns: 1fr;
     gap: 28px;
-  }
-
-  .restaurant-gallery-bento {
-    height: 260px;
-    grid-template-columns: 3fr 2fr;
   }
 }
 

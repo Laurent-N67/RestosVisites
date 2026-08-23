@@ -22,7 +22,7 @@ import PhotoLightbox from './PhotoLightbox.tsx'
 
 const GROUPE_CUISINE = 'Type de cuisine'
 const GROUPE_PRIX = 'Gamme de prix'
-const GALLERY_PREVIEW_SIZE = 4
+const GALLERY_PREVIEW_SIZE = 9
 
 interface RestaurantDetailPageProps {
   restaurants: Restaurant[]
@@ -245,9 +245,7 @@ function RestaurantDetailPage({
 
   const visibleVisites = showAllVisites ? restaurantVisites : restaurantVisites.slice(0, 5)
 
-  const mainGalleryPhoto = galleryPhotos[0]
-  const sideGalleryPhotos = galleryPhotos.slice(1, GALLERY_PREVIEW_SIZE)
-  const galleryOverflowCount = galleryPhotos.length - GALLERY_PREVIEW_SIZE
+  const visibleGalleryPhotos = galleryPhotos.slice(0, GALLERY_PREVIEW_SIZE)
 
   function openVisitePhoto(visite: Visite, index: number) {
     setLightbox({
@@ -458,35 +456,29 @@ function RestaurantDetailPage({
           {galleryPhotos.length === 0 ? (
             <p className="restaurant-description-empty">Aucune photo pour le moment.</p>
           ) : (
-            <div className="restaurant-gallery-bento">
-              <button
-                type="button"
-                className="restaurant-gallery-main"
-                onClick={() => openGalleryPhoto(0)}
-              >
-                <img src={resolvePhotoUrl(mainGalleryPhoto.url)} alt="" loading="lazy" />
-              </button>
-              {sideGalleryPhotos.length > 0 && (
-                <div className="restaurant-gallery-side">
-                  {sideGalleryPhotos.map((photo, i) => {
-                    const isLast = i === sideGalleryPhotos.length - 1
-                    return (
-                      <button
-                        key={photo.url}
-                        type="button"
-                        className="restaurant-gallery-side-item"
-                        onClick={() => openGalleryPhoto(i + 1)}
-                      >
-                        <img src={resolvePhotoUrl(photo.url)} alt="" loading="lazy" />
-                        {isLast && galleryOverflowCount > 0 && (
-                          <span className="restaurant-gallery-overflow">+{galleryOverflowCount}</span>
-                        )}
-                      </button>
-                    )
-                  })}
-                </div>
+            <>
+              <div className="restaurant-gallery-grid">
+                {visibleGalleryPhotos.map((photo, index) => (
+                  <button
+                    key={photo.url}
+                    type="button"
+                    className="restaurant-gallery-thumb"
+                    onClick={() => openGalleryPhoto(index)}
+                  >
+                    <img src={resolvePhotoUrl(photo.url)} alt="" loading="lazy" />
+                  </button>
+                ))}
+              </div>
+              {galleryPhotos.length > GALLERY_PREVIEW_SIZE && (
+                <button
+                  type="button"
+                  className="restaurant-gallery-voir-tout"
+                  onClick={() => openGalleryPhoto(0)}
+                >
+                  Voir toutes les photos ({galleryPhotos.length})
+                </button>
               )}
-            </div>
+            </>
           )}
         </section>
       </div>
