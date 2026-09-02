@@ -1,6 +1,8 @@
 # ---- Client (React/Vite) ----
 FROM node:22-alpine AS client-build
 WORKDIR /client
+ARG VITE_CARTO_API_KEY
+ENV VITE_CARTO_API_KEY=$VITE_CARTO_API_KEY
 COPY client/package.json client/package-lock.json* ./
 RUN npm ci
 COPY client/ ./

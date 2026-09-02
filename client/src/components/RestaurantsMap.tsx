@@ -34,9 +34,12 @@ const SIDEBAR_PREVIEW_LIMIT = 4
 const DEFAULT_CENTER: [number, number] = [46.6034, 1.8883] // Centre de la France
 const DEFAULT_ZOOM = 6
 
+const CARTO_API_KEY = import.meta.env.VITE_CARTO_API_KEY as string | undefined
+const CARTO_KEY_PARAM = CARTO_API_KEY ? `?key=${CARTO_API_KEY}` : ''
+
 const TILE_URLS = {
-  light: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-  dark: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+  light: `https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}{r}.png${CARTO_KEY_PARAM}`,
+  dark: `https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png${CARTO_KEY_PARAM}`,
 } as const
 
 export interface VisiteMutation {
