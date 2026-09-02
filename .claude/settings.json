@@ -4,7 +4,9 @@
       "Edit",
       "Write",
       "Bash",
-      "PowerShell"
+      "PowerShell",
+      "Bash(flyctl deploy*)",
+      "PowerShell(flyctl deploy*)"
     ],
     "ask": [
       "Bash(git push*)",
@@ -33,6 +35,13 @@
       "PowerShell(gh api*)"
     ]
   },
+  "autoMode": {
+    "allow": [
+      "$defaults",
+      "Bash(flyctl deploy*)",
+      "PowerShell(flyctl deploy*)"
+    ]
+  },  
   "worktree": {
     "bgIsolation": "none"
   }
