@@ -206,10 +206,9 @@ function App() {
 
   function handleVisiteSaved(restaurantId: string) {
     setVisiteMutation({ restaurantId, token: Date.now() })
-    if (editingVisite) {
-      setActivePanel('none')
-      setEditingVisite(null)
-    }
+    setActivePanel('none')
+    setEditingVisite(null)
+    setPreselectedRestaurantId(null)
   }
 
   async function handleLogout() {

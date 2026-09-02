@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { MapContainer, TileLayer, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, ZoomControl, useMap } from 'react-leaflet'
 import MarkerClusterGroup from 'react-leaflet-cluster'
 import 'react-leaflet-cluster/dist/assets/MarkerCluster.css'
 import 'react-leaflet-cluster/dist/assets/MarkerCluster.Default.css'
@@ -365,6 +365,7 @@ function RestaurantsMap({
   return (
     <div className="map-page">
       <div className="map-view">
+      <div className="map-canvas">
         <button
           type="button"
           className="map-sidebar-toggle"
@@ -475,7 +476,9 @@ function RestaurantsMap({
           center={DEFAULT_CENTER}
           zoom={DEFAULT_ZOOM}
           className="restaurants-map"
+          zoomControl={false}
         >
+          <ZoomControl position="bottomleft" />
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
             url={TILE_URLS[theme]}
@@ -611,6 +614,7 @@ function RestaurantsMap({
             </div>
           </section>
         )}
+      </div>
       </div>
     </div>
   )
